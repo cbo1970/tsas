@@ -1,0 +1,41 @@
+package com.cas.tsas.infrastructure.persistence.repository;
+
+import com.cas.tsas.application.port.out.LoadMatchPort;
+import com.cas.tsas.application.port.out.SaveMatchPort;
+import com.cas.tsas.domain.model.Match;
+import com.cas.tsas.infrastructure.persistence.mapper.MatchMapper;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+
+@Component
+public class MatchPersistenceAdapter implements LoadMatchPort, SaveMatchPort {
+
+    private final MatchJpaRepository repository;
+    private final MatchMapper mapper;
+
+    public MatchPersistenceAdapter(MatchJpaRepository repository, MatchMapper mapper) {
+        this.repository = repository;
+        this.mapper = mapper;
+    }
+
+    @Override
+    public Optional<Match> loadMatch(Long id) {
+        return repository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Match> loadAllMatches() {
+        return repository.findAll().stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public Match saveMatch(Match match) {
+        var entity = mapper.toEntity(match);
+        var saved = repository.save(entity);
+        return mapper.toDomain(saved);
+    }
+}
