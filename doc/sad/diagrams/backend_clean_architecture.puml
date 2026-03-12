@@ -1,0 +1,141 @@
+@startuml TSaS_Backend_CleanArchitecture
+
+!theme plain
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam padding 6
+
+title TSaS Backend – Clean Architecture (Klassen-Detail)
+
+' ─────────────────────────────────────────────
+' INFRASTRUCTURE
+' ─────────────────────────────────────────────
+package "infrastructure" #DDEEFF {
+
+  package "web (REST Adapter)" #C5D8F0 {
+    component "[PlayerController]"     as PC
+    component "[MatchController]"      as MC
+    component "[PointController]"      as PTC
+    component "[StatisticsController]" as SC
+  }
+
+  package "persistence (JPA Adapter)" #C5D8F0 {
+    component "[PlayerPersistenceAdapter]" as PPA
+    component "[MatchPersistenceAdapter]"  as MPA
+    component "[PlayerJpaRepository]"      as PJR   <<JpaRepository>>
+    component "[MatchJpaRepository]"       as MJR   <<JpaRepository>>
+    component "[PointJpaRepository]"       as PTJR  <<JpaRepository>>
+  }
+
+  package "security" #C5D8F0 {
+    component "[SecurityConfig]" as SEC
+  }
+
+}
+
+' ─────────────────────────────────────────────
+' APPLICATION
+' ─────────────────────────────────────────────
+package "application" #DDFFDD {
+
+  package "port/in  (Use Case Interfaces)" #B8F0B8 {
+    interface "PlayerUseCase"     as PUC
+    interface "MatchUseCase"      as MUC
+    interface "ScoringUseCase"    as SUC
+    interface "StatisticsUseCase" as STUC
+  }
+
+  package "port/out  (Repository Interfaces)" #B8F0B8 {
+    interface "LoadPlayerPort"  as LPP
+    interface "SavePlayerPort"  as SPP
+    interface "LoadMatchPort"   as LMP
+    interface "SaveMatchPort"   as SMP
+    interface "LoadPointPort"   as LPTAP
+    interface "SavePointPort"   as SPTAP
+  }
+
+  package "service  (@Service)" #B8F0B8 {
+    component "[PlayerService]"     as PS
+    component "[MatchService]"      as MS
+    component "[ScoringService]"    as SS
+    component "[StatisticsService]" as STS
+  }
+
+}
+
+' ─────────────────────────────────────────────
+' DOMAIN
+' ─────────────────────────────────────────────
+package "domain  (keine Framework-Abhängigkeiten)" #FFEECC {
+  component "[Player]"   as P
+  component "[Match]"    as M
+  component "[MatchSet]" as MSE
+  component "[Point]"    as PT
+}
+
+' ─────────────────────────────────────────────
+' Abhängigkeiten: Web → Port/In
+' ─────────────────────────────────────────────
+PC  ..>  PUC  : calls
+MC  ..>  MUC  : calls
+PTC ..>  SUC  : calls
+SC  ..>  STUC : calls
+
+' ─────────────────────────────────────────────
+' Abhängigkeiten: Service implementiert Port/In
+' ─────────────────────────────────────────────
+PS  .up.|>  PUC
+MS  .up.|>  MUC
+SS  .up.|>  SUC
+STS .up.|>  STUC
+
+' ─────────────────────────────────────────────
+' Abhängigkeiten: Service → Port/Out
+' ─────────────────────────────────────────────
+PS  ..>  LPP
+PS  ..>  SPP
+MS  ..>  LMP
+MS  ..>  SMP
+SS  ..>  LPTAP
+SS  ..>  SPTAP
+STS ..>  LMP
+STS ..>  LPTAP
+
+' ─────────────────────────────────────────────
+' Abhängigkeiten: Persistence implementiert Port/Out
+' ─────────────────────────────────────────────
+PPA .up.|>  LPP
+PPA .up.|>  SPP
+MPA .up.|>  LMP
+MPA .up.|>  SMP
+MPA .up.|>  LPTAP
+MPA .up.|>  SPTAP
+
+' ─────────────────────────────────────────────
+' Abhängigkeiten: Services → Domain
+' ─────────────────────────────────────────────
+PS  ..>  P
+MS  ..>  M
+MS  ..>  MSE
+SS  ..>  PT
+STS ..>  P
+STS ..>  M
+STS ..>  PT
+
+' ─────────────────────────────────────────────
+' Abhängigkeiten: Persistence → JPA Repos
+' ─────────────────────────────────────────────
+PPA ..>  PJR
+MPA ..>  MJR
+MPA ..>  PTJR
+
+note right of PUC
+  Abhängigkeiten zeigen
+  stets von aussen nach innen:
+  Infrastructure → Application → Domain
+  Die Domain kennt keine äusseren Schichten.
+end note
+
+@enduml

@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="297mm" height="330mm" viewBox="0 0 297 330" font-family="Arial, sans-serif" font-size="3">
+
+  <rect width="297" height="330" fill="#f8f9fa"/>
+
+  <!-- Title -->
+  <text x="148" y="9" text-anchor="middle" font-size="6" font-weight="bold" fill="#1a3a1a">Tennis Match – Datenbankmodell</text>
+  <line x1="10" y1="11" x2="287" y2="11" stroke="#4a7c4a" stroke-width="0.4"/>
+
+  <!-- ============================================================ -->
+  <!-- PLAYER TABLE -->
+  <!-- ============================================================ -->
+  <rect x="10" y="15" width="52" height="68" rx="1.5" fill="white" stroke="#2a5a2a" stroke-width="0.6"/>
+  <rect x="10" y="15" width="52" height="7" rx="1.5" fill="#2a5a2a"/>
+  <text x="36" y="20.5" text-anchor="middle" font-size="4" font-weight="bold" fill="white">PLAYER</text>
+
+  <text x="13" y="28" fill="#c0392b" font-weight="bold">PK</text>
+  <text x="22" y="28" fill="#222">player_id</text>
+  <text x="55" y="28" text-anchor="end" fill="#888">INT</text>
+  <line x1="10" y1="30" x2="62" y2="30" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="35" fill="#555">first_name</text>
+  <text x="55" y="35" text-anchor="end" fill="#888">VARCHAR(50)</text>
+  <line x1="10" y1="37" x2="62" y2="37" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="42" fill="#555">last_name</text>
+  <text x="55" y="42" text-anchor="end" fill="#888">VARCHAR(50)</text>
+  <line x1="10" y1="44" x2="62" y2="44" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="49" fill="#555">nationality</text>
+  <text x="55" y="49" text-anchor="end" fill="#888">CHAR(3)</text>
+  <line x1="10" y1="51" x2="62" y2="51" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="56" fill="#555">date_of_birth</text>
+  <text x="55" y="56" text-anchor="end" fill="#888">DATE</text>
+  <line x1="10" y1="58" x2="62" y2="58" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="63" fill="#555">dominant_hand</text>
+  <text x="55" y="63" text-anchor="end" fill="#888">CHAR(1)</text>
+  <line x1="10" y1="65" x2="62" y2="65" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="70" fill="#555">atp_ranking</text>
+  <text x="55" y="70" text-anchor="end" fill="#888">INT</text>
+  <line x1="10" y1="72" x2="62" y2="72" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="77" fill="#555">ranking_points</text>
+  <text x="55" y="77" text-anchor="end" fill="#888">INT</text>
+
+  <!-- ============================================================ -->
+  <!-- MATCH TABLE -->
+  <!-- ============================================================ -->
+  <rect x="100" y="15" width="60" height="95" rx="1.5" fill="white" stroke="#2a5a2a" stroke-width="0.6"/>
+  <rect x="100" y="15" width="60" height="7" rx="1.5" fill="#2a5a2a"/>
+  <text x="130" y="20.5" text-anchor="middle" font-size="4" font-weight="bold" fill="white">MATCH</text>
+
+  <text x="103" y="28" fill="#c0392b" font-weight="bold">PK</text>
+  <text x="112" y="28" fill="#222">match_id</text>
+  <text x="153" y="28" text-anchor="end" fill="#888">INT</text>
+  <line x1="100" y1="30" x2="160" y2="30" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="103" y="35" fill="#27ae60" font-weight="bold">FK</text>
+  <text x="112" y="35" fill="#222">player1_id</text>
+  <text x="153" y="35" text-anchor="end" fill="#888">INT</text>
+  <line x1="100" y1="37" x2="160" y2="37" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="103" y="42" fill="#27ae60" font-weight="bold">FK</text>
+  <text x="112" y="42" fill="#222">player2_id</text>
+  <text x="153" y="42" text-anchor="end" fill="#888">INT</text>
+  <line x1="100" y1="44" x2="160" y2="44" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="103" y="49" fill="#27ae60" font-weight="bold">FK</text>
+  <text x="112" y="49" fill="#222">winner_id</text>
+  <text x="153" y="49" text-anchor="end" fill="#888">INT</text>
+  <line x1="100" y1="51" x2="160" y2="51" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="103" y="56" fill="#555">tournament_name</text>
+  <text x="153" y="56" text-anchor="end" fill="#888">VARCHAR(100)</text>
+  <line x1="100" y1="58" x2="160" y2="58" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="103" y="63" fill="#555">tournament_round</text>
+  <text x="153" y="63" text-anchor="end" fill="#888">VARCHAR(20)</text>
+  <line x1="100" y1="65" x2="160" y2="65" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="103" y="70" fill="#555">surface</text>
+  <text x="153" y="70" text-anchor="end" fill="#888">ENUM(clay,grass,hard)</text>
+  <line x1="100" y1="72" x2="160" y2="72" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="103" y="77" fill="#555">match_date</text>
+  <text x="153" y="77" text-anchor="end" fill="#888">DATETIME</text>
+  <line x1="100" y1="79" x2="160" y2="79" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="103" y="84" fill="#555">best_of</text>
+  <text x="153" y="84" text-anchor="end" fill="#888">TINYINT(3/5)</text>
+  <line x1="100" y1="86" x2="160" y2="86" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="103" y="91" fill="#555">status</text>
+  <text x="153" y="91" text-anchor="end" fill="#888">ENUM(live,completed,ret)</text>
+  <line x1="100" y1="93" x2="160" y2="93" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="103" y="98" fill="#555">duration_min</text>
+  <text x="153" y="98" text-anchor="end" fill="#888">INT</text>
+  <line x1="100" y1="100" x2="160" y2="100" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="103" y="105" fill="#555">indoor_outdoor</text>
+  <text x="153" y="105" text-anchor="end" fill="#888">CHAR(1)</text>
+
+  <!-- ============================================================ -->
+  <!-- SET TABLE -->
+  <!-- ============================================================ -->
+  <rect x="100" y="125" width="60" height="60" rx="1.5" fill="white" stroke="#1a5a8a" stroke-width="0.6"/>
+  <rect x="100" y="125" width="60" height="7" rx="1.5" fill="#1a5a8a"/>
+  <text x="130" y="130.5" text-anchor="middle" font-size="4" font-weight="bold" fill="white">MATCH_SET</text>
+
+  <text x="103" y="138" fill="#c0392b" font-weight="bold">PK</text>
+  <text x="112" y="138" fill="#222">set_id</text>
+  <text x="153" y="138" text-anchor="end" fill="#888">INT</text>
+  <line x1="100" y1="140" x2="160" y2="140" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="103" y="145" fill="#27ae60" font-weight="bold">FK</text>
+  <text x="112" y="145" fill="#222">match_id</text>
+  <text x="153" y="145" text-anchor="end" fill="#888">INT</text>
+  <line x1="100" y1="147" x2="160" y2="147" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="103" y="152" fill="#555">set_number</text>
+  <text x="153" y="152" text-anchor="end" fill="#888">TINYINT</text>
+  <line x1="100" y1="154" x2="160" y2="154" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="103" y="159" fill="#555">games_p1</text>
+  <text x="153" y="159" text-anchor="end" fill="#888">TINYINT</text>
+  <line x1="100" y1="161" x2="160" y2="161" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="103" y="166" fill="#555">games_p2</text>
+  <text x="153" y="166" text-anchor="end" fill="#888">TINYINT</text>
+  <line x1="100" y1="168" x2="160" y2="168" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="103" y="173" fill="#555">tiebreak_p1 / _p2</text>
+  <text x="153" y="173" text-anchor="end" fill="#888">TINYINT NULL</text>
+  <line x1="100" y1="175" x2="160" y2="175" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="103" y="180" fill="#27ae60" font-weight="bold">FK</text>
+  <text x="112" y="180" fill="#222">set_winner_id</text>
+  <text x="153" y="180" text-anchor="end" fill="#888">INT</text>
+
+  <!-- ============================================================ -->
+  <!-- CURRENT SCORE TABLE (Live-Spielstand) -->
+  <!-- ============================================================ -->
+  <rect x="10" y="100" width="58" height="95" rx="1.5" fill="white" stroke="#8a1a8a" stroke-width="0.6"/>
+  <rect x="10" y="100" width="58" height="7" rx="1.5" fill="#8a1a8a"/>
+  <text x="39" y="105.5" text-anchor="middle" font-size="4" font-weight="bold" fill="white">CURRENT_SCORE</text>
+
+  <text x="13" y="113" fill="#c0392b" font-weight="bold">PK</text>
+  <text x="22" y="113" fill="#222">score_id</text>
+  <text x="61" y="113" text-anchor="end" fill="#888">INT</text>
+  <line x1="10" y1="115" x2="68" y2="115" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="120" fill="#27ae60" font-weight="bold">FK</text>
+  <text x="22" y="120" fill="#222">match_id</text>
+  <text x="61" y="120" text-anchor="end" fill="#888">INT</text>
+  <line x1="10" y1="122" x2="68" y2="122" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="127" fill="#555">current_set</text>
+  <text x="61" y="127" text-anchor="end" fill="#888">TINYINT</text>
+  <line x1="10" y1="129" x2="68" y2="129" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="134" fill="#555">sets_p1</text>
+  <text x="61" y="134" text-anchor="end" fill="#888">TINYINT</text>
+  <line x1="10" y1="136" x2="68" y2="136" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="141" fill="#555">sets_p2</text>
+  <text x="61" y="141" text-anchor="end" fill="#888">TINYINT</text>
+  <line x1="10" y1="143" x2="68" y2="143" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="150" fill="#555">games_p1</text>
+  <text x="61" y="150" text-anchor="end" fill="#888">TINYINT</text>
+  <line x1="10" y1="152" x2="68" y2="152" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="157" fill="#555">games_p2</text>
+  <text x="61" y="157" text-anchor="end" fill="#888">TINYINT</text>
+  <line x1="10" y1="159" x2="68" y2="159" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="164" fill="#555">points_p1</text>
+  <text x="61" y="164" text-anchor="end" fill="#888">VARCHAR(3)</text>
+  <line x1="10" y1="166" x2="68" y2="166" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="173" fill="#555">points_p2</text>
+  <text x="61" y="173" text-anchor="end" fill="#888">VARCHAR(3)</text>
+  <line x1="10" y1="175" x2="68" y2="175" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="180" fill="#27ae60" font-weight="bold">FK</text>
+  <text x="22" y="180" fill="#222">server_id</text>
+  <text x="61" y="180" text-anchor="end" fill="#888">INT</text>
+  <line x1="10" y1="182" x2="68" y2="182" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="189" fill="#555">last_updated</text>
+  <text x="61" y="189" text-anchor="end" fill="#888">DATETIME</text>
+
+  <!-- ============================================================ -->
+  <!-- MATCH_STATS TABLE -->
+  <!-- ============================================================ -->
+  <rect x="190" y="15" width="100" height="140" rx="1.5" fill="white" stroke="#8a5a1a" stroke-width="0.6"/>
+  <rect x="190" y="15" width="100" height="7" rx="1.5" fill="#8a5a1a"/>
+  <text x="240" y="20.5" text-anchor="middle" font-size="4" font-weight="bold" fill="white">MATCH_STATS  (pro Spieler &amp; Match)</text>
+
+  <text x="193" y="28" fill="#c0392b" font-weight="bold">PK</text>
+  <text x="202" y="28" fill="#222">stat_id</text>
+  <text x="283" y="28" text-anchor="end" fill="#888">INT</text>
+  <line x1="190" y1="30" x2="290" y2="30" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="193" y="35" fill="#27ae60" font-weight="bold">FK</text>
+  <text x="202" y="35" fill="#222">match_id</text>
+  <text x="283" y="35" text-anchor="end" fill="#888">INT</text>
+  <line x1="190" y1="37" x2="290" y2="37" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="193" y="42" fill="#27ae60" font-weight="bold">FK</text>
+  <text x="202" y="42" fill="#222">player_id</text>
+  <text x="283" y="42" text-anchor="end" fill="#888">INT</text>
+  <line x1="190" y1="44" x2="290" y2="44" stroke="#eee" stroke-width="0.3"/>
+
+  <!-- Serve stats -->
+  <text x="193" y="50" fill="#8a5a1a" font-weight="bold" font-size="2.8">── Aufschlag ──</text>
+  <line x1="190" y1="52" x2="290" y2="52" stroke="#eee" stroke-width="0.3"/>
+  <text x="202" y="57" fill="#555">aces</text>
+  <text x="283" y="57" text-anchor="end" fill="#888">SMALLINT</text>
+  <line x1="190" y1="59" x2="290" y2="59" stroke="#eee" stroke-width="0.3"/>
+  <text x="202" y="64" fill="#555">double_faults</text>
+  <text x="283" y="64" text-anchor="end" fill="#888">SMALLINT</text>
+  <line x1="190" y1="66" x2="290" y2="66" stroke="#eee" stroke-width="0.3"/>
+  <text x="202" y="71" fill="#555">first_serve_in</text>
+  <text x="283" y="71" text-anchor="end" fill="#888">SMALLINT</text>
+  <line x1="190" y1="73" x2="290" y2="73" stroke="#eee" stroke-width="0.3"/>
+  <text x="202" y="78" fill="#555">first_serve_total</text>
+  <text x="283" y="78" text-anchor="end" fill="#888">SMALLINT</text>
+  <line x1="190" y1="80" x2="290" y2="80" stroke="#eee" stroke-width="0.3"/>
+  <text x="202" y="85" fill="#555">first_serve_pts_won</text>
+  <text x="283" y="85" text-anchor="end" fill="#888">SMALLINT</text>
+  <line x1="190" y1="87" x2="290" y2="87" stroke="#eee" stroke-width="0.3"/>
+  <text x="202" y="92" fill="#555">second_serve_pts_won</text>
+  <text x="283" y="92" text-anchor="end" fill="#888">SMALLINT</text>
+  <line x1="190" y1="94" x2="290" y2="94" stroke="#eee" stroke-width="0.3"/>
+  <text x="202" y="99" fill="#555">service_winners</text>
+  <text x="283" y="99" text-anchor="end" fill="#888">SMALLINT</text>
+  <line x1="190" y1="101" x2="290" y2="101" stroke="#eee" stroke-width="0.3"/>
+
+  <!-- Winners / errors -->
+  <text x="193" y="107" fill="#8a5a1a" font-weight="bold" font-size="2.8">── Winner / Fehler ──</text>
+  <line x1="190" y1="109" x2="290" y2="109" stroke="#eee" stroke-width="0.3"/>
+  <text x="202" y="114" fill="#555">forehand_winners</text>
+  <text x="283" y="114" text-anchor="end" fill="#888">SMALLINT</text>
+  <line x1="190" y1="116" x2="290" y2="116" stroke="#eee" stroke-width="0.3"/>
+  <text x="202" y="121" fill="#555">backhand_winners</text>
+  <text x="283" y="121" text-anchor="end" fill="#888">SMALLINT</text>
+  <line x1="190" y1="123" x2="290" y2="123" stroke="#eee" stroke-width="0.3"/>
+  <text x="202" y="128" fill="#555">unforced_errors</text>
+  <text x="283" y="128" text-anchor="end" fill="#888">SMALLINT</text>
+  <line x1="190" y1="130" x2="290" y2="130" stroke="#eee" stroke-width="0.3"/>
+  <text x="202" y="135" fill="#555">forced_errors</text>
+  <text x="283" y="135" text-anchor="end" fill="#888">SMALLINT</text>
+  <line x1="190" y1="137" x2="290" y2="137" stroke="#eee" stroke-width="0.3"/>
+
+  <!-- Break points -->
+  <text x="193" y="143" fill="#8a5a1a" font-weight="bold" font-size="2.8">── Break / Return ──</text>
+  <line x1="190" y1="145" x2="290" y2="145" stroke="#eee" stroke-width="0.3"/>
+  <text x="202" y="150" fill="#555">break_pts_won</text>
+  <text x="283" y="150" text-anchor="end" fill="#888">SMALLINT</text>
+  <line x1="190" y1="152" x2="290" y2="152" stroke="#eee" stroke-width="0.3"/>
+  <text x="202" y="157" fill="#555">break_pts_total</text>
+  <text x="283" y="157" text-anchor="end" fill="#888">SMALLINT</text>
+
+  <!-- ============================================================ -->
+  <!-- POINT TABLE -->
+  <!-- ============================================================ -->
+  <!-- 13 Attribute à 7px + Header 7px = 98px total -->
+  <rect x="10" y="205" width="60" height="98" rx="1.5" fill="white" stroke="#5a1a1a" stroke-width="0.6"/>
+  <rect x="10" y="205" width="60" height="7" rx="1.5" fill="#5a1a1a"/>
+  <text x="40" y="210.5" text-anchor="middle" font-size="4" font-weight="bold" fill="white">POINT</text>
+
+  <text x="13" y="218" fill="#c0392b" font-weight="bold">PK</text>
+  <text x="22" y="218" fill="#222">point_id</text>
+  <text x="63" y="218" text-anchor="end" fill="#888">INT</text>
+  <line x1="10" y1="220" x2="70" y2="220" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="225" fill="#27ae60" font-weight="bold">FK</text>
+  <text x="22" y="225" fill="#222">match_id</text>
+  <text x="63" y="225" text-anchor="end" fill="#888">INT</text>
+  <line x1="10" y1="227" x2="70" y2="227" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="232" fill="#27ae60" font-weight="bold">FK</text>
+  <text x="22" y="232" fill="#222">set_id</text>
+  <text x="63" y="232" text-anchor="end" fill="#888">INT</text>
+  <line x1="10" y1="234" x2="70" y2="234" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="239" fill="#555">set_nr</text>
+  <text x="63" y="239" text-anchor="end" fill="#888">TINYINT</text>
+  <line x1="10" y1="241" x2="70" y2="241" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="246" fill="#555">game_nr</text>
+  <text x="63" y="246" text-anchor="end" fill="#888">TINYINT</text>
+  <line x1="10" y1="248" x2="70" y2="248" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="253" fill="#555">point_nr</text>
+  <text x="63" y="253" text-anchor="end" fill="#888">TINYINT</text>
+  <line x1="10" y1="255" x2="70" y2="255" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="260" fill="#27ae60" font-weight="bold">FK</text>
+  <text x="22" y="260" fill="#222">server_id</text>
+  <text x="63" y="260" text-anchor="end" fill="#888">INT</text>
+  <line x1="10" y1="262" x2="70" y2="262" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="267" fill="#27ae60" font-weight="bold">FK</text>
+  <text x="22" y="267" fill="#222">winner_id</text>
+  <text x="63" y="267" text-anchor="end" fill="#888">INT</text>
+  <line x1="10" y1="269" x2="70" y2="269" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="274" fill="#555">serve_nr</text>
+  <text x="63" y="274" text-anchor="end" fill="#888">TINYINT</text>
+  <line x1="10" y1="276" x2="70" y2="276" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="281" fill="#555">point_type</text>
+  <text x="63" y="281" text-anchor="end" fill="#888">ENUM</text>
+  <line x1="10" y1="283" x2="70" y2="283" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="288" fill="#555">shot_type</text>
+  <text x="63" y="288" text-anchor="end" fill="#888">ENUM</text>
+  <line x1="10" y1="290" x2="70" y2="290" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="295" fill="#555">direction</text>
+  <text x="63" y="295" text-anchor="end" fill="#888">ENUM</text>
+  <line x1="10" y1="297" x2="70" y2="297" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="302" fill="#555">rally_length</text>
+  <text x="63" y="302" text-anchor="end" fill="#888">SMALLINT</text>
+  <line x1="10" y1="304" x2="70" y2="304" stroke="#eee" stroke-width="0.3"/>
+
+  <text x="13" y="309" fill="#555">is_breakpoint</text>
+  <text x="63" y="309" text-anchor="end" fill="#888">BOOL</text>
+
+
+  <!-- ============================================================ -->
+  <!-- RELATIONSHIPS (Linien) -->
+  <!-- ============================================================ -->
+
+  <!-- MATCH → CURRENT_SCORE -->
+  <line x1="100" y1="80" x2="68" y2="110" stroke="#8a1a8a" stroke-width="0.5"/>
+  <text x="83" y="91" text-anchor="middle" font-size="2.2" fill="#8a1a8a">1:1</text>
+  <line x1="62" y1="38" x2="100" y2="38" stroke="#27ae60" stroke-width="0.5" marker-end="url(#arrow)"/>
+  <text x="75" y="36.5" text-anchor="middle" font-size="2.2" fill="#27ae60">1..2</text>
+
+  <!-- CURRENT_SCORE.server_id → PLAYER -->
+  <line x1="10" y1="180" x2="36" y2="83" stroke="#27ae60" stroke-width="0.5" stroke-dasharray="2,1"/>
+  <text x="6" y="135" text-anchor="middle" font-size="2.2" fill="#27ae60">FK</text>
+
+  <!-- MATCH → SET -->
+  <line x1="130" y1="110" x2="130" y2="125" stroke="#1a5a8a" stroke-width="0.5"/>
+  <text x="136" y="120" font-size="2.2" fill="#1a5a8a">1:N</text>
+
+  <!-- MATCH → MATCH_STATS -->
+  <line x1="160" y1="50" x2="190" y2="42" stroke="#8a5a1a" stroke-width="0.5"/>
+  <text x="174" y="44" text-anchor="middle" font-size="2.2" fill="#8a5a1a">1:2</text>
+
+  <!-- MATCH → POINT -->
+  <line x1="130" y1="110" x2="40" y2="205" stroke="#5a1a1a" stroke-width="0.5" stroke-dasharray="2,1"/>
+  <text x="75" y="165" font-size="2.2" fill="#5a1a1a">1:N</text>
+
+  <!-- SET → POINT -->
+  <line x1="110" y1="185" x2="55" y2="205" stroke="#5a1a1a" stroke-width="0.5" stroke-dasharray="2,1"/>
+
+  <!-- ============================================================ -->
+  <!-- LEGEND -->
+  <!-- ============================================================ -->
+  <rect x="190" y="163" width="97" height="30" rx="1.5" fill="#f0f4f0" stroke="#888" stroke-width="0.3"/>
+  <text x="238" y="168" text-anchor="middle" font-size="3" font-weight="bold" fill="#333">Legende</text>
+  <text x="193" y="174" fill="#c0392b" font-weight="bold" font-size="3">PK</text>
+  <text x="200" y="174" font-size="3" fill="#333">Primary Key</text>
+  <text x="193" y="180" fill="#27ae60" font-weight="bold" font-size="3">FK</text>
+  <text x="200" y="180" font-size="3" fill="#333">Foreign Key</text>
+  <line x1="230" y1="170" x2="244" y2="170" stroke="#5a1a1a" stroke-width="0.5" stroke-dasharray="2,1"/>
+  <text x="246" y="171" font-size="3" fill="#333">optionale Relation</text>
+  <line x1="230" y1="177" x2="244" y2="177" stroke="#27ae60" stroke-width="0.5"/>
+  <text x="246" y="178" font-size="3" fill="#333">Pflichtrelation</text>
+
+  <!-- Footer -->
+  <line x1="10" y1="318" x2="287" y2="318" stroke="#aaa" stroke-width="0.3"/>
+  <text x="148" y="322" text-anchor="middle" font-size="2.5" fill="#999">Tennis Match DB Model · UNIQUE(match_id, player_id) auf MATCH_STATS · INDEX auf match_id, player_id, set_id</text>
+
+</svg>
