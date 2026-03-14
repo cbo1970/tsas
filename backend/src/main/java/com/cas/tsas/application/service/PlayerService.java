@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -27,18 +28,21 @@ public class PlayerService implements CreatePlayerUseCase, SearchPlayerUseCase {
     public Player createPlayer(CreatePlayerCommand command) {
         Player player = new Player(
                 null,
-                command.name(),
+                command.firstName(),
+                command.lastName(),
                 command.gender(),
-                command.ranking(),
                 command.handedness(),
-                command.backhandType()
+                command.backhandType(),
+                command.ranking(),
+                command.nationality(),
+                command.birthDate()
         );
         return savePlayerPort.savePlayer(player);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Player findById(Long id) {
+    public Player findById(UUID id) {
         return loadPlayerPort.loadPlayer(id)
                 .orElseThrow(() -> new PlayerNotFoundException(id));
     }

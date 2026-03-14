@@ -1,0 +1,53 @@
+export type MatchStatus = 'IN_PROGRESS' | 'COMPLETED';
+
+export interface Match {
+  id: string;
+  player1Id: string;
+  player2Id: string;
+  setsToWin: number;
+  matchTiebreak: boolean;
+  shortSet: boolean;
+  status: MatchStatus;
+}
+
+export interface MatchScore {
+  id: string;
+  matchId: string;
+  pointsPlayer1: number;
+  pointsPlayer2: number;
+  gamesPlayer1: number;
+  gamesPlayer2: number;
+  setsPlayer1: number;
+  setsPlayer2: number;
+  isDeuce: boolean;
+  isAdvantagePlayer1: boolean | null;
+  currentSet: number;
+  isDone: boolean;
+  winner: string | null;
+}
+
+export interface MatchWithScore extends Match {
+  score: MatchScore;
+}
+
+export interface CreateMatchRequest {
+  player1Id: string;
+  player2Id: string;
+  setsToWin: number;
+  matchTiebreak: boolean;
+  shortSet: boolean;
+}
+
+export interface SetScoreRequest {
+  pointsPlayer1: number;
+  pointsPlayer2: number;
+  gamesPlayer1: number;
+  gamesPlayer2: number;
+  setsPlayer1: number;
+  setsPlayer2: number;
+  isDeuce: boolean;
+  isAdvantagePlayer1: boolean | null;
+  currentSet: number;
+  isDone: boolean;
+  winner: string | null;
+}

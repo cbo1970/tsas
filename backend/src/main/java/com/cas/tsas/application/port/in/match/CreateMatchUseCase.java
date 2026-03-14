@@ -2,18 +2,17 @@ package com.cas.tsas.application.port.in.match;
 
 import com.cas.tsas.domain.model.Match;
 
-import java.time.LocalDate;
+import java.util.UUID;
 
 public interface CreateMatchUseCase {
 
     Match createMatch(CreateMatchCommand command);
 
     record CreateMatchCommand(
-            Long ownPlayerId,
-            Long opponentId,
-            LocalDate date,
+            UUID player1Id,
+            UUID player2Id,
             int setsToWin,
-            boolean matchTieBreak,
+            boolean matchTiebreak,
             boolean shortSet
     ) {}
 }

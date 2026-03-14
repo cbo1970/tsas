@@ -4,10 +4,11 @@ import com.cas.tsas.domain.model.Match;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface LoadMatchPort {
 
-    Optional<Match> loadMatch(Long id);
+    Optional<Match> loadMatch(UUID id);
 
     List<Match> loadAllMatches();
 }

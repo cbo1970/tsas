@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Component
 public class PlayerPersistenceAdapter implements LoadPlayerPort, SavePlayerPort {
@@ -21,7 +22,7 @@ public class PlayerPersistenceAdapter implements LoadPlayerPort, SavePlayerPort 
     }
 
     @Override
-    public Optional<Player> loadPlayer(Long id) {
+    public Optional<Player> loadPlayer(UUID id) {
         return repository.findById(id).map(mapper::toDomain);
     }
 

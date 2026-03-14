@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Component
 public class MatchPersistenceAdapter implements LoadMatchPort, SaveMatchPort {
@@ -21,7 +22,7 @@ public class MatchPersistenceAdapter implements LoadMatchPort, SaveMatchPort {
     }
 
     @Override
-    public Optional<Match> loadMatch(Long id) {
+    public Optional<Match> loadMatch(UUID id) {
         return repository.findById(id).map(mapper::toDomain);
     }
 

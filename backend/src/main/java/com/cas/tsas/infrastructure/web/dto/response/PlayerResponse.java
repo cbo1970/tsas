@@ -1,23 +1,35 @@
 package com.cas.tsas.infrastructure.web.dto.response;
 
+import com.cas.tsas.domain.model.BackhandType;
+import com.cas.tsas.domain.model.Gender;
+import com.cas.tsas.domain.model.Handedness;
 import com.cas.tsas.domain.model.Player;
 
+import java.time.LocalDate;
+import java.util.UUID;
+
 public record PlayerResponse(
-        Long id,
-        String name,
-        String gender,
+        UUID id,
+        String firstName,
+        String lastName,
+        Gender gender,
+        Handedness handedness,
+        BackhandType backhandType,
         Integer ranking,
-        String handedness,
-        String backhandType
+        String nationality,
+        LocalDate birthDate
 ) {
     public static PlayerResponse from(Player player) {
         return new PlayerResponse(
                 player.getId(),
-                player.getName(),
+                player.getFirstName(),
+                player.getLastName(),
                 player.getGender(),
-                player.getRanking(),
                 player.getHandedness(),
-                player.getBackhandType()
+                player.getBackhandType(),
+                player.getRanking(),
+                player.getNationality(),
+                player.getBirthDate()
         );
     }
 }

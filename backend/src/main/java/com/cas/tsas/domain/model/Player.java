@@ -1,45 +1,64 @@
 package com.cas.tsas.domain.model;
 
+import java.time.LocalDate;
+import java.util.UUID;
+
 /**
  * Domain entity representing a tennis player.
  * Pure POJO — no framework dependencies.
  */
 public class Player {
 
-    private Long id;
-    private String name;
-    private String gender;
+    private UUID id;
+    private String firstName;
+    private String lastName;
+    private Gender gender;
+    private Handedness handedness;
+    private BackhandType backhandType;
     private Integer ranking;
-    private String handedness;
-    private String backhandType;
+    private String nationality;
+    private LocalDate birthDate;
 
     public Player() {}
 
-    public Player(Long id, String name, String gender, Integer ranking,
-                  String handedness, String backhandType) {
+    public Player(UUID id, String firstName, String lastName, Gender gender,
+                  Handedness handedness, BackhandType backhandType,
+                  Integer ranking, String nationality, LocalDate birthDate) {
         this.id = id;
-        this.name = name;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.gender = gender;
-        this.ranking = ranking;
         this.handedness = handedness;
         this.backhandType = backhandType;
+        this.ranking = ranking;
+        this.nationality = nationality;
+        this.birthDate = birthDate;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
 
-    public String getGender() { return gender; }
-    public void setGender(String gender) { this.gender = gender; }
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
+
+    public Gender getGender() { return gender; }
+    public void setGender(Gender gender) { this.gender = gender; }
+
+    public Handedness getHandedness() { return handedness; }
+    public void setHandedness(Handedness handedness) { this.handedness = handedness; }
+
+    public BackhandType getBackhandType() { return backhandType; }
+    public void setBackhandType(BackhandType backhandType) { this.backhandType = backhandType; }
 
     public Integer getRanking() { return ranking; }
     public void setRanking(Integer ranking) { this.ranking = ranking; }
 
-    public String getHandedness() { return handedness; }
-    public void setHandedness(String handedness) { this.handedness = handedness; }
+    public String getNationality() { return nationality; }
+    public void setNationality(String nationality) { this.nationality = nationality; }
 
-    public String getBackhandType() { return backhandType; }
-    public void setBackhandType(String backhandType) { this.backhandType = backhandType; }
+    public LocalDate getBirthDate() { return birthDate; }
+    public void setBirthDate(LocalDate birthDate) { this.birthDate = birthDate; }
 }

@@ -1,0 +1,14 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Backend – Spring Boot" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <option name="ACTIVE_PROFILES" value="local" />
+    <envs>
+      <env name="JAVA_HOME" value="/opt/java/jdk-25.0.1" />
+    </envs>
+    <module name="tsas-backend.main" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.cas.tsas.TsasBackendApplication" />
+    <option name="WORKING_DIRECTORY" value="file://$MODULE_WORKING_DIR$" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

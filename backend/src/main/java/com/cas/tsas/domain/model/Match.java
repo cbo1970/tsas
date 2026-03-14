@@ -1,8 +1,6 @@
 package com.cas.tsas.domain.model;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.UUID;
 
 /**
  * Domain entity representing a tennis match (Begegnung).
@@ -10,49 +8,45 @@ import java.util.List;
  */
 public class Match {
 
-    private Long id;
-    private Player ownPlayer;
-    private Player opponent;
-    private LocalDate date;
+    private UUID id;
+    private UUID player1Id;
+    private UUID player2Id;
     private int setsToWin;
-    private boolean matchTieBreak;
+    private boolean matchTiebreak;
     private boolean shortSet;
-    private List<Point> points = new ArrayList<>();
+    private MatchStatus status;
 
     public Match() {}
 
-    public Match(Long id, Player ownPlayer, Player opponent, LocalDate date,
-                 int setsToWin, boolean matchTieBreak, boolean shortSet) {
+    public Match(UUID id, UUID player1Id, UUID player2Id, int setsToWin,
+                 boolean matchTiebreak, boolean shortSet, MatchStatus status) {
         this.id = id;
-        this.ownPlayer = ownPlayer;
-        this.opponent = opponent;
-        this.date = date;
+        this.player1Id = player1Id;
+        this.player2Id = player2Id;
         this.setsToWin = setsToWin;
-        this.matchTieBreak = matchTieBreak;
+        this.matchTiebreak = matchTiebreak;
         this.shortSet = shortSet;
+        this.status = status;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
-    public Player getOwnPlayer() { return ownPlayer; }
-    public void setOwnPlayer(Player ownPlayer) { this.ownPlayer = ownPlayer; }
+    public UUID getPlayer1Id() { return player1Id; }
+    public void setPlayer1Id(UUID player1Id) { this.player1Id = player1Id; }
 
-    public Player getOpponent() { return opponent; }
-    public void setOpponent(Player opponent) { this.opponent = opponent; }
-
-    public LocalDate getDate() { return date; }
-    public void setDate(LocalDate date) { this.date = date; }
+    public UUID getPlayer2Id() { return player2Id; }
+    public void setPlayer2Id(UUID player2Id) { this.player2Id = player2Id; }
 
     public int getSetsToWin() { return setsToWin; }
     public void setSetsToWin(int setsToWin) { this.setsToWin = setsToWin; }
 
-    public boolean isMatchTieBreak() { return matchTieBreak; }
-    public void setMatchTieBreak(boolean matchTieBreak) { this.matchTieBreak = matchTieBreak; }
+    public boolean isMatchTiebreak() { return matchTiebreak; }
+    public void setMatchTiebreak(boolean matchTiebreak) { this.matchTiebreak = matchTiebreak; }
 
     public boolean isShortSet() { return shortSet; }
     public void setShortSet(boolean shortSet) { this.shortSet = shortSet; }
 
-    public List<Point> getPoints() { return points; }
-    public void setPoints(List<Point> points) { this.points = points; }
+    public MatchStatus getStatus() { return status; }
+    public void setStatus(MatchStatus status) { this.status = status; }
 }

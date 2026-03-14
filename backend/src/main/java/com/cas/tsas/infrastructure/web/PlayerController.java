@@ -9,9 +9,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/players")
+@RequestMapping("/api/players")
 public class PlayerController {
 
     private final CreatePlayerUseCase createPlayerUseCase;
@@ -27,17 +28,20 @@ public class PlayerController {
     @ResponseStatus(HttpStatus.CREATED)
     public PlayerResponse createPlayer(@Valid @RequestBody CreatePlayerRequest request) {
         var command = new CreatePlayerUseCase.CreatePlayerCommand(
-                request.name(),
+                request.firstName(),
+                request.lastName(),
                 request.gender(),
-                request.ranking(),
                 request.handedness(),
-                request.backhandType()
+                request.backhandType(),
+                request.ranking(),
+                request.nationality(),
+                request.birthDate()
         );
         return PlayerResponse.from(createPlayerUseCase.createPlayer(command));
     }
 
     @GetMapping("/{id}")
-    public PlayerResponse getPlayer(@PathVariable Long id) {
+    public PlayerResponse getPlayer(@PathVariable UUID id) {
         return PlayerResponse.from(searchPlayerUseCase.findById(id));
     }
 

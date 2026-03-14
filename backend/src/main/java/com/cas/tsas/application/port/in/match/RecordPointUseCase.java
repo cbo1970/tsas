@@ -1,15 +1,15 @@
 package com.cas.tsas.application.port.in.match;
 
-import com.cas.tsas.domain.model.Point;
+import com.cas.tsas.domain.model.MatchScore;
+
+import java.util.UUID;
 
 public interface RecordPointUseCase {
 
-    Point recordPoint(RecordPointCommand command);
+    MatchScore recordPoint(RecordPointCommand command);
 
     record RecordPointCommand(
-            Long matchId,
-            String ownAttribute,
-            String opponentAttribute,
-            String remark
+            UUID matchId,
+            boolean player1Scored
     ) {}
 }
