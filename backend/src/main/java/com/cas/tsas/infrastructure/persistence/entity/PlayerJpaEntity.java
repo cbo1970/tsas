@@ -32,7 +32,7 @@ public class PlayerJpaEntity {
     @Column(name = "backhand_type")
     private BackhandType backhandType;
 
-    private Integer ranking;
+    private String ranking;
     private String nationality;
 
     @Column(name = "birth_date")
@@ -58,8 +58,8 @@ public class PlayerJpaEntity {
     public BackhandType getBackhandType() { return backhandType; }
     public void setBackhandType(BackhandType backhandType) { this.backhandType = backhandType; }
 
-    public Integer getRanking() { return ranking; }
-    public void setRanking(Integer ranking) { this.ranking = ranking; }
+    public String getRanking() { return ranking; }
+    public void setRanking(String ranking) { this.ranking = ranking; }
 
     public String getNationality() { return nationality; }
     public void setNationality(String nationality) { this.nationality = nationality; }

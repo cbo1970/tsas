@@ -14,7 +14,7 @@ public record CreatePlayerRequest(
         @NotNull Gender gender,
         @NotNull Handedness handedness,
         @NotNull BackhandType backhandType,
-        Integer ranking,
+        String ranking,
         String nationality,
         LocalDate birthDate
 ) {}

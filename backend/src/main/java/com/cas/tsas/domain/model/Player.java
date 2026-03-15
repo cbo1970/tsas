@@ -15,7 +15,7 @@ public class Player {
     private Gender gender;
     private Handedness handedness;
     private BackhandType backhandType;
-    private Integer ranking;
+    private String ranking;
     private String nationality;
     private LocalDate birthDate;
 
@@ -23,7 +23,7 @@ public class Player {
 
     public Player(UUID id, String firstName, String lastName, Gender gender,
                   Handedness handedness, BackhandType backhandType,
-                  Integer ranking, String nationality, LocalDate birthDate) {
+                  String ranking, String nationality, LocalDate birthDate) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -53,8 +53,8 @@ public class Player {
     public BackhandType getBackhandType() { return backhandType; }
     public void setBackhandType(BackhandType backhandType) { this.backhandType = backhandType; }
 
-    public Integer getRanking() { return ranking; }
-    public void setRanking(Integer ranking) { this.ranking = ranking; }
+    public String getRanking() { return ranking; }
+    public void setRanking(String ranking) { this.ranking = ranking; }
 
     public String getNationality() { return nationality; }
     public void setNationality(String nationality) { this.nationality = nationality; }

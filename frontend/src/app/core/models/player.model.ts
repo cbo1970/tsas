@@ -9,7 +9,7 @@ export interface Player {
   gender: Gender;
   handedness: Handedness;
   backhandType: BackhandType;
-  ranking?: number;
+  ranking?: string;
   nationality?: string;
   birthDate?: string;
 }
@@ -20,7 +20,7 @@ export interface CreatePlayerRequest {
   gender: Gender;
   handedness: Handedness;
   backhandType: BackhandType;
-  ranking?: number;
+  ranking?: string;
   nationality?: string;
   birthDate?: string;
 }

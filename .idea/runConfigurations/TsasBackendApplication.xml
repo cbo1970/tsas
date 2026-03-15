@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Backend – Spring Boot" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+  <configuration default="false" name="TsasBackendApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
     <option name="ACTIVE_PROFILES" value="local" />
     <envs>
       <env name="JAVA_HOME" value="/opt/java/jdk-25.0.1" />

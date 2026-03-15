@@ -29,8 +29,11 @@ import { ScoreEditDialogComponent } from './score-edit-dialog.component';
       @if (matchData()) {
         <div class="score-header">
           <h2>Match</h2>
-          <div class="match-status" [class.completed]="matchData()!.status === 'COMPLETED'">
-            {{ matchData()!.status === 'COMPLETED' ? 'Beendet' : 'Läuft' }}
+          <div class="set-counter">Satz {{ matchData()!.score.currentSet }}</div>
+          <div class="match-status-wrapper">
+            <div class="match-status" [class.completed]="matchData()!.status === 'COMPLETED'">
+              {{ matchData()!.status === 'COMPLETED' ? 'Beendet' : 'Läuft' }}
+            </div>
           </div>
         </div>
 
@@ -52,48 +55,51 @@ import { ScoreEditDialogComponent } from './score-edit-dialog.component';
         }
 
         <div class="scoreboard">
-          <!-- Player 1 -->
-          <div class="player-panel" [class.inactive]="matchData()!.status === 'COMPLETED'"
-               (click)="scorePoint(true)">
-            <div class="player-name">{{ player1Name() }}</div>
+          <!-- Row: Names -->
+          <div class="cell name-cell p1-bg">{{ player1Name() }}</div>
+          <div class="cell name-cell divider-bg"></div>
+          <div class="cell name-cell p2-bg">{{ player2Name() }}</div>
+
+          <!-- Row: Sets -->
+          <div class="cell score-cell p1-bg" [class.inactive]="matchData()!.status === 'COMPLETED'" (click)="scorePoint(true)">
             <div class="sets-display">
               @for (s of getSetsArray(); track $index) {
                 <div class="set-badge" [class.won]="s.p1 > s.p2">{{ s.p1 }}</div>
               }
             </div>
-            <div class="games-display">{{ matchData()!.score.gamesPlayer1 }}</div>
-            <div class="points-display">{{ formatPoints(matchData()!.score, true) }}</div>
           </div>
-
-          <!-- Divider with score labels -->
-          <div class="score-divider">
-            <div class="score-label">Sets</div>
-            <div class="score-label">Games</div>
-            <div class="score-label">
-              @if (matchData()!.score.isDeuce) {
-                <span class="deuce-label">Deuce</span>
-              } @else {
-                Punkte
-              }
-            </div>
-          </div>
-
-          <!-- Player 2 -->
-          <div class="player-panel player2" [class.inactive]="matchData()!.status === 'COMPLETED'"
-               (click)="scorePoint(false)">
-            <div class="player-name">{{ player2Name() }}</div>
+          <div class="cell score-label divider-bg">Sets</div>
+          <div class="cell score-cell p2-bg" [class.inactive]="matchData()!.status === 'COMPLETED'" (click)="scorePoint(false)">
             <div class="sets-display">
               @for (s of getSetsArray(); track $index) {
                 <div class="set-badge" [class.won]="s.p2 > s.p1">{{ s.p2 }}</div>
               }
             </div>
+          </div>
+
+          <!-- Row: Games -->
+          <div class="cell score-cell p1-bg" [class.inactive]="matchData()!.status === 'COMPLETED'" (click)="scorePoint(true)">
+            <div class="games-display">{{ matchData()!.score.gamesPlayer1 }}</div>
+          </div>
+          <div class="cell score-label divider-bg">Games</div>
+          <div class="cell score-cell p2-bg" [class.inactive]="matchData()!.status === 'COMPLETED'" (click)="scorePoint(false)">
             <div class="games-display">{{ matchData()!.score.gamesPlayer2 }}</div>
+          </div>
+
+          <!-- Row: Points -->
+          <div class="cell score-cell p1-bg" [class.inactive]="matchData()!.status === 'COMPLETED'" (click)="scorePoint(true)">
+            <div class="points-display">{{ formatPoints(matchData()!.score, true) }}</div>
+          </div>
+          <div class="cell score-label divider-bg">
+            @if (matchData()!.score.isDeuce) {
+              <span class="deuce-label">Deuce</span>
+            } @else {
+              Punkte
+            }
+          </div>
+          <div class="cell score-cell p2-bg" [class.inactive]="matchData()!.status === 'COMPLETED'" (click)="scorePoint(false)">
             <div class="points-display">{{ formatPoints(matchData()!.score, false) }}</div>
           </div>
-        </div>
-
-        <div class="set-counter">
-          Satz {{ matchData()!.score.currentSet }}
         </div>
 
         <div class="action-buttons">
@@ -125,7 +131,8 @@ import { ScoreEditDialogComponent } from './score-edit-dialog.component';
       align-items: center;
       margin-bottom: 24px;
     }
-    .score-header h2 { margin: 0; font-size: 24px; }
+    .score-header h2 { margin: 0; font-size: 24px; flex: 1; }
+    .score-header .match-status-wrapper { flex: 1; display: flex; justify-content: flex-end; }
     .match-status {
       padding: 4px 12px;
       border-radius: 16px;
@@ -152,45 +159,39 @@ import { ScoreEditDialogComponent } from './score-edit-dialog.component';
     .scoreboard {
       display: grid;
       grid-template-columns: 1fr auto 1fr;
-      gap: 0;
       border-radius: 16px;
       overflow: hidden;
       box-shadow: 0 4px 16px rgba(0,0,0,.2);
-      min-height: 300px;
     }
-    .player-panel {
-      background: linear-gradient(180deg, #1a237e 0%, #283593 100%);
-      color: white;
+    .cell {
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 16px;
-      padding: 32px 16px;
-      cursor: pointer;
-      transition: background 0.2s;
-      user-select: none;
     }
-    .player-panel:hover:not(.inactive) {
-      background: linear-gradient(180deg, #283593 0%, #3949ab 100%);
-    }
-    .player-panel:active:not(.inactive) {
-      background: linear-gradient(180deg, #3949ab 0%, #5c6bc0 100%);
-    }
-    .player-panel.player2 {
-      background: linear-gradient(180deg, #b71c1c 0%, #c62828 100%);
-    }
-    .player-panel.player2:hover:not(.inactive) {
-      background: linear-gradient(180deg, #c62828 0%, #d32f2f 100%);
-    }
-    .player-panel.player2:active:not(.inactive) {
-      background: linear-gradient(180deg, #d32f2f 0%, #e53935 100%);
-    }
-    .player-panel.inactive { cursor: default; opacity: 0.7; }
-    .player-name {
-      font-size: 20px;
+    .p1-bg { background: #1a237e; color: white; }
+    .p2-bg { background: #b71c1c; color: white; }
+    .divider-bg { background: #263238; min-width: 70px; }
+    .name-cell {
+      font-size: 22px;
       font-weight: bold;
       text-align: center;
+      padding: 24px 16px;
+    }
+    .score-cell {
+      cursor: pointer;
+      transition: filter 0.2s;
+      user-select: none;
+      padding: 20px 16px;
+    }
+    .score-cell:hover:not(.inactive) { filter: brightness(1.2); }
+    .score-cell:active:not(.inactive) { filter: brightness(1.4); }
+    .score-cell.inactive { cursor: default; opacity: 0.7; }
+    .score-label {
+      color: rgba(255,255,255,0.5);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 20px 8px;
     }
     .sets-display {
       display: flex;
@@ -204,47 +205,28 @@ import { ScoreEditDialogComponent } from './score-edit-dialog.component';
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      font-size: 18px;
       font-weight: bold;
     }
     .set-badge.won { background: rgba(255,255,255,0.5); }
     .games-display {
-      font-size: 56px;
+      font-size: 58px;
       font-weight: bold;
       line-height: 1;
     }
     .points-display {
-      font-size: 32px;
+      font-size: 34px;
       font-weight: 500;
-    }
-    .score-divider {
-      background: #263238;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      padding: 32px 8px;
-      min-width: 60px;
-    }
-    .score-label {
-      color: rgba(255,255,255,0.5);
-      font-size: 11px;
-      text-transform: uppercase;
-      writing-mode: vertical-rl;
-      transform: rotate(180deg);
-      letter-spacing: 1px;
     }
     .deuce-label {
       color: #ffd54f;
-      font-size: 9px;
+      font-size: 11px;
       font-weight: bold;
     }
     .set-counter {
-      text-align: center;
-      margin-top: 16px;
       color: #666;
-      font-size: 14px;
+      font-size: 18px;
+      font-weight: bold;
     }
     .action-buttons {
       display: flex;

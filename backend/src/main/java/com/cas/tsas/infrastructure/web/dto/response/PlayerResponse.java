@@ -15,7 +15,7 @@ public record PlayerResponse(
         Gender gender,
         Handedness handedness,
         BackhandType backhandType,
-        Integer ranking,
+        String ranking,
         String nationality,
         LocalDate birthDate
 ) {

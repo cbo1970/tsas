@@ -67,7 +67,7 @@ import { CreatePlayerRequest } from '../../core/models/player.model';
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Ranking (optional)</mat-label>
-          <input matInput type="number" formControlName="ranking" />
+          <input matInput type="text" formControlName="ranking" />
         </mat-form-field>
       </form>
     </mat-dialog-content>
@@ -93,7 +93,7 @@ export class PlayerDialogComponent {
     gender: ['MALE', Validators.required],
     handedness: ['RIGHT', Validators.required],
     backhandType: ['TWO_HANDED', Validators.required],
-    ranking: [null as number | null]
+    ranking: [null as string | null]
   });
 
   cancel() {
