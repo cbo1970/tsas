@@ -18,6 +18,7 @@ public class Player {
     private String ranking;
     private String nationality;
     private LocalDate birthDate;
+    private boolean active = true;
 
     public Player() {}
 
@@ -61,4 +62,7 @@ public class Player {
 
     public LocalDate getBirthDate() { return birthDate; }
     public void setBirthDate(LocalDate birthDate) { this.birthDate = birthDate; }
+
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
 }

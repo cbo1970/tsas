@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 public class PlayerMapper {
 
     public Player toDomain(PlayerJpaEntity entity) {
-        return new Player(
+        Player player = new Player(
                 entity.getId(),
                 entity.getFirstName(),
                 entity.getLastName(),
@@ -19,6 +19,8 @@ public class PlayerMapper {
                 entity.getNationality(),
                 entity.getBirthDate()
         );
+        player.setActive(entity.isActive());
+        return player;
     }
 
     public PlayerJpaEntity toEntity(Player player) {
@@ -32,6 +34,7 @@ public class PlayerMapper {
         entity.setRanking(player.getRanking());
         entity.setNationality(player.getNationality());
         entity.setBirthDate(player.getBirthDate());
+        entity.setActive(player.isActive());
         return entity;
     }
 }

@@ -17,9 +17,11 @@ public record PlayerResponse(
         BackhandType backhandType,
         String ranking,
         String nationality,
-        LocalDate birthDate
+        LocalDate birthDate,
+        boolean active,
+        boolean deletable
 ) {
-    public static PlayerResponse from(Player player) {
+    public static PlayerResponse from(Player player, boolean deletable) {
         return new PlayerResponse(
                 player.getId(),
                 player.getFirstName(),
@@ -29,7 +31,9 @@ public record PlayerResponse(
                 player.getBackhandType(),
                 player.getRanking(),
                 player.getNationality(),
-                player.getBirthDate()
+                player.getBirthDate(),
+                player.isActive(),
+                deletable
         );
     }
 }

@@ -68,8 +68,28 @@ import { PlayerDialogComponent } from './player-dialog.component';
               <td mat-cell *matCellDef="let player">{{ player.ranking ?? '–' }}</td>
             </ng-container>
 
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let player" class="actions-cell">
+                @if (player.deletable !== false) {
+                  <button mat-icon-button color="warn" title="Spieler löschen"
+                          (click)="deletePlayer(player); $event.stopPropagation()">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                } @else {
+                  <button mat-icon-button title="Spieler inaktivieren"
+                          [class.inactive-btn]="!player.active"
+                          (click)="deactivatePlayer(player); $event.stopPropagation()"
+                          [disabled]="player.active === false">
+                    <mat-icon>person_off</mat-icon>
+                  </button>
+                }
+              </td>
+            </ng-container>
+
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+                [class.inactive-row]="row.active === false"></tr>
           </table>
 
           @if (filteredPlayers().length === 0) {
@@ -89,6 +109,9 @@ import { PlayerDialogComponent } from './player-dialog.component';
     .full-width { width: 100%; }
     .empty-state { text-align: center; padding: 48px; color: #666; }
     table { border-radius: 8px; overflow: hidden; }
+    .actions-cell { width: 56px; text-align: right; }
+    .inactive-row { opacity: 0.45; }
+    .inactive-btn { opacity: 0.3; }
   `]
 })
 export class PlayersComponent implements OnInit {
@@ -99,7 +122,7 @@ export class PlayersComponent implements OnInit {
   players = signal<Player[]>([]);
   searchTerm = signal('');
   sort = signal<Sort>({ active: 'lastName', direction: 'asc' });
-  displayedColumns = ['firstName', 'lastName', 'ranking'];
+  displayedColumns = ['firstName', 'lastName', 'ranking', 'actions'];
 
   filteredPlayers = computed(() => {
     const term = this.searchTerm().toLowerCase().trim();
@@ -150,6 +173,26 @@ export class PlayersComponent implements OnInit {
           error: () => this.snackBar.open('Fehler beim Anlegen', 'OK', { duration: 3000 })
         });
       }
+    });
+  }
+
+  deletePlayer(player: Player) {
+    this.api.deletePlayer(player.id).subscribe({
+      next: () => {
+        this.loadPlayers();
+        this.snackBar.open(`${player.firstName} ${player.lastName} gelöscht`, 'OK', { duration: 3000 });
+      },
+      error: () => this.snackBar.open('Fehler beim Löschen', 'OK', { duration: 3000 })
+    });
+  }
+
+  deactivatePlayer(player: Player) {
+    this.api.deactivatePlayer(player.id).subscribe({
+      next: () => {
+        this.loadPlayers();
+        this.snackBar.open(`${player.firstName} ${player.lastName} inaktiviert`, 'OK', { duration: 3000 });
+      },
+      error: () => this.snackBar.open('Fehler beim Inaktivieren', 'OK', { duration: 3000 })
     });
   }
 }

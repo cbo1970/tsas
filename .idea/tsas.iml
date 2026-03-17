@@ -29,5 +29,9 @@
     </orderEntry>
     <orderEntry type="library" name="Gradle: org.springframework:spring-context:6.2.3" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework:spring-tx:6.2.3" level="project" />
+    <orderEntry type="library" name="Gradle: org.springframework.data:spring-data-jpa:3.4.3" level="project" />
+    <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-autoconfigure:3.4.3" level="project" />
+    <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot:3.4.3" level="project" />
+    <orderEntry type="library" name="Gradle: org.springframework.data:spring-data-commons:3.4.3" level="project" />
   </component>
 </module>

@@ -1,5 +1,6 @@
 package com.cas.tsas.infrastructure.persistence.repository;
 
+import com.cas.tsas.application.port.out.DeletePlayerPort;
 import com.cas.tsas.application.port.out.LoadPlayerPort;
 import com.cas.tsas.application.port.out.SavePlayerPort;
 import com.cas.tsas.domain.model.Player;
@@ -10,8 +11,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+
+
 @Component
-public class PlayerPersistenceAdapter implements LoadPlayerPort, SavePlayerPort {
+public class PlayerPersistenceAdapter implements LoadPlayerPort, SavePlayerPort, DeletePlayerPort {
 
     private final PlayerJpaRepository repository;
     private final PlayerMapper mapper;
@@ -38,5 +41,10 @@ public class PlayerPersistenceAdapter implements LoadPlayerPort, SavePlayerPort 
         var entity = mapper.toEntity(player);
         var saved = repository.save(entity);
         return mapper.toDomain(saved);
+    }
+
+    @Override
+    public void deletePlayer(UUID id) {
+        repository.deleteById(id);
     }
 }

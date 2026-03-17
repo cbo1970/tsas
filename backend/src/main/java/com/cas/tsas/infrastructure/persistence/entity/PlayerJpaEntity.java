@@ -35,6 +35,9 @@ public class PlayerJpaEntity {
     private String ranking;
     private String nationality;
 
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private boolean active = true;
+
     @Column(name = "birth_date")
     private LocalDate birthDate;
 
@@ -66,4 +69,7 @@ public class PlayerJpaEntity {
 
     public LocalDate getBirthDate() { return birthDate; }
     public void setBirthDate(LocalDate birthDate) { this.birthDate = birthDate; }
+
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
 }

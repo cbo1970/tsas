@@ -29,6 +29,14 @@ export class ApiService {
     return this.http.post<Player>(`${this.base}/players`, request);
   }
 
+  deletePlayer(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/players/${id}`);
+  }
+
+  deactivatePlayer(id: string): Observable<void> {
+    return this.http.patch<void>(`${this.base}/players/${id}/deactivate`, {});
+  }
+
   // Matches
   getMatches(): Observable<Match[]> {
     return this.http.get<Match[]>(`${this.base}/matches`);

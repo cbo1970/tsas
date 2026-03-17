@@ -12,6 +12,8 @@ export interface Player {
   ranking?: string;
   nationality?: string;
   birthDate?: string;
+  active?: boolean;
+  deletable?: boolean;
 }
 
 export interface CreatePlayerRequest {
