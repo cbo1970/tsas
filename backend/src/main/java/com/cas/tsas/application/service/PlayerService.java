@@ -3,6 +3,7 @@ package com.cas.tsas.application.service;
 import com.cas.tsas.application.port.in.player.CreatePlayerUseCase;
 import com.cas.tsas.application.port.in.player.DeletePlayerUseCase;
 import com.cas.tsas.application.port.in.player.SearchPlayerUseCase;
+import com.cas.tsas.application.port.in.player.UpdatePlayerUseCase;
 import com.cas.tsas.application.port.out.DeletePlayerPort;
 import com.cas.tsas.application.port.out.LoadMatchPort;
 import com.cas.tsas.application.port.out.LoadPlayerPort;
@@ -17,7 +18,7 @@ import java.util.UUID;
 
 @Service
 @Transactional
-public class PlayerService implements CreatePlayerUseCase, SearchPlayerUseCase, DeletePlayerUseCase {
+public class PlayerService implements CreatePlayerUseCase, SearchPlayerUseCase, UpdatePlayerUseCase, DeletePlayerUseCase {
 
     private final LoadPlayerPort loadPlayerPort;
     private final SavePlayerPort savePlayerPort;
@@ -59,6 +60,21 @@ public class PlayerService implements CreatePlayerUseCase, SearchPlayerUseCase, 
     @Transactional(readOnly = true)
     public List<Player> findAll() {
         return loadPlayerPort.loadAllPlayers();
+    }
+
+    @Override
+    public Player updatePlayer(UpdatePlayerCommand command) {
+        Player player = loadPlayerPort.loadPlayer(command.id())
+                .orElseThrow(() -> new PlayerNotFoundException(command.id()));
+        player.setFirstName(command.firstName());
+        player.setLastName(command.lastName());
+        player.setGender(command.gender());
+        player.setHandedness(command.handedness());
+        player.setBackhandType(command.backhandType());
+        player.setRanking(command.ranking());
+        player.setNationality(command.nationality());
+        player.setBirthDate(command.birthDate());
+        return savePlayerPort.savePlayer(player);
     }
 
     @Override

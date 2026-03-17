@@ -29,6 +29,10 @@ export class ApiService {
     return this.http.post<Player>(`${this.base}/players`, request);
   }
 
+  updatePlayer(id: string, request: CreatePlayerRequest): Observable<Player> {
+    return this.http.put<Player>(`${this.base}/players/${id}`, request);
+  }
+
   deletePlayer(id: string): Observable<void> {
     return this.http.delete<void>(`${this.base}/players/${id}`);
   }

@@ -89,7 +89,8 @@ import { PlayerDialogComponent } from './player-dialog.component';
 
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
             <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-                [class.inactive-row]="row.active === false"></tr>
+                [class.inactive-row]="row.active === false"
+                (dblclick)="openEditDialog(row)"></tr>
           </table>
 
           @if (filteredPlayers().length === 0) {
@@ -112,6 +113,7 @@ import { PlayerDialogComponent } from './player-dialog.component';
     .actions-cell { width: 56px; text-align: right; }
     .inactive-row { opacity: 0.45; }
     .inactive-btn { opacity: 0.3; }
+    tr.mat-mdc-row { cursor: pointer; }
   `]
 })
 export class PlayersComponent implements OnInit {
@@ -171,6 +173,21 @@ export class PlayersComponent implements OnInit {
             this.snackBar.open('Spieler angelegt', 'OK', { duration: 3000 });
           },
           error: () => this.snackBar.open('Fehler beim Anlegen', 'OK', { duration: 3000 })
+        });
+      }
+    });
+  }
+
+  openEditDialog(player: Player) {
+    const ref = this.dialog.open(PlayerDialogComponent, { width: '500px', data: player });
+    ref.afterClosed().subscribe((result: CreatePlayerRequest | undefined) => {
+      if (result) {
+        this.api.updatePlayer(player.id, result).subscribe({
+          next: () => {
+            this.loadPlayers();
+            this.snackBar.open('Spieler gespeichert', 'OK', { duration: 3000 });
+          },
+          error: () => this.snackBar.open('Fehler beim Speichern', 'OK', { duration: 3000 })
         });
       }
     });

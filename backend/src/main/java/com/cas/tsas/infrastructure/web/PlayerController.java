@@ -3,7 +3,9 @@ package com.cas.tsas.infrastructure.web;
 import com.cas.tsas.application.port.in.player.CreatePlayerUseCase;
 import com.cas.tsas.application.port.in.player.DeletePlayerUseCase;
 import com.cas.tsas.application.port.in.player.SearchPlayerUseCase;
+import com.cas.tsas.application.port.in.player.UpdatePlayerUseCase;
 import com.cas.tsas.infrastructure.web.dto.request.CreatePlayerRequest;
+import com.cas.tsas.infrastructure.web.dto.request.UpdatePlayerRequest;
 import com.cas.tsas.infrastructure.web.dto.response.PlayerResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -18,13 +20,16 @@ public class PlayerController {
 
     private final CreatePlayerUseCase createPlayerUseCase;
     private final SearchPlayerUseCase searchPlayerUseCase;
+    private final UpdatePlayerUseCase updatePlayerUseCase;
     private final DeletePlayerUseCase deletePlayerUseCase;
 
     public PlayerController(CreatePlayerUseCase createPlayerUseCase,
                             SearchPlayerUseCase searchPlayerUseCase,
+                            UpdatePlayerUseCase updatePlayerUseCase,
                             DeletePlayerUseCase deletePlayerUseCase) {
         this.createPlayerUseCase = createPlayerUseCase;
         this.searchPlayerUseCase = searchPlayerUseCase;
+        this.updatePlayerUseCase = updatePlayerUseCase;
         this.deletePlayerUseCase = deletePlayerUseCase;
     }
 
@@ -62,6 +67,24 @@ public class PlayerController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePlayer(@PathVariable UUID id) {
         deletePlayerUseCase.deletePlayer(id);
+    }
+
+    @PutMapping("/{id}")
+    public PlayerResponse updatePlayer(@PathVariable UUID id,
+                                       @Valid @RequestBody UpdatePlayerRequest request) {
+        var command = new UpdatePlayerUseCase.UpdatePlayerCommand(
+                id,
+                request.firstName(),
+                request.lastName(),
+                request.gender(),
+                request.handedness(),
+                request.backhandType(),
+                request.ranking(),
+                request.nationality(),
+                request.birthDate()
+        );
+        var player = updatePlayerUseCase.updatePlayer(command);
+        return PlayerResponse.from(player, !deletePlayerUseCase.hasMatches(id));
     }
 
     @PatchMapping("/{id}/deactivate")

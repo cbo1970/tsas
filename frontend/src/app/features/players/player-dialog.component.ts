@@ -1,12 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
-import { CreatePlayerRequest } from '../../core/models/player.model';
+import { CreatePlayerRequest, Player } from '../../core/models/player.model';
 
 @Component({
   selector: 'app-player-dialog',
@@ -21,7 +21,7 @@ import { CreatePlayerRequest } from '../../core/models/player.model';
     MatButtonModule
   ],
   template: `
-    <h2 mat-dialog-title>Neuer Spieler</h2>
+    <h2 mat-dialog-title>{{ player ? 'Spieler bearbeiten' : 'Neuer Spieler' }}</h2>
     <mat-dialog-content>
       <form [formGroup]="form" class="dialog-form">
         <mat-form-field appearance="outline" class="full-width">
@@ -69,6 +69,11 @@ import { CreatePlayerRequest } from '../../core/models/player.model';
           <mat-label>Ranking (optional)</mat-label>
           <input matInput type="text" formControlName="ranking" />
         </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Nationalität (optional)</mat-label>
+          <input matInput formControlName="nationality" />
+        </mat-form-field>
       </form>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
@@ -86,14 +91,16 @@ import { CreatePlayerRequest } from '../../core/models/player.model';
 export class PlayerDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly dialogRef = inject(MatDialogRef<PlayerDialogComponent>);
+  readonly player: Player | null = inject(MAT_DIALOG_DATA, { optional: true });
 
   form = this.fb.group({
-    firstName: ['', Validators.required],
-    lastName: ['', Validators.required],
-    gender: ['MALE', Validators.required],
-    handedness: ['RIGHT', Validators.required],
-    backhandType: ['TWO_HANDED', Validators.required],
-    ranking: [null as string | null]
+    firstName: [this.player?.firstName ?? '', Validators.required],
+    lastName:  [this.player?.lastName  ?? '', Validators.required],
+    gender:    [this.player?.gender    ?? 'MALE', Validators.required],
+    handedness:   [this.player?.handedness   ?? 'RIGHT', Validators.required],
+    backhandType: [this.player?.backhandType ?? 'TWO_HANDED', Validators.required],
+    ranking:     [this.player?.ranking     ?? null as string | null],
+    nationality: [this.player?.nationality ?? null as string | null]
   });
 
   cancel() {
@@ -104,12 +111,13 @@ export class PlayerDialogComponent {
     if (this.form.valid) {
       const v = this.form.value;
       const request: CreatePlayerRequest = {
-        firstName: v.firstName!,
-        lastName: v.lastName!,
-        gender: v.gender as any,
-        handedness: v.handedness as any,
+        firstName:   v.firstName!,
+        lastName:    v.lastName!,
+        gender:      v.gender as any,
+        handedness:  v.handedness as any,
         backhandType: v.backhandType as any,
-        ranking: v.ranking ?? undefined
+        ranking:     v.ranking    ?? undefined,
+        nationality: v.nationality ?? undefined
       };
       this.dialogRef.close(request);
     }
