@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: docker.io/library/postgres:16-alpine
+    container_name: tsas-postgres
+    environment:
+      POSTGRES_DB: tsas
+      POSTGRES_USER: tsas
+      POSTGRES_PASSWORD: tsas
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./volume/postgres:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tsas -d tsas"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

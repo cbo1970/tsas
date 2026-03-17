@@ -1,0 +1,5 @@
+# PostgreSQL data volume (Podman / Docker)
+volume/
+
+# macOS
+.DS_Store
