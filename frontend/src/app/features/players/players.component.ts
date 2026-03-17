@@ -1,14 +1,13 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
+import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 
@@ -23,6 +22,7 @@ import { PlayerDialogComponent } from './player-dialog.component';
     CommonModule,
     FormsModule,
     MatTableModule,
+    MatSortModule,
     MatButtonModule,
     MatIconModule,
     MatDialogModule,
@@ -52,33 +52,20 @@ import { PlayerDialogComponent } from './player-dialog.component';
 
       <mat-card>
         <mat-card-content>
-          <table mat-table [dataSource]="filteredPlayers()" class="full-width">
-            <ng-container matColumnDef="name">
-              <th mat-header-cell *matHeaderCellDef>Name</th>
-              <td mat-cell *matCellDef="let player">
-                {{ player.firstName }} {{ player.lastName }}
-              </td>
+          <table mat-table [dataSource]="filteredPlayers()" matSort (matSortChange)="onSort($event)" class="full-width">
+            <ng-container matColumnDef="firstName">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Vorname</th>
+              <td mat-cell *matCellDef="let player">{{ player.firstName }}</td>
             </ng-container>
 
-            <ng-container matColumnDef="handedness">
-              <th mat-header-cell *matHeaderCellDef>Spielhand</th>
-              <td mat-cell *matCellDef="let player">
-                {{ player.handedness === 'LEFT' ? 'Links' : 'Rechts' }}
-              </td>
-            </ng-container>
-
-            <ng-container matColumnDef="backhandType">
-              <th mat-header-cell *matHeaderCellDef>Backhand</th>
-              <td mat-cell *matCellDef="let player">
-                {{ player.backhandType === 'ONE_HANDED' ? 'Einhändig' : 'Zweihändig' }}
-              </td>
+            <ng-container matColumnDef="lastName">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+              <td mat-cell *matCellDef="let player">{{ player.lastName }}</td>
             </ng-container>
 
             <ng-container matColumnDef="ranking">
-              <th mat-header-cell *matHeaderCellDef>Ranking</th>
-              <td mat-cell *matCellDef="let player">
-                {{ player.ranking ?? '–' }}
-              </td>
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Ranking</th>
+              <td mat-cell *matCellDef="let player">{{ player.ranking ?? '–' }}</td>
             </ng-container>
 
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
@@ -111,16 +98,34 @@ export class PlayersComponent implements OnInit {
 
   players = signal<Player[]>([]);
   searchTerm = signal('');
-  displayedColumns = ['name', 'handedness', 'backhandType', 'ranking'];
+  sort = signal<Sort>({ active: 'lastName', direction: 'asc' });
+  displayedColumns = ['firstName', 'lastName', 'ranking'];
 
   filteredPlayers = computed(() => {
     const term = this.searchTerm().toLowerCase().trim();
-    if (!term) return this.players();
-    return this.players().filter(p =>
+    const { active, direction } = this.sort();
+
+    let result = this.players().filter(p =>
+      !term ||
       `${p.firstName} ${p.lastName}`.toLowerCase().includes(term) ||
       (p.ranking ?? '').toString().toLowerCase().includes(term)
     );
+
+    if (direction) {
+      result = [...result].sort((a, b) => {
+        const valA = (a[active as keyof Player] ?? '') as string;
+        const valB = (b[active as keyof Player] ?? '') as string;
+        return direction === 'asc'
+          ? valA.toString().localeCompare(valB.toString())
+          : valB.toString().localeCompare(valA.toString());
+      });
+    }
+    return result;
   });
+
+  onSort(sort: Sort) {
+    this.sort.set(sort);
+  }
 
   ngOnInit() {
     this.loadPlayers();
