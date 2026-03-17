@@ -1,6 +1,5 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -47,58 +46,91 @@ import { ScoreEditDialogComponent } from './score-edit-dialog.component';
               <div class="final-score">
                 Satz: {{ matchData()!.score.setsPlayer1 }} : {{ matchData()!.score.setsPlayer2 }}
               </div>
-              <button mat-raised-button color="primary" routerLink="/players" (click)="goToMatches()">
+              <button mat-raised-button color="primary" (click)="goToMatches()">
                 Zurück zur Übersicht
               </button>
             </mat-card-content>
           </mat-card>
         }
 
-        <div class="scoreboard">
-          <!-- Row: Names -->
-          <div class="cell name-cell p1-bg">{{ player1Name() }}</div>
-          <div class="cell name-cell divider-bg"></div>
-          <div class="cell name-cell p2-bg">{{ player2Name() }}</div>
+        <!-- Tennis court -->
+        <div class="court-wrapper">
+          <div class="court">
 
-          <!-- Row: Sets -->
-          <div class="cell score-cell p1-bg" [class.inactive]="matchData()!.status === 'COMPLETED'" (click)="scorePoint(true)">
-            <div class="sets-display">
-              @for (s of getSetsArray(); track $index) {
-                <div class="set-badge" [class.won]="s.p1 > s.p2">{{ s.p1 }}</div>
-              }
+            <!-- Court lines -->
+            <div class="line singles-left"></div>
+            <div class="line singles-right"></div>
+            <div class="line service-line-top"></div>
+            <div class="line service-line-bottom"></div>
+            <div class="line center-service"></div>
+
+            <!-- Net -->
+            <div class="net-area">
+              <div class="net-post"></div>
+              <div class="net-mesh"></div>
+              <div class="net-post"></div>
             </div>
-          </div>
-          <div class="cell score-label divider-bg">Sets</div>
-          <div class="cell score-cell p2-bg" [class.inactive]="matchData()!.status === 'COMPLETED'" (click)="scorePoint(false)">
-            <div class="sets-display">
-              @for (s of getSetsArray(); track $index) {
-                <div class="set-badge" [class.won]="s.p2 > s.p1">{{ s.p2 }}</div>
-              }
+
+            <!-- Player 2 half (top) — click to score -->
+            <div class="court-half top-half"
+                 [class.inactive]="matchData()!.status === 'COMPLETED'"
+                 (click)="scorePoint(false)">
+              <div class="player-overlay">
+                <div class="pname">{{ player2Name() }}</div>
+                <div class="score-blocks">
+                  <div class="score-block">
+                    <div class="slbl">Sets</div>
+                    <div class="sets-display">
+                      @for (s of getSetsArray(); track $index) {
+                        <div class="set-badge" [class.won]="s.p2 > s.p1">{{ s.p2 }}</div>
+                      }
+                    </div>
+                  </div>
+                  <div class="score-block">
+                    <div class="slbl">Games</div>
+                    <div class="sval-lg">{{ matchData()!.score.gamesPlayer2 }}</div>
+                  </div>
+                  <div class="score-block">
+                    <div class="slbl">
+                      @if (matchData()!.score.isDeuce) { <span class="deuce-lbl">Deuce</span> }
+                      @else { Punkte }
+                    </div>
+                    <div class="sval-md">{{ formatPoints(matchData()!.score, false) }}</div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
 
-          <!-- Row: Games -->
-          <div class="cell score-cell p1-bg" [class.inactive]="matchData()!.status === 'COMPLETED'" (click)="scorePoint(true)">
-            <div class="games-display">{{ matchData()!.score.gamesPlayer1 }}</div>
-          </div>
-          <div class="cell score-label divider-bg">Games</div>
-          <div class="cell score-cell p2-bg" [class.inactive]="matchData()!.status === 'COMPLETED'" (click)="scorePoint(false)">
-            <div class="games-display">{{ matchData()!.score.gamesPlayer2 }}</div>
-          </div>
+            <!-- Player 1 half (bottom) — click to score -->
+            <div class="court-half bottom-half"
+                 [class.inactive]="matchData()!.status === 'COMPLETED'"
+                 (click)="scorePoint(true)">
+              <div class="player-overlay">
+                <div class="pname">{{ player1Name() }}</div>
+                <div class="score-blocks">
+                  <div class="score-block">
+                    <div class="slbl">Sets</div>
+                    <div class="sets-display">
+                      @for (s of getSetsArray(); track $index) {
+                        <div class="set-badge" [class.won]="s.p1 > s.p2">{{ s.p1 }}</div>
+                      }
+                    </div>
+                  </div>
+                  <div class="score-block">
+                    <div class="slbl">Games</div>
+                    <div class="sval-lg">{{ matchData()!.score.gamesPlayer1 }}</div>
+                  </div>
+                  <div class="score-block">
+                    <div class="slbl">
+                      @if (matchData()!.score.isDeuce) { <span class="deuce-lbl">Deuce</span> }
+                      @else { Punkte }
+                    </div>
+                    <div class="sval-md">{{ formatPoints(matchData()!.score, true) }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-          <!-- Row: Points -->
-          <div class="cell score-cell p1-bg" [class.inactive]="matchData()!.status === 'COMPLETED'" (click)="scorePoint(true)">
-            <div class="points-display">{{ formatPoints(matchData()!.score, true) }}</div>
-          </div>
-          <div class="cell score-label divider-bg">
-            @if (matchData()!.score.isDeuce) {
-              <span class="deuce-label">Deuce</span>
-            } @else {
-              Punkte
-            }
-          </div>
-          <div class="cell score-cell p2-bg" [class.inactive]="matchData()!.status === 'COMPLETED'" (click)="scorePoint(false)">
-            <div class="points-display">{{ formatPoints(matchData()!.score, false) }}</div>
           </div>
         </div>
 
@@ -120,120 +152,157 @@ import { ScoreEditDialogComponent } from './score-edit-dialog.component';
     </div>
   `,
   styles: [`
-    .score-page {
-      padding: 24px;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    .score-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-    }
-    .score-header h2 { margin: 0; font-size: 24px; flex: 1; }
-    .score-header .match-status-wrapper { flex: 1; display: flex; justify-content: flex-end; }
-    .match-status {
-      padding: 4px 12px;
-      border-radius: 16px;
-      background: #4caf50;
-      color: white;
-      font-size: 14px;
-    }
+    .score-page { padding: 24px; max-width: 900px; margin: 0 auto; }
+
+    /* ── Header ── */
+    .score-header { display: flex; align-items: center; margin-bottom: 20px; }
+    .score-header h2 { flex: 1; margin: 0; font-size: 24px; }
+    .set-counter { font-size: 18px; font-weight: bold; color: #555; }
+    .match-status-wrapper { flex: 1; display: flex; justify-content: flex-end; }
+    .match-status { padding: 4px 12px; border-radius: 16px; background: #4caf50; color: white; font-size: 14px; }
     .match-status.completed { background: #9e9e9e; }
-    .winner-card {
-      margin-bottom: 24px;
-      background: linear-gradient(135deg, #1a237e, #283593);
-      color: white;
-    }
+
+    /* ── Winner card ── */
+    .winner-card { margin-bottom: 20px; background: linear-gradient(135deg, #1a237e, #283593); color: white; }
     .winner-card mat-card-content { padding: 24px !important; }
-    .winner-text {
+    .winner-text { display: flex; align-items: center; gap: 8px; font-size: 22px; font-weight: bold; margin-bottom: 8px; }
+    .final-score { font-size: 16px; margin-bottom: 16px; }
+
+    /* ── Court wrapper (dark surround = outside the court) ── */
+    .court-wrapper {
+      background: rgb(8, 40, 88);
+      padding: 28px 20px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: center;
+      box-shadow: 0 6px 32px rgba(0,0,0,.5);
+    }
+
+    /* ── The court itself — landscape (net vertical) ── */
+    .court {
+      position: relative;
+      background: rgb(32, 90, 160);
+      border: 3px solid white;
+      width: 100%;
+      aspect-ratio: 23.77 / 10.97;
+    }
+
+    /* ── White court lines (absolute) ── */
+    .line { position: absolute; background: white; }
+
+    /* Singles baselines — 12.49 % from top/bottom */
+    .singles-left  { left: 0; right: 0; top: 12.49%;    height: 2px; }
+    .singles-right { left: 0; right: 0; bottom: 12.49%; height: 2px; }
+
+    /* Service lines — 23.08 % from each baseline (left/right) */
+    .service-line-top    { left: 23.08%;  top: 12.49%; bottom: 12.49%; width: 2px; }
+    .service-line-bottom { right: 23.08%; top: 12.49%; bottom: 12.49%; width: 2px; }
+
+    /* Center service line — horizontal, between the two service lines */
+    .center-service {
+      left: 23.08%; right: 23.08%;
+      top: calc(50% - 1px); height: 2px;
+    }
+
+    /* ── Net — vertical in the center ── */
+    .net-area {
+      position: absolute;
+      left: calc(50% - 5px);
+      top: -6px; bottom: -6px;
+      width: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 2;
+    }
+    .net-post {
+      width: 20px; height: 8px;
+      background: #ddd;
+      border-radius: 2px;
+      flex-shrink: 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,.5);
+    }
+    .net-mesh {
+      flex: 1; width: 6px;
+      background: repeating-linear-gradient(
+        180deg,
+        rgba(255,255,255,.85) 0px, rgba(255,255,255,.85) 6px,
+        transparent 6px, transparent 10px
+      );
+    }
+
+    /* ── Clickable court halves ── */
+    .court-half {
+      position: absolute;
+      top: 0; bottom: 0;
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 24px;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
+      z-index: 3;
+    }
+    /* top-half = Player 2 → rechte Seite */
+    .top-half    { right: 0; width: 50%; }
+    /* bottom-half = Player 1 → linke Seite */
+    .bottom-half { left: 0;  width: 50%; }
+    .court-half:hover:not(.inactive)  { background: rgba(255,255,255,.06); }
+    .court-half:active:not(.inactive) { background: rgba(255,255,255,.12); }
+    .court-half.inactive { cursor: default; }
+
+    /* ── Score overlay card on each half ── */
+    .player-overlay {
+      background: rgba(0, 10, 5, 0.62);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 10px;
+      padding: 10px 18px 12px;
+      text-align: center;
+      color: white;
+      min-width: 200px;
+    }
+    .pname {
+      font-size: 16px;
       font-weight: bold;
       margin-bottom: 8px;
-    }
-    .final-score { font-size: 18px; margin-bottom: 16px; }
-    .scoreboard {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      border-radius: 16px;
+      white-space: nowrap;
       overflow: hidden;
-      box-shadow: 0 4px 16px rgba(0,0,0,.2);
+      text-overflow: ellipsis;
     }
-    .cell {
+    .score-blocks {
       display: flex;
-      align-items: center;
+      gap: 20px;
       justify-content: center;
+      align-items: flex-end;
     }
-    .p1-bg { background: #1a237e; color: white; }
-    .p2-bg { background: #b71c1c; color: white; }
-    .divider-bg { background: #263238; min-width: 70px; }
-    .name-cell {
-      font-size: 22px;
-      font-weight: bold;
-      text-align: center;
-      padding: 24px 16px;
+    .score-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
     }
-    .score-cell {
-      cursor: pointer;
-      transition: filter 0.2s;
-      user-select: none;
-      padding: 20px 16px;
-    }
-    .score-cell:hover:not(.inactive) { filter: brightness(1.2); }
-    .score-cell:active:not(.inactive) { filter: brightness(1.4); }
-    .score-cell.inactive { cursor: default; opacity: 0.7; }
-    .score-label {
-      color: rgba(255,255,255,0.5);
-      font-size: 13px;
+    .slbl {
+      font-size: 10px;
       text-transform: uppercase;
       letter-spacing: 1px;
-      padding: 20px 8px;
+      color: rgba(255,255,255,.55);
     }
-    .sets-display {
-      display: flex;
-      gap: 8px;
-    }
+    .sets-display { display: flex; gap: 5px; }
     .set-badge {
-      width: 32px;
-      height: 32px;
+      width: 26px; height: 26px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      font-weight: bold;
+      background: rgba(255,255,255,.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: bold;
     }
-    .set-badge.won { background: rgba(255,255,255,0.5); }
-    .games-display {
-      font-size: 58px;
-      font-weight: bold;
-      line-height: 1;
-    }
-    .points-display {
-      font-size: 34px;
-      font-weight: 500;
-    }
-    .deuce-label {
-      color: #ffd54f;
-      font-size: 11px;
-      font-weight: bold;
-    }
-    .set-counter {
-      color: #666;
-      font-size: 18px;
-      font-weight: bold;
-    }
-    .action-buttons {
-      display: flex;
-      gap: 16px;
-      justify-content: center;
-      margin-top: 24px;
-    }
+    .set-badge.won { background: rgba(255,255,255,.55); }
+    .sval-lg { font-size: 46px; font-weight: bold; line-height: 1; }
+    .sval-md { font-size: 28px; font-weight: 500; line-height: 1; }
+    .deuce-lbl { color: #ffd54f; font-size: 9px; font-weight: bold; }
+
+    /* ── Action buttons ── */
+    .action-buttons { display: flex; gap: 16px; justify-content: center; margin-top: 20px; }
     .loading { text-align: center; padding: 48px; color: #666; }
   `]
 })
