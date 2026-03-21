@@ -1,15 +1,15 @@
-package com.cas.tsas.application.service;
+package com.cas.tsas.player.application.service;
 
-import com.cas.tsas.application.port.in.player.CreatePlayerUseCase;
-import com.cas.tsas.application.port.in.player.DeletePlayerUseCase;
-import com.cas.tsas.application.port.in.player.SearchPlayerUseCase;
-import com.cas.tsas.application.port.in.player.UpdatePlayerUseCase;
-import com.cas.tsas.application.port.out.DeletePlayerPort;
-import com.cas.tsas.application.port.out.LoadMatchPort;
-import com.cas.tsas.application.port.out.LoadPlayerPort;
-import com.cas.tsas.application.port.out.SavePlayerPort;
-import com.cas.tsas.domain.exception.PlayerNotFoundException;
-import com.cas.tsas.domain.model.Player;
+import com.cas.tsas.player.application.port.in.CreatePlayerUseCase;
+import com.cas.tsas.player.application.port.in.DeletePlayerUseCase;
+import com.cas.tsas.player.application.port.in.SearchPlayerUseCase;
+import com.cas.tsas.player.application.port.in.UpdatePlayerUseCase;
+import com.cas.tsas.player.application.port.out.DeletePlayerPort;
+import com.cas.tsas.player.application.port.out.HasMatchesPort;
+import com.cas.tsas.player.application.port.out.LoadPlayerPort;
+import com.cas.tsas.player.application.port.out.SavePlayerPort;
+import com.cas.tsas.player.domain.exception.PlayerNotFoundException;
+import com.cas.tsas.player.domain.model.Player;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,14 +23,14 @@ public class PlayerService implements CreatePlayerUseCase, SearchPlayerUseCase, 
     private final LoadPlayerPort loadPlayerPort;
     private final SavePlayerPort savePlayerPort;
     private final DeletePlayerPort deletePlayerPort;
-    private final LoadMatchPort loadMatchPort;
+    private final HasMatchesPort hasMatchesPort;
 
     public PlayerService(LoadPlayerPort loadPlayerPort, SavePlayerPort savePlayerPort,
-                         DeletePlayerPort deletePlayerPort, LoadMatchPort loadMatchPort) {
+                         DeletePlayerPort deletePlayerPort, HasMatchesPort hasMatchesPort) {
         this.loadPlayerPort = loadPlayerPort;
         this.savePlayerPort = savePlayerPort;
         this.deletePlayerPort = deletePlayerPort;
-        this.loadMatchPort = loadMatchPort;
+        this.hasMatchesPort = hasMatchesPort;
     }
 
     @Override
@@ -79,12 +79,12 @@ public class PlayerService implements CreatePlayerUseCase, SearchPlayerUseCase, 
 
     @Override
     public boolean hasMatches(UUID id) {
-        return loadMatchPort.existsByPlayerId(id);
+        return hasMatchesPort.existsByPlayerId(id);
     }
 
     @Override
     public void deletePlayer(UUID id) {
-        if (loadMatchPort.existsByPlayerId(id)) {
+        if (hasMatchesPort.existsByPlayerId(id)) {
             throw new IllegalStateException("Spieler hat Matches und kann nicht gelöscht werden.");
         }
         loadPlayerPort.loadPlayer(id).orElseThrow(() -> new PlayerNotFoundException(id));

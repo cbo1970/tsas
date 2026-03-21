@@ -1,7 +1,7 @@
-package com.cas.tsas.infrastructure.persistence.mapper;
+package com.cas.tsas.player.infrastructure.persistence.mapper;
 
-import com.cas.tsas.domain.model.Player;
-import com.cas.tsas.infrastructure.persistence.entity.PlayerJpaEntity;
+import com.cas.tsas.player.domain.model.Player;
+import com.cas.tsas.player.infrastructure.persistence.entity.PlayerJpaEntity;
 import org.springframework.stereotype.Component;
 
 @Component

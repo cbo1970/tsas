@@ -1,12 +1,12 @@
-package com.cas.tsas.infrastructure.web;
+package com.cas.tsas.player.infrastructure.web;
 
-import com.cas.tsas.application.port.in.player.CreatePlayerUseCase;
-import com.cas.tsas.application.port.in.player.DeletePlayerUseCase;
-import com.cas.tsas.application.port.in.player.SearchPlayerUseCase;
-import com.cas.tsas.application.port.in.player.UpdatePlayerUseCase;
-import com.cas.tsas.infrastructure.web.dto.request.CreatePlayerRequest;
-import com.cas.tsas.infrastructure.web.dto.request.UpdatePlayerRequest;
-import com.cas.tsas.infrastructure.web.dto.response.PlayerResponse;
+import com.cas.tsas.player.application.port.in.CreatePlayerUseCase;
+import com.cas.tsas.player.application.port.in.DeletePlayerUseCase;
+import com.cas.tsas.player.application.port.in.SearchPlayerUseCase;
+import com.cas.tsas.player.application.port.in.UpdatePlayerUseCase;
+import com.cas.tsas.player.infrastructure.web.dto.request.CreatePlayerRequest;
+import com.cas.tsas.player.infrastructure.web.dto.request.UpdatePlayerRequest;
+import com.cas.tsas.player.infrastructure.web.dto.response.PlayerResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;

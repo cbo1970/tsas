@@ -1,9 +1,9 @@
-package com.cas.tsas.infrastructure.web.dto.response;
+package com.cas.tsas.player.infrastructure.web.dto.response;
 
-import com.cas.tsas.domain.model.BackhandType;
-import com.cas.tsas.domain.model.Gender;
-import com.cas.tsas.domain.model.Handedness;
-import com.cas.tsas.domain.model.Player;
+import com.cas.tsas.player.domain.model.BackhandType;
+import com.cas.tsas.player.domain.model.Gender;
+import com.cas.tsas.player.domain.model.Handedness;
+import com.cas.tsas.player.domain.model.Player;
 
 import java.time.LocalDate;
 import java.util.UUID;

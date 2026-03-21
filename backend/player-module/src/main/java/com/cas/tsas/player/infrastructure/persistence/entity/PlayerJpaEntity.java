@@ -1,8 +1,8 @@
-package com.cas.tsas.infrastructure.persistence.entity;
+package com.cas.tsas.player.infrastructure.persistence.entity;
 
-import com.cas.tsas.domain.model.BackhandType;
-import com.cas.tsas.domain.model.Gender;
-import com.cas.tsas.domain.model.Handedness;
+import com.cas.tsas.player.domain.model.BackhandType;
+import com.cas.tsas.player.domain.model.Gender;
+import com.cas.tsas.player.domain.model.Handedness;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;

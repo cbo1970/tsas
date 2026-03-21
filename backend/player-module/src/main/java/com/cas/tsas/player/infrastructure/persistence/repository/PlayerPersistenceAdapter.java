@@ -1,10 +1,10 @@
-package com.cas.tsas.infrastructure.persistence.repository;
+package com.cas.tsas.player.infrastructure.persistence.repository;
 
-import com.cas.tsas.application.port.out.DeletePlayerPort;
-import com.cas.tsas.application.port.out.LoadPlayerPort;
-import com.cas.tsas.application.port.out.SavePlayerPort;
-import com.cas.tsas.domain.model.Player;
-import com.cas.tsas.infrastructure.persistence.mapper.PlayerMapper;
+import com.cas.tsas.player.application.port.out.DeletePlayerPort;
+import com.cas.tsas.player.application.port.out.LoadPlayerPort;
+import com.cas.tsas.player.application.port.out.SavePlayerPort;
+import com.cas.tsas.player.domain.model.Player;
+import com.cas.tsas.player.infrastructure.persistence.mapper.PlayerMapper;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
