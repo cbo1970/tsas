@@ -1,4 +1,4 @@
-package com.cas.tsas.domain.model;
+package com.cas.tsas.player.domain.model;
 
 import java.time.LocalDate;
 import java.util.UUID;

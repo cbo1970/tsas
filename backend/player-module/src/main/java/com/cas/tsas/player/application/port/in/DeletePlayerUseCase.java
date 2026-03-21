@@ -1,4 +1,4 @@
-package com.cas.tsas.application.port.in.player;
+package com.cas.tsas.player.application.port.in;
 
 import java.util.UUID;
 

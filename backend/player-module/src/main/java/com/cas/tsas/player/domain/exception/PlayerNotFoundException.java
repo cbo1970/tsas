@@ -1,4 +1,4 @@
-package com.cas.tsas.domain.exception;
+package com.cas.tsas.player.domain.exception;
 
 import java.util.UUID;
 

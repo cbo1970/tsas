@@ -1,6 +1,6 @@
-package com.cas.tsas.application.port.out;
+package com.cas.tsas.player.application.port.out;
 
-import com.cas.tsas.domain.model.Player;
+import com.cas.tsas.player.domain.model.Player;
 
 import java.util.List;
 import java.util.Optional;
