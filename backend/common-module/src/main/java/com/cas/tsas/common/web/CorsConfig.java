@@ -1,4 +1,4 @@
-package com.cas.tsas.infrastructure.web;
+package com.cas.tsas.common.web;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

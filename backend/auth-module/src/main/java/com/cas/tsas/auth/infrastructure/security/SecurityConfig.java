@@ -1,4 +1,4 @@
-package com.cas.tsas.infrastructure.security;
+package com.cas.tsas.auth.infrastructure.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
