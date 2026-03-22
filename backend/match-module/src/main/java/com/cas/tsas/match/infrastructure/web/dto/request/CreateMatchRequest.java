@@ -1,4 +1,4 @@
-package com.cas.tsas.infrastructure.web.dto.request;
+package com.cas.tsas.match.infrastructure.web.dto.request;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

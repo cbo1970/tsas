@@ -1,8 +1,8 @@
-package com.cas.tsas.infrastructure.web.dto.response;
+package com.cas.tsas.match.infrastructure.web.dto.response;
 
-import com.cas.tsas.domain.model.Match;
-import com.cas.tsas.domain.model.MatchScore;
-import com.cas.tsas.domain.model.MatchStatus;
+import com.cas.tsas.match.domain.model.Match;
+import com.cas.tsas.match.domain.model.MatchScore;
+import com.cas.tsas.match.domain.model.MatchStatus;
 
 import java.util.UUID;
 

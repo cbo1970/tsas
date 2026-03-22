@@ -1,4 +1,4 @@
-package com.cas.tsas.infrastructure.web.dto.request;
+package com.cas.tsas.match.infrastructure.web.dto.request;
 
 public record SetScoreRequest(
         int pointsPlayer1,

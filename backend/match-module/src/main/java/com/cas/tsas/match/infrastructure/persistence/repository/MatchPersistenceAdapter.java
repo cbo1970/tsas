@@ -1,9 +1,10 @@
-package com.cas.tsas.infrastructure.persistence.repository;
+package com.cas.tsas.match.infrastructure.persistence.repository;
 
-import com.cas.tsas.application.port.out.LoadMatchPort;
-import com.cas.tsas.application.port.out.SaveMatchPort;
-import com.cas.tsas.domain.model.Match;
-import com.cas.tsas.infrastructure.persistence.mapper.MatchMapper;
+import com.cas.tsas.match.application.port.out.LoadMatchPort;
+import com.cas.tsas.match.application.port.out.SaveMatchPort;
+import com.cas.tsas.match.domain.model.Match;
+import com.cas.tsas.match.infrastructure.persistence.mapper.MatchMapper;
+import com.cas.tsas.player.application.port.out.HasMatchesPort;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
-public class MatchPersistenceAdapter implements LoadMatchPort, SaveMatchPort {
+public class MatchPersistenceAdapter implements LoadMatchPort, SaveMatchPort, HasMatchesPort {
 
     private final MatchJpaRepository repository;
     private final MatchMapper mapper;

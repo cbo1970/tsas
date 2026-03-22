@@ -1,6 +1,6 @@
-package com.cas.tsas.infrastructure.persistence.entity;
+package com.cas.tsas.match.infrastructure.persistence.entity;
 
-import com.cas.tsas.domain.model.MatchStatus;
+import com.cas.tsas.match.domain.model.MatchStatus;
 import jakarta.persistence.*;
 
 import java.util.UUID;

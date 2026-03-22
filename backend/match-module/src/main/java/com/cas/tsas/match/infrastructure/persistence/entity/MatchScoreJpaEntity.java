@@ -1,4 +1,4 @@
-package com.cas.tsas.infrastructure.persistence.entity;
+package com.cas.tsas.match.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
 

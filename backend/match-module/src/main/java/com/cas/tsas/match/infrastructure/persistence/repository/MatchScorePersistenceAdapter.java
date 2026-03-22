@@ -1,9 +1,9 @@
-package com.cas.tsas.infrastructure.persistence.repository;
+package com.cas.tsas.match.infrastructure.persistence.repository;
 
-import com.cas.tsas.application.port.out.LoadMatchScorePort;
-import com.cas.tsas.application.port.out.SaveMatchScorePort;
-import com.cas.tsas.domain.model.MatchScore;
-import com.cas.tsas.infrastructure.persistence.mapper.MatchScoreMapper;
+import com.cas.tsas.match.application.port.out.LoadMatchScorePort;
+import com.cas.tsas.match.application.port.out.SaveMatchScorePort;
+import com.cas.tsas.match.domain.model.MatchScore;
+import com.cas.tsas.match.infrastructure.persistence.mapper.MatchScoreMapper;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;

@@ -1,8 +1,8 @@
-package com.cas.tsas.application.service;
+package com.cas.tsas.match.application.service;
 
-import com.cas.tsas.domain.model.Match;
-import com.cas.tsas.domain.model.MatchScore;
-import com.cas.tsas.domain.model.MatchStatus;
+import com.cas.tsas.match.domain.model.Match;
+import com.cas.tsas.match.domain.model.MatchScore;
+import com.cas.tsas.match.domain.model.MatchStatus;
 import org.springframework.stereotype.Component;
 
 /**

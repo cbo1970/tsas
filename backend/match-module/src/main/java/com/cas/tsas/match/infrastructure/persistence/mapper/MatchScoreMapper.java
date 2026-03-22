@@ -1,7 +1,7 @@
-package com.cas.tsas.infrastructure.persistence.mapper;
+package com.cas.tsas.match.infrastructure.persistence.mapper;
 
-import com.cas.tsas.domain.model.MatchScore;
-import com.cas.tsas.infrastructure.persistence.entity.MatchScoreJpaEntity;
+import com.cas.tsas.match.domain.model.MatchScore;
+import com.cas.tsas.match.infrastructure.persistence.entity.MatchScoreJpaEntity;
 import org.springframework.stereotype.Component;
 
 @Component

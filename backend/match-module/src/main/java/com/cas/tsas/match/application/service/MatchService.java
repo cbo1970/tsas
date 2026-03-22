@@ -1,20 +1,20 @@
-package com.cas.tsas.application.service;
+package com.cas.tsas.match.application.service;
 
-import com.cas.tsas.application.port.in.match.CreateMatchUseCase;
-import com.cas.tsas.application.port.in.match.EndMatchUseCase;
-import com.cas.tsas.application.port.in.match.GetMatchUseCase;
-import com.cas.tsas.application.port.in.match.RecordPointUseCase;
-import com.cas.tsas.application.port.in.match.SetScoreUseCase;
-import com.cas.tsas.application.port.out.LoadMatchPort;
-import com.cas.tsas.application.port.out.LoadMatchScorePort;
-import com.cas.tsas.application.port.out.LoadPlayerPort;
-import com.cas.tsas.application.port.out.SaveMatchPort;
-import com.cas.tsas.application.port.out.SaveMatchScorePort;
-import com.cas.tsas.domain.exception.MatchNotFoundException;
-import com.cas.tsas.domain.exception.PlayerNotFoundException;
-import com.cas.tsas.domain.model.Match;
-import com.cas.tsas.domain.model.MatchScore;
-import com.cas.tsas.domain.model.MatchStatus;
+import com.cas.tsas.match.application.port.in.CreateMatchUseCase;
+import com.cas.tsas.match.application.port.in.EndMatchUseCase;
+import com.cas.tsas.match.application.port.in.GetMatchUseCase;
+import com.cas.tsas.match.application.port.in.RecordPointUseCase;
+import com.cas.tsas.match.application.port.in.SetScoreUseCase;
+import com.cas.tsas.match.application.port.out.LoadMatchPort;
+import com.cas.tsas.match.application.port.out.LoadMatchScorePort;
+import com.cas.tsas.match.application.port.out.SaveMatchPort;
+import com.cas.tsas.match.application.port.out.SaveMatchScorePort;
+import com.cas.tsas.match.domain.exception.MatchNotFoundException;
+import com.cas.tsas.match.domain.model.Match;
+import com.cas.tsas.match.domain.model.MatchScore;
+import com.cas.tsas.match.domain.model.MatchStatus;
+import com.cas.tsas.player.application.port.out.LoadPlayerPort;
+import com.cas.tsas.player.domain.exception.PlayerNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

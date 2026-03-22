@@ -1,6 +1,6 @@
-package com.cas.tsas.infrastructure.persistence.repository;
+package com.cas.tsas.match.infrastructure.persistence.repository;
 
-import com.cas.tsas.infrastructure.persistence.entity.MatchJpaEntity;
+import com.cas.tsas.match.infrastructure.persistence.entity.MatchJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;

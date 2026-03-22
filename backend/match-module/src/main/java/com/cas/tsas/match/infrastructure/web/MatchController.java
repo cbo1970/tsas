@@ -1,15 +1,15 @@
-package com.cas.tsas.infrastructure.web;
+package com.cas.tsas.match.infrastructure.web;
 
-import com.cas.tsas.application.port.in.match.CreateMatchUseCase;
-import com.cas.tsas.application.port.in.match.EndMatchUseCase;
-import com.cas.tsas.application.port.in.match.GetMatchUseCase;
-import com.cas.tsas.application.port.in.match.RecordPointUseCase;
-import com.cas.tsas.application.port.in.match.SetScoreUseCase;
-import com.cas.tsas.infrastructure.web.dto.request.CreateMatchRequest;
-import com.cas.tsas.infrastructure.web.dto.request.SetScoreRequest;
-import com.cas.tsas.infrastructure.web.dto.response.MatchResponse;
-import com.cas.tsas.infrastructure.web.dto.response.MatchScoreResponse;
-import com.cas.tsas.infrastructure.web.dto.response.MatchWithScoreResponse;
+import com.cas.tsas.match.application.port.in.CreateMatchUseCase;
+import com.cas.tsas.match.application.port.in.EndMatchUseCase;
+import com.cas.tsas.match.application.port.in.GetMatchUseCase;
+import com.cas.tsas.match.application.port.in.RecordPointUseCase;
+import com.cas.tsas.match.application.port.in.SetScoreUseCase;
+import com.cas.tsas.match.infrastructure.web.dto.request.CreateMatchRequest;
+import com.cas.tsas.match.infrastructure.web.dto.request.SetScoreRequest;
+import com.cas.tsas.match.infrastructure.web.dto.response.MatchResponse;
+import com.cas.tsas.match.infrastructure.web.dto.response.MatchScoreResponse;
+import com.cas.tsas.match.infrastructure.web.dto.response.MatchWithScoreResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
