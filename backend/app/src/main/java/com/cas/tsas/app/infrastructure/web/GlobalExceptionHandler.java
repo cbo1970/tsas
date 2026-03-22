@@ -1,7 +1,7 @@
-package com.cas.tsas.infrastructure.web;
+package com.cas.tsas.app.infrastructure.web;
 
-import com.cas.tsas.domain.exception.MatchNotFoundException;
-import com.cas.tsas.domain.exception.PlayerNotFoundException;
+import com.cas.tsas.match.domain.exception.MatchNotFoundException;
+import com.cas.tsas.player.domain.exception.PlayerNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
