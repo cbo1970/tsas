@@ -1,6 +1,6 @@
-package com.cas.tsas.application.port.out;
+package com.cas.tsas.match.application.port.out;
 
-import com.cas.tsas.domain.model.Match;
+import com.cas.tsas.match.domain.model.Match;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,6 +11,4 @@ public interface LoadMatchPort {
     Optional<Match> loadMatch(UUID id);
 
     List<Match> loadAllMatches();
-
-    boolean existsByPlayerId(UUID playerId);
 }

@@ -1,6 +1,6 @@
-package com.cas.tsas.application.port.in.match;
+package com.cas.tsas.match.application.port.in;
 
-import com.cas.tsas.domain.model.MatchScore;
+import com.cas.tsas.match.domain.model.MatchScore;
 
 import java.util.UUID;
 

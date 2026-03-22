@@ -1,4 +1,4 @@
-package com.cas.tsas.domain.exception;
+package com.cas.tsas.match.domain.exception;
 
 import java.util.UUID;
 
