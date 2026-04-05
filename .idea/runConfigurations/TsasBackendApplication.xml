@@ -3,7 +3,7 @@
     <envs>
       <env name="JAVA_HOME" value="/opt/java/jdk-25.0.1" />
     </envs>
-    <module name="tsas-backend.main" />
+    <module name="tsas-backend.app.main" />
     <option name="SPRING_BOOT_MAIN_CLASS" value="com.cas.tsas.TsasBackendApplication" />
     <option name="WORKING_DIRECTORY" value="file://$MODULE_WORKING_DIR$" />
     <method v="2">

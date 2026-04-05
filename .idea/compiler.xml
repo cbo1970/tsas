@@ -1,9 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="CompilerConfiguration">
+    <bytecodeTargetLevel>
+      <module name="tsas-backend.main" target="21" />
+      <module name="tsas-backend.test" target="21" />
+    </bytecodeTargetLevel>
+  </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="tsas-backend" options="-parameters" />
+      <module name="tsas-backend.app" options="-parameters" />
+      <module name="tsas-backend.app.main" options="-parameters" />
+      <module name="tsas-backend.app.test" options="-parameters" />
+      <module name="tsas-backend.auth-module.main" options="-parameters" />
+      <module name="tsas-backend.common-module.main" options="-parameters" />
       <module name="tsas-backend.main" options="-parameters" />
+      <module name="tsas-backend.match-module.main" options="-parameters" />
+      <module name="tsas-backend.player-module.main" options="-parameters" />
+      <module name="tsas-backend.statistics-module.main" options="-parameters" />
       <module name="tsas-backend.test" options="-parameters" />
     </option>
   </component>
