@@ -9,6 +9,12 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$/backend" />
+            <option value="$PROJECT_DIR$/backend/app" />
+            <option value="$PROJECT_DIR$/backend/auth-module" />
+            <option value="$PROJECT_DIR$/backend/common-module" />
+            <option value="$PROJECT_DIR$/backend/match-module" />
+            <option value="$PROJECT_DIR$/backend/player-module" />
+            <option value="$PROJECT_DIR$/backend/statistics-module" />
           </set>
         </option>
       </GradleProjectSettings>

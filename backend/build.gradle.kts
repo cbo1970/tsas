@@ -17,6 +17,7 @@ subprojects {
 
     tasks.withType<JavaCompile> {
         options.release = 21
+        options.compilerArgs.add("-parameters")
     }
 
     repositories {
