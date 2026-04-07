@@ -17,3 +17,9 @@ spring:
     console:
       enabled: true
       path: /h2-console
+
+tsas:
+  cors:
+    allowed-origins:
+      - "http://localhost:4200"
+

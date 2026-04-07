@@ -25,6 +25,12 @@ spring:
   #       jwt:
   #         issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/tsas}
 
+tsas:
+  cors:
+    allowed-origins:
+      - "http://localhost:4200"
+      - "http://192.168.1.101:4200"
+
 management:
   endpoints:
     web:

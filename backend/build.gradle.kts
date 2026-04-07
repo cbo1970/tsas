@@ -1,5 +1,3 @@
-import org.gradle.api.plugins.JavaPluginExtension
-
 plugins {
     id("org.springframework.boot") version "3.4.3" apply false
     id("io.spring.dependency-management") version "1.1.7" apply false
@@ -26,6 +24,8 @@ subprojects {
 
     dependencies {
         "testImplementation"("org.springframework.boot:spring-boot-starter-test")
+        "testImplementation"("org.testcontainers:junit-jupiter")
+        "testImplementation"("org.testcontainers:postgresql")
         "testRuntimeOnly"("org.junit.platform:junit-platform-launcher")
     }
 

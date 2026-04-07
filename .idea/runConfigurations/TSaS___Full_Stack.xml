@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="TSaS – Full Stack" type="CompoundRunConfigurationType">
+    <toRun name="TsasBackendApplication" type="SpringBootApplicationConfigurationType" />
+    <toRun name="Frontend – Angular Dev" type="js.build_tools.npm" />
+    <method v="2" />
+  </configuration>
+</component>

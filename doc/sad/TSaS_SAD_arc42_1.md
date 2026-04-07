@@ -332,7 +332,7 @@ Strukturiertes Logging via SLF4J/Logback im JSON-Format. Spring Boot Actuator st
 
 ### 8.5 Testkonzept
 
-- Unit Tests: JUnit 5 für Domänenlogik und Services.
+- Unit Tests: JUnit 5 (Jupiter) für Domänenlogik und Services; Mockito für das Mocking von Ports und externen Abhängigkeiten.
 - Integrationstests: Spring Boot Test mit Testcontainers (PostgreSQL).
 - API-Tests: REST Assured für Endpunkt-Validierung.
 - Frontend-Tests: Jasmine/Karma für Angular-Komponenten.
