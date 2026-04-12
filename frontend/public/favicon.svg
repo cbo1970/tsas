@@ -1,28 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Racket handle -->
-  <line x1="22" y1="22" x2="29" y2="29" stroke="#8B5E3C" stroke-width="3" stroke-linecap="round"/>
-
-  <!-- Racket frame (oval) -->
-  <ellipse cx="13" cy="13" rx="11" ry="12" fill="none" stroke="#2c6e49" stroke-width="2.5"/>
-
-  <!-- String grid (horizontal) -->
-  <line x1="4"  y1="9"  x2="22" y2="9"  stroke="#2c6e49" stroke-width="0.9" opacity="0.7"/>
-  <line x1="3"  y1="12" x2="23" y2="12" stroke="#2c6e49" stroke-width="0.9" opacity="0.7"/>
-  <line x1="3"  y1="15" x2="23" y2="15" stroke="#2c6e49" stroke-width="0.9" opacity="0.7"/>
-  <line x1="4"  y1="18" x2="22" y2="18" stroke="#2c6e49" stroke-width="0.9" opacity="0.7"/>
-
-  <!-- String grid (vertical) -->
-  <line x1="8"  y1="2"  x2="8"  y2="24" stroke="#2c6e49" stroke-width="0.9" opacity="0.7"/>
-  <line x1="11" y1="1"  x2="11" y2="25" stroke="#2c6e49" stroke-width="0.9" opacity="0.7"/>
-  <line x1="14" y1="1"  x2="14" y2="25" stroke="#2c6e49" stroke-width="0.9" opacity="0.7"/>
-  <line x1="17" y1="2"  x2="17" y2="24" stroke="#2c6e49" stroke-width="0.9" opacity="0.7"/>
-
-  <!-- Racket throat -->
-  <path d="M9 23 Q13 27 17 23" fill="none" stroke="#2c6e49" stroke-width="2.5"/>
-
+  <!-- Background -->
+  <rect width="32" height="32" rx="6" fill="#1a5276"/>
+  <!-- Racket frame -->
+  <ellipse cx="13" cy="12" rx="9.5" ry="10.5" fill="none" stroke="#fff" stroke-width="2.2"/>
+  <!-- Horizontal strings -->
+  <line x1="4"  y1="9"  x2="22" y2="9"  stroke="#fff" stroke-width="0.9" opacity="0.65"/>
+  <line x1="3.5" y1="12" x2="22.5" y2="12" stroke="#fff" stroke-width="0.9" opacity="0.65"/>
+  <line x1="4"  y1="15" x2="22" y2="15" stroke="#fff" stroke-width="0.9" opacity="0.65"/>
+  <!-- Vertical strings -->
+  <line x1="8"  y1="2"  x2="8"  y2="22" stroke="#fff" stroke-width="0.9" opacity="0.65"/>
+  <line x1="11" y1="1.5" x2="11" y2="22.5" stroke="#fff" stroke-width="0.9" opacity="0.65"/>
+  <line x1="14" y1="1.5" x2="14" y2="22.5" stroke="#fff" stroke-width="0.9" opacity="0.65"/>
+  <line x1="17" y1="2"  x2="17" y2="22" stroke="#fff" stroke-width="0.9" opacity="0.65"/>
+  <!-- Throat -->
+  <path d="M10 22 L13 26.5 L16 22" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/>
+  <!-- Handle -->
+  <line x1="13" y1="26.5" x2="13" y2="31" stroke="#fff" stroke-width="2.8" stroke-linecap="round"/>
   <!-- Tennis ball -->
-  <circle cx="24" cy="8" r="6" fill="#c8e84b"/>
-  <!-- Ball seam -->
-  <path d="M19 6 Q22 9 19 12" fill="none" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
-  <path d="M29 6 Q26 9 29 12" fill="none" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+  <circle cx="25" cy="8" r="5.5" fill="#c8e84b"/>
+  <path d="M20.5 6 Q23 8.5 20.5 11" fill="none" stroke="white" stroke-width="1.1" stroke-linecap="round"/>
+  <path d="M29.5 6 Q27 8.5 29.5 11" fill="none" stroke="white" stroke-width="1.1" stroke-linecap="round"/>
 </svg>
