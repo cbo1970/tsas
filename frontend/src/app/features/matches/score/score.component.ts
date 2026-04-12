@@ -132,19 +132,37 @@ import { ScoreEditDialogComponent } from './score-edit-dialog.component';
             </div>
 
           </div>
-        </div>
 
-        <div class="action-buttons">
-          <button mat-stroked-button (click)="openEditDialog()">
-            <mat-icon>edit</mat-icon>
-            Score korrigieren
-          </button>
-          @if (matchData()!.status !== 'COMPLETED') {
-            <button mat-raised-button color="warn" (click)="endMatch()">
-              <mat-icon>stop</mat-icon>
-              Match beenden
+          <div class="bottom-area">
+            <button class="ace-btn"
+                    [disabled]="matchData()!.status === 'COMPLETED'"
+                    (click)="recordAce(true)">
+              <span class="ace-icon">🎾</span>
+              <span class="ace-count">{{ matchData()!.score.acesPlayer1 }}</span>
+              <span class="ace-lbl">Asse {{ player1Name() }}</span>
             </button>
-          }
+
+            <div class="action-buttons">
+              <button mat-stroked-button (click)="openEditDialog()">
+                <mat-icon>edit</mat-icon>
+                Score korrigieren
+              </button>
+              @if (matchData()!.status !== 'COMPLETED') {
+                <button mat-raised-button color="warn" (click)="endMatch()">
+                  <mat-icon>stop</mat-icon>
+                  Match beenden
+                </button>
+              }
+            </div>
+
+            <button class="ace-btn"
+                    [disabled]="matchData()!.status === 'COMPLETED'"
+                    (click)="recordAce(false)">
+              <span class="ace-icon">🎾</span>
+              <span class="ace-count">{{ matchData()!.score.acesPlayer2 }}</span>
+              <span class="ace-lbl">Asse {{ player2Name() }}</span>
+            </button>
+          </div>
         </div>
       } @else {
         <div class="loading">Lade Match...</div>
@@ -174,7 +192,8 @@ import { ScoreEditDialogComponent } from './score-edit-dialog.component';
       padding: 28px 20px;
       border-radius: 12px;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      align-items: center;
       box-shadow: 0 6px 32px rgba(0,0,0,.5);
     }
 
@@ -301,8 +320,48 @@ import { ScoreEditDialogComponent } from './score-edit-dialog.component';
     .sval-md { font-size: 28px; font-weight: 500; line-height: 1; }
     .deuce-lbl { color: #ffd54f; font-size: 9px; font-weight: bold; }
 
-    /* ── Action buttons ── */
-    .action-buttons { display: flex; gap: 16px; justify-content: center; margin-top: 20px; }
+    /* ── Bottom area (ace buttons + action buttons) ── */
+    .bottom-area {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      margin-top: 20px;
+      gap: 12px;
+    }
+
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+    }
+    .action-buttons .mat-mdc-outlined-button {
+      color: white;
+      --mdc-outlined-button-outline-color: rgba(255,255,255,.6);
+    }
+
+    .ace-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.4);
+      border-radius: 10px;
+      padding: 10px 16px;
+      cursor: pointer;
+      color: white;
+      min-width: 80px;
+      transition: background 0.15s;
+    }
+    .ace-btn:hover:not([disabled]) { background: rgba(255,255,255,.2); }
+    .ace-btn:active:not([disabled]) { background: rgba(255,255,255,.28); }
+    .ace-btn[disabled] { opacity: 0.4; cursor: default; }
+    .ace-icon { font-size: 20px; line-height: 1; }
+    .ace-count { font-size: 28px; font-weight: bold; line-height: 1; }
+    .ace-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255,255,255,.7); text-align: center; }
     .loading { text-align: center; padding: 48px; color: #666; }
   `]
 })
@@ -347,6 +406,25 @@ export class ScoreComponent implements OnInit {
   loadPlayers(p1Id: string, p2Id: string) {
     this.api.getPlayer(p1Id).subscribe(p => this.player1.set(p));
     this.api.getPlayer(p2Id).subscribe(p => this.player2.set(p));
+  }
+
+  recordAce(forPlayer1: boolean) {
+    const m = this.matchData();
+    if (!m || m.status === 'COMPLETED') return;
+
+    const obs = forPlayer1
+      ? this.api.acePlayer1(this.matchId)
+      : this.api.acePlayer2(this.matchId);
+
+    obs.subscribe({
+      next: (score) => {
+        this.matchData.update(md => md ? { ...md, score } : md);
+        if (score.isDone) {
+          this.loadMatch();
+        }
+      },
+      error: () => this.snackBar.open('Fehler beim Speichern', 'OK', { duration: 3000 })
+    });
   }
 
   scorePoint(player1Scored: boolean) {
