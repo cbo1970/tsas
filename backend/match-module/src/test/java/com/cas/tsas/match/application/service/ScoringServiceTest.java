@@ -45,7 +45,7 @@ class ScoringServiceTest {
                                     int setsP1, int setsP2) {
         return new MatchScore(null, UUID.randomUUID(),
                 pointsP1, pointsP2, gamesP1, gamesP2, setsP1, setsP2,
-                false, null, 1, false, null);
+                false, null, 1, false, null, 0, 0);
     }
 
     private static MatchScore freshScore() {

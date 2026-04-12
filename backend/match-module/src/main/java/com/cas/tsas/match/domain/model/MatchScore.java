@@ -2,6 +2,10 @@ package com.cas.tsas.match.domain.model;
 
 import java.util.UUID;
 
+/**
+ * Domain entity representing the running score of a match.
+ * Pure POJO — no framework dependencies.
+ */
 public class MatchScore {
 
     private UUID id;
