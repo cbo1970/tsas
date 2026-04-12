@@ -1,0 +1,39 @@
+services:
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-tsas}
+      POSTGRES_USER: ${DB_USERNAME:-tsas}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-tsas}
+    volumes:
+      - ../volume/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-tsas}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/backend/Dockerfile
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${DB_NAME:-tsas}
+      DB_USERNAME: ${DB_USERNAME:-tsas}
+      DB_PASSWORD: ${DB_PASSWORD:-tsas}
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/frontend/Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
