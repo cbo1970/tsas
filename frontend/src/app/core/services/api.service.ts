@@ -70,6 +70,14 @@ export class ApiService {
     return this.http.post<MatchScore>(`${this.base}/matches/${matchId}/ace/player2`, {});
   }
 
+  setServingPlayer1(matchId: string): Observable<MatchScore> {
+    return this.http.post<MatchScore>(`${this.base}/matches/${matchId}/serve/player1`, {});
+  }
+
+  setServingPlayer2(matchId: string): Observable<MatchScore> {
+    return this.http.post<MatchScore>(`${this.base}/matches/${matchId}/serve/player2`, {});
+  }
+
   setScore(matchId: string, request: SetScoreRequest): Observable<MatchScore> {
     return this.http.put<MatchScore>(`${this.base}/matches/${matchId}/score`, request);
   }

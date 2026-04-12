@@ -43,6 +43,7 @@ function makeMatch(overrides: Partial<MatchWithScore> = {}): MatchWithScore {
       winner: null,
       acesPlayer1: 0,
       acesPlayer2: 0,
+      servingPlayer: null,
     },
     ...overrides,
   };

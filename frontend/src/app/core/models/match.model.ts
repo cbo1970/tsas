@@ -26,6 +26,7 @@ export interface MatchScore {
   winner: string | null;
   acesPlayer1: number;
   acesPlayer2: number;
+  servingPlayer: number | null;
 }
 
 export interface MatchWithScore extends Match {
