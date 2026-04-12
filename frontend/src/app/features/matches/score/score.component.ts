@@ -76,7 +76,9 @@ import { ScoreEditDialogComponent } from './score-edit-dialog.component';
                  [class.inactive]="matchData()!.status === 'COMPLETED'"
                  (click)="scorePoint(false)">
               <div class="player-overlay">
-                <div class="pname">{{ player2Name() }}</div>
+                <div class="pname">
+                  @if (servingPlayer() === 2) { <span class="serve-indicator">🎾 </span> }{{ player2Name() }}
+                </div>
                 <div class="score-blocks">
                   <div class="score-block">
                     <div class="slbl">Sets</div>
@@ -106,7 +108,9 @@ import { ScoreEditDialogComponent } from './score-edit-dialog.component';
                  [class.inactive]="matchData()!.status === 'COMPLETED'"
                  (click)="scorePoint(true)">
               <div class="player-overlay">
-                <div class="pname">{{ player1Name() }}</div>
+                <div class="pname">
+                  @if (servingPlayer() === 1) { <span class="serve-indicator">🎾 </span> }{{ player1Name() }}
+                </div>
                 <div class="score-blocks">
                   <div class="score-block">
                     <div class="slbl">Sets</div>
@@ -135,7 +139,7 @@ import { ScoreEditDialogComponent } from './score-edit-dialog.component';
 
           <div class="bottom-area">
             <button class="ace-btn"
-                    [disabled]="matchData()!.status === 'COMPLETED'"
+                    [disabled]="matchData()!.status === 'COMPLETED' || servingPlayer() !== 1"
                     (click)="recordAce(true)">
               <span class="ace-icon">🎾</span>
               <span class="ace-count">{{ matchData()!.score.acesPlayer1 }}</span>
@@ -143,6 +147,15 @@ import { ScoreEditDialogComponent } from './score-edit-dialog.component';
             </button>
 
             <div class="action-buttons">
+              @if (servingPlayer() === null && matchData()!.status !== 'COMPLETED') {
+                <div class="serve-toggle">
+                  <span class="serve-lbl">Aufschlag</span>
+                  <div class="serve-btns">
+                    <button class="serve-btn" (click)="setServe(true)">{{ player1Name() }}</button>
+                    <button class="serve-btn" (click)="setServe(false)">{{ player2Name() }}</button>
+                  </div>
+                </div>
+              }
               <button mat-stroked-button (click)="openEditDialog()">
                 <mat-icon>edit</mat-icon>
                 Score korrigieren
@@ -156,7 +169,7 @@ import { ScoreEditDialogComponent } from './score-edit-dialog.component';
             </div>
 
             <button class="ace-btn"
-                    [disabled]="matchData()!.status === 'COMPLETED'"
+                    [disabled]="matchData()!.status === 'COMPLETED' || servingPlayer() !== 2"
                     (click)="recordAce(false)">
               <span class="ace-icon">🎾</span>
               <span class="ace-count">{{ matchData()!.score.acesPlayer2 }}</span>
@@ -363,6 +376,32 @@ import { ScoreEditDialogComponent } from './score-edit-dialog.component';
     .ace-count { font-size: 28px; font-weight: bold; line-height: 1; }
     .ace-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255,255,255,.7); text-align: center; }
     .loading { text-align: center; padding: 48px; color: #666; }
+    .serve-toggle {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+    .serve-lbl {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgba(255,255,255,.6);
+    }
+    .serve-btns { display: flex; gap: 8px; }
+    .serve-btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,.5);
+      border-radius: 6px;
+      color: white;
+      font-size: 12px;
+      padding: 5px 10px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .serve-btn:hover { background: rgba(255,255,255,.15); }
+    .serve-indicator { font-size: 14px; }
   `]
 })
 export class ScoreComponent implements OnInit {
@@ -385,6 +424,8 @@ export class ScoreComponent implements OnInit {
     const p = this.player2();
     return p ? `${p.firstName} ${p.lastName}` : 'Spieler 2';
   });
+
+  servingPlayer = computed(() => this.matchData()?.score?.servingPlayer ?? null);
 
   private matchId = '';
 
@@ -422,6 +463,22 @@ export class ScoreComponent implements OnInit {
         if (score.isDone) {
           this.loadMatch();
         }
+      },
+      error: () => this.snackBar.open('Fehler beim Speichern', 'OK', { duration: 3000 })
+    });
+  }
+
+  setServe(forPlayer1: boolean) {
+    const m = this.matchData();
+    if (!m || m.status === 'COMPLETED') return;
+
+    const obs = forPlayer1
+      ? this.api.setServingPlayer1(this.matchId)
+      : this.api.setServingPlayer2(this.matchId);
+
+    obs.subscribe({
+      next: (score) => {
+        this.matchData.update(md => md ? { ...md, score } : md);
       },
       error: () => this.snackBar.open('Fehler beim Speichern', 'OK', { duration: 3000 })
     });
