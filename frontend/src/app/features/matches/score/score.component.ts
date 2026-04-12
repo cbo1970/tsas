@@ -71,10 +71,11 @@ import { ScoreEditDialogComponent } from './score-edit-dialog.component';
               <div class="net-post"></div>
             </div>
 
-            <!-- Player 2 half (top) — click to score -->
+            <!-- Player 2 half (top) — click to score / set serve -->
             <div class="court-half top-half"
                  [class.inactive]="matchData()!.status === 'COMPLETED'"
-                 (click)="scorePoint(false)">
+                 [class.serve-pending]="servingPlayer() === null && matchData()!.status !== 'COMPLETED'"
+                 (click)="handleCourtClick(false)">
               <div class="player-overlay">
                 <div class="pname">
                   @if (servingPlayer() === 2) { <span class="serve-indicator">🎾 </span> }{{ player2Name() }}
@@ -103,10 +104,11 @@ import { ScoreEditDialogComponent } from './score-edit-dialog.component';
               </div>
             </div>
 
-            <!-- Player 1 half (bottom) — click to score -->
+            <!-- Player 1 half (bottom) — click to score / set serve -->
             <div class="court-half bottom-half"
                  [class.inactive]="matchData()!.status === 'COMPLETED'"
-                 (click)="scorePoint(true)">
+                 [class.serve-pending]="servingPlayer() === null && matchData()!.status !== 'COMPLETED'"
+                 (click)="handleCourtClick(true)">
               <div class="player-overlay">
                 <div class="pname">
                   @if (servingPlayer() === 1) { <span class="serve-indicator">🎾 </span> }{{ player1Name() }}
@@ -147,15 +149,6 @@ import { ScoreEditDialogComponent } from './score-edit-dialog.component';
             </button>
 
             <div class="action-buttons">
-              @if (servingPlayer() === null && matchData()!.status !== 'COMPLETED') {
-                <div class="serve-toggle">
-                  <span class="serve-lbl">Aufschlag</span>
-                  <div class="serve-btns">
-                    <button class="serve-btn" (click)="setServe(true)">{{ player1Name() }}</button>
-                    <button class="serve-btn" (click)="setServe(false)">{{ player2Name() }}</button>
-                  </div>
-                </div>
-              }
               <button mat-stroked-button (click)="openEditDialog()">
                 <mat-icon>edit</mat-icon>
                 Score korrigieren
@@ -282,6 +275,8 @@ import { ScoreEditDialogComponent } from './score-edit-dialog.component';
     .court-half:hover:not(.inactive)  { background: rgba(255,255,255,.06); }
     .court-half:active:not(.inactive) { background: rgba(255,255,255,.12); }
     .court-half.inactive { cursor: default; }
+    .court-half.serve-pending { opacity: 0.45; }
+    .court-half.serve-pending:hover { opacity: 0.75; background: rgba(255,255,255,.08); }
 
     /* ── Score overlay card on each half ── */
     .player-overlay {
@@ -376,31 +371,6 @@ import { ScoreEditDialogComponent } from './score-edit-dialog.component';
     .ace-count { font-size: 28px; font-weight: bold; line-height: 1; }
     .ace-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255,255,255,.7); text-align: center; }
     .loading { text-align: center; padding: 48px; color: #666; }
-    .serve-toggle {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 4px;
-    }
-    .serve-lbl {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: rgba(255,255,255,.6);
-    }
-    .serve-btns { display: flex; gap: 8px; }
-    .serve-btn {
-      background: transparent;
-      border: 1px solid rgba(255,255,255,.5);
-      border-radius: 6px;
-      color: white;
-      font-size: 12px;
-      padding: 5px 10px;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-    .serve-btn:hover { background: rgba(255,255,255,.15); }
     .serve-indicator { font-size: 14px; }
   `]
 })
@@ -482,6 +452,14 @@ export class ScoreComponent implements OnInit {
       },
       error: () => this.snackBar.open('Fehler beim Speichern', 'OK', { duration: 3000 })
     });
+  }
+
+  handleCourtClick(forPlayer1: boolean) {
+    if (this.servingPlayer() === null) {
+      this.setServe(forPlayer1);
+    } else {
+      this.scorePoint(forPlayer1);
+    }
   }
 
   scorePoint(player1Scored: boolean) {
