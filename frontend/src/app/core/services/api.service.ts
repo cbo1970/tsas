@@ -62,6 +62,14 @@ export class ApiService {
     return this.http.post<MatchScore>(`${this.base}/matches/${matchId}/score/player2`, {});
   }
 
+  acePlayer1(matchId: string): Observable<MatchScore> {
+    return this.http.post<MatchScore>(`${this.base}/matches/${matchId}/ace/player1`, {});
+  }
+
+  acePlayer2(matchId: string): Observable<MatchScore> {
+    return this.http.post<MatchScore>(`${this.base}/matches/${matchId}/ace/player2`, {});
+  }
+
   setScore(matchId: string, request: SetScoreRequest): Observable<MatchScore> {
     return this.http.put<MatchScore>(`${this.base}/matches/${matchId}/score`, request);
   }

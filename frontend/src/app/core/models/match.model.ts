@@ -24,6 +24,8 @@ export interface MatchScore {
   currentSet: number;
   isDone: boolean;
   winner: string | null;
+  acesPlayer1: number;
+  acesPlayer2: number;
 }
 
 export interface MatchWithScore extends Match {
