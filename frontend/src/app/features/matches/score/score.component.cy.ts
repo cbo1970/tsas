@@ -41,6 +41,8 @@ function makeMatch(overrides: Partial<MatchWithScore> = {}): MatchWithScore {
       currentSet: 1,
       isDone: false,
       winner: null,
+      acesPlayer1: 0,
+      acesPlayer2: 0,
     },
     ...overrides,
   };
