@@ -189,5 +189,17 @@ class MatchApiIT extends AbstractIntegrationTest {
                     .andExpect(jsonPath("$.acesPlayer2").value(0))
                     .andExpect(jsonPath("$.pointsPlayer1").value(1));
         }
+
+        @Test
+        void returns_409_when_match_already_completed() throws Exception {
+            UUID p1 = createPlayer();
+            UUID p2 = createPlayer();
+            UUID matchId = createMatch(p1, p2);
+
+            mockMvc.perform(post("/api/matches/{id}/end", matchId));
+
+            mockMvc.perform(post("/api/matches/{id}/ace/player1", matchId))
+                    .andExpect(status().isConflict());
+        }
     }
 }

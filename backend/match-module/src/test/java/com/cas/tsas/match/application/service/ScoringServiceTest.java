@@ -309,22 +309,26 @@ class ScoringServiceTest {
     }
 
     // =========================================================================
-    @Test
-    void recordAce_incrementsAceCounterAndScoresPoint() {
-        // Arrange
-        Match match = new Match(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
-                2, false, false, MatchStatus.IN_PROGRESS);
-        MatchScore score = new MatchScore(UUID.randomUUID(), match.getId(),
-                0, 0, 0, 0, 0, 0, false, null, 1, false, null, 0, 0);
+    @Nested
+    class AceRecording {
 
-        // Act — ace for player 1
-        score.setAcesPlayer1(score.getAcesPlayer1() + 1);
-        scoringService.applyPoint(match, score, true);
+        @Test
+        void recordAce_incrementsAceCounterAndScoresPoint() {
+            // Arrange
+            Match match = new Match(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+                    2, false, false, MatchStatus.IN_PROGRESS);
+            MatchScore score = new MatchScore(UUID.randomUUID(), match.getId(),
+                    0, 0, 0, 0, 0, 0, false, null, 1, false, null, 0, 0);
 
-        // Assert
-        assertThat(score.getAcesPlayer1()).isEqualTo(1);
-        assertThat(score.getAcesPlayer2()).isEqualTo(0);
-        assertThat(score.getPointsPlayer1()).isEqualTo(1); // 0 -> 15
+            // Act — ace for player 1
+            score.setAcesPlayer1(score.getAcesPlayer1() + 1);
+            scoringService.applyPoint(match, score, true);
+
+            // Assert
+            assertThat(score.getAcesPlayer1()).isEqualTo(1);
+            assertThat(score.getAcesPlayer2()).isEqualTo(0);
+            assertThat(score.getPointsPlayer1()).isEqualTo(1); // 0 -> 15
+        }
     }
 
     // =========================================================================
