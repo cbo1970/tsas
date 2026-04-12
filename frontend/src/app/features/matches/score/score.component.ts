@@ -280,14 +280,14 @@ import { ScoreEditDialogComponent } from './score-edit-dialog.component';
 
     /* ── Score overlay card on each half ── */
     .player-overlay {
-      background: rgba(0, 10, 5, 0.62);
-      backdrop-filter: blur(6px);
-      border: 1px solid rgba(255,255,255,.15);
+      background: rgb(6, 28, 70);
+      border: 1px solid rgba(255,255,255,.2);
       border-radius: 10px;
       padding: 10px 18px 12px;
       text-align: center;
       color: white;
       min-width: 200px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.4);
     }
     .pname {
       font-size: 16px;
