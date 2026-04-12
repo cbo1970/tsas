@@ -3,6 +3,7 @@ package com.cas.tsas.match.application.service;
 import com.cas.tsas.match.application.port.in.CreateMatchUseCase;
 import com.cas.tsas.match.application.port.in.EndMatchUseCase;
 import com.cas.tsas.match.application.port.in.GetMatchUseCase;
+import com.cas.tsas.match.application.port.in.RecordAceUseCase;
 import com.cas.tsas.match.application.port.in.RecordPointUseCase;
 import com.cas.tsas.match.application.port.in.SetScoreUseCase;
 import com.cas.tsas.match.application.port.out.LoadMatchPort;
@@ -24,7 +25,7 @@ import java.util.UUID;
 @Service
 @Transactional
 public class MatchService implements CreateMatchUseCase, GetMatchUseCase, RecordPointUseCase,
-        SetScoreUseCase, EndMatchUseCase {
+        SetScoreUseCase, EndMatchUseCase, RecordAceUseCase {
 
     private final LoadMatchPort loadMatchPort;
     private final SaveMatchPort saveMatchPort;
@@ -152,6 +153,35 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
             saveMatchPort.saveMatch(match);
         } else if (!saved.isDone() && match.getStatus() == MatchStatus.COMPLETED) {
             match.setStatus(MatchStatus.IN_PROGRESS);
+            saveMatchPort.saveMatch(match);
+        }
+
+        return saved;
+    }
+
+    @Override
+    public MatchScore recordAce(RecordAceCommand command) {
+        Match match = loadMatchPort.loadMatch(command.matchId())
+                .orElseThrow(() -> new MatchNotFoundException(command.matchId()));
+
+        if (match.getStatus() == MatchStatus.COMPLETED) {
+            throw new IllegalStateException("Match is already completed");
+        }
+
+        MatchScore score = loadMatchScorePort.loadMatchScore(command.matchId())
+                .orElseThrow(() -> new MatchNotFoundException(command.matchId()));
+
+        if (command.forPlayer1()) {
+            score.setAcesPlayer1(score.getAcesPlayer1() + 1);
+        } else {
+            score.setAcesPlayer2(score.getAcesPlayer2() + 1);
+        }
+
+        scoringService.applyPoint(match, score, command.forPlayer1());
+        MatchScore saved = saveMatchScorePort.saveMatchScore(score);
+
+        if (saved.isDone()) {
+            match.setStatus(MatchStatus.COMPLETED);
             saveMatchPort.saveMatch(match);
         }
 
