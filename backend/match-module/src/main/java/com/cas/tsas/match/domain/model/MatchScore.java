@@ -23,6 +23,7 @@ public class MatchScore {
     private String winner;
     private int acesPlayer1;
     private int acesPlayer2;
+    private Integer servingPlayer;
 
     public MatchScore() {}
 
@@ -32,7 +33,8 @@ public class MatchScore {
                       int setsPlayer1, int setsPlayer2,
                       boolean isDeuce, Boolean isAdvantagePlayer1,
                       int currentSet, boolean isDone, String winner,
-                      int acesPlayer1, int acesPlayer2) {
+                      int acesPlayer1, int acesPlayer2,
+                      Integer servingPlayer) {
         this.id = id;
         this.matchId = matchId;
         this.pointsPlayer1 = pointsPlayer1;
@@ -48,6 +50,7 @@ public class MatchScore {
         this.winner = winner;
         this.acesPlayer1 = acesPlayer1;
         this.acesPlayer2 = acesPlayer2;
+        this.servingPlayer = servingPlayer;
     }
 
     public UUID getId() { return id; }
@@ -94,4 +97,7 @@ public class MatchScore {
 
     public int getAcesPlayer2() { return acesPlayer2; }
     public void setAcesPlayer2(int acesPlayer2) { this.acesPlayer2 = acesPlayer2; }
+
+    public Integer getServingPlayer() { return servingPlayer; }
+    public void setServingPlayer(Integer servingPlayer) { this.servingPlayer = servingPlayer; }
 }

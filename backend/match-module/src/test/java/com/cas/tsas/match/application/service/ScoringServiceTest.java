@@ -45,7 +45,7 @@ class ScoringServiceTest {
                                     int setsP1, int setsP2) {
         return new MatchScore(null, UUID.randomUUID(),
                 pointsP1, pointsP2, gamesP1, gamesP2, setsP1, setsP2,
-                false, null, 1, false, null, 0, 0);
+                false, null, 1, false, null, 0, 0, null);
     }
 
     private static MatchScore freshScore() {
@@ -340,6 +340,56 @@ class ScoringServiceTest {
 
             assertThat(s.getPointsPlayer1()).isEqualTo(0);
             assertThat(s.getWinner()).isEqualTo("PLAYER1");
+        }
+    }
+
+    // =========================================================================
+    @Nested
+    class ServeRotation {
+
+        @Test
+        void serve_rotates_to_player2_after_player1_wins_game() {
+            Match match = normalMatch();
+            MatchScore s = score(3, 0, 0, 0, 0, 0);
+            s.setServingPlayer(1);
+
+            scoringService.applyPoint(match, s, true); // player1 wins game (40:0 → game)
+
+            assertThat(s.getServingPlayer()).isEqualTo(2);
+        }
+
+        @Test
+        void serve_rotates_to_player1_after_player2_wins_game() {
+            Match match = normalMatch();
+            MatchScore s = score(0, 3, 0, 0, 0, 0);
+            s.setServingPlayer(2);
+
+            scoringService.applyPoint(match, s, false); // player2 wins game
+
+            assertThat(s.getServingPlayer()).isEqualTo(1);
+        }
+
+        @Test
+        void serve_not_rotated_when_serving_player_is_null() {
+            Match match = normalMatch();
+            MatchScore s = score(3, 0, 0, 0, 0, 0);
+            // servingPlayer is null (default from factory)
+
+            scoringService.applyPoint(match, s, true);
+
+            assertThat(s.getServingPlayer()).isNull();
+        }
+
+        @Test
+        void serve_rotates_after_regular_tiebreak_win() {
+            // Tiebreak at 6:4 points — one more point wins for player1 (7:4 → tiebreak won)
+            Match match = normalMatch();
+            MatchScore s = score(6, 4, 6, 6, 0, 0);
+            s.setServingPlayer(1);
+
+            scoringService.applyPoint(match, s, true);
+
+            assertThat(s.getServingPlayer()).isEqualTo(2);
         }
     }
 }

@@ -73,7 +73,8 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
                 0, 0,
                 false, null,
                 1, false, null,
-                0, 0
+                0, 0,
+                null
         );
         saveMatchScorePort.saveMatchScore(score);
 

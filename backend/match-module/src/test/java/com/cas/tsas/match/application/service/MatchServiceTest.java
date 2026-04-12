@@ -67,7 +67,7 @@ class MatchServiceTest {
     }
 
     private static MatchScore freshScore() {
-        return new MatchScore(null, MATCH_ID, 0, 0, 0, 0, 0, 0, false, null, 1, false, null, 0, 0);
+        return new MatchScore(null, MATCH_ID, 0, 0, 0, 0, 0, 0, false, null, 1, false, null, 0, 0, null);
     }
 
     private static Player anyPlayer(UUID id) {
@@ -344,7 +344,7 @@ class MatchServiceTest {
         @Test
         void marks_score_done_and_determines_winner_by_sets() {
             Match match = inProgressMatch();
-            MatchScore score = new MatchScore(null, MATCH_ID, 0, 0, 0, 0, 2, 1, false, null, 3, false, null, 0, 0);
+            MatchScore score = new MatchScore(null, MATCH_ID, 0, 0, 0, 0, 2, 1, false, null, 3, false, null, 0, 0, null);
             when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(match));
             when(saveMatchPort.saveMatch(any())).thenReturn(match);
             when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));

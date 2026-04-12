@@ -19,7 +19,8 @@ public record MatchScoreResponse(
         boolean isDone,
         String winner,
         int acesPlayer1,
-        int acesPlayer2
+        int acesPlayer2,
+        Integer servingPlayer
 ) {
     public static MatchScoreResponse from(MatchScore score) {
         return new MatchScoreResponse(
@@ -37,7 +38,8 @@ public record MatchScoreResponse(
                 score.isDone(),
                 score.getWinner(),
                 score.getAcesPlayer1(),
-                score.getAcesPlayer2()
+                score.getAcesPlayer2(),
+                score.getServingPlayer()
         );
     }
 }

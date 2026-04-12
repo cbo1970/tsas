@@ -99,6 +99,7 @@ public class ScoringService {
         }
 
         checkSetWon(match, score);
+        rotateServe(score);
     }
 
     private void checkSetWon(Match match, MatchScore score) {
@@ -203,6 +204,7 @@ public class ScoringService {
                     score.setGamesPlayer2(score.getGamesPlayer2() + 1);
                     awardSet(match, score, false);
                 }
+                rotateServe(score);
             }
         }
     }
@@ -241,5 +243,11 @@ public class ScoringService {
         int s2 = score.getSetsPlayer2();
         // Match tiebreak: when sets are (required-1):(required-1)
         return s1 == required - 1 && s2 == required - 1;
+    }
+
+    private void rotateServe(MatchScore score) {
+        if (score.getServingPlayer() != null) {
+            score.setServingPlayer(score.getServingPlayer() == 1 ? 2 : 1);
+        }
     }
 }

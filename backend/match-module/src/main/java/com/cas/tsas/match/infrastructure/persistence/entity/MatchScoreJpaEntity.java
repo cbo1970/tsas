@@ -54,6 +54,9 @@ public class MatchScoreJpaEntity {
     @Column(name = "aces_player2")
     private int acesPlayer2;
 
+    @Column(name = "serving_player")
+    private Integer servingPlayer;
+
     public MatchScoreJpaEntity() {}
 
     public UUID getId() { return id; }
@@ -100,4 +103,7 @@ public class MatchScoreJpaEntity {
 
     public int getAcesPlayer2() { return acesPlayer2; }
     public void setAcesPlayer2(int acesPlayer2) { this.acesPlayer2 = acesPlayer2; }
+
+    public Integer getServingPlayer() { return servingPlayer; }
+    public void setServingPlayer(Integer servingPlayer) { this.servingPlayer = servingPlayer; }
 }

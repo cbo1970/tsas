@@ -23,7 +23,8 @@ public class MatchScoreMapper {
                 entity.isDone(),
                 entity.getWinner(),
                 entity.getAcesPlayer1(),
-                entity.getAcesPlayer2()
+                entity.getAcesPlayer2(),
+                entity.getServingPlayer()
         );
     }
 
@@ -44,6 +45,7 @@ public class MatchScoreMapper {
         entity.setWinner(score.getWinner());
         entity.setAcesPlayer1(score.getAcesPlayer1());
         entity.setAcesPlayer2(score.getAcesPlayer2());
+        entity.setServingPlayer(score.getServingPlayer());
         return entity;
     }
 }
