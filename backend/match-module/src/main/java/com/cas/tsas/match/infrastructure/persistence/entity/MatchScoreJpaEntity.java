@@ -48,6 +48,12 @@ public class MatchScoreJpaEntity {
     @Column(name = "winner")
     private String winner;
 
+    @Column(name = "aces_player1")
+    private int acesPlayer1;
+
+    @Column(name = "aces_player2")
+    private int acesPlayer2;
+
     public MatchScoreJpaEntity() {}
 
     public UUID getId() { return id; }
@@ -88,4 +94,10 @@ public class MatchScoreJpaEntity {
 
     public String getWinner() { return winner; }
     public void setWinner(String winner) { this.winner = winner; }
+
+    public int getAcesPlayer1() { return acesPlayer1; }
+    public void setAcesPlayer1(int acesPlayer1) { this.acesPlayer1 = acesPlayer1; }
+
+    public int getAcesPlayer2() { return acesPlayer2; }
+    public void setAcesPlayer2(int acesPlayer2) { this.acesPlayer2 = acesPlayer2; }
 }

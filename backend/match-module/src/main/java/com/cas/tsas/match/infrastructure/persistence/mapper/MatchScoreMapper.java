@@ -21,7 +21,9 @@ public class MatchScoreMapper {
                 entity.getIsAdvantagePlayer1(),
                 entity.getCurrentSet(),
                 entity.isDone(),
-                entity.getWinner()
+                entity.getWinner(),
+                entity.getAcesPlayer1(),
+                entity.getAcesPlayer2()
         );
     }
 
@@ -40,6 +42,8 @@ public class MatchScoreMapper {
         entity.setCurrentSet(score.getCurrentSet());
         entity.setDone(score.isDone());
         entity.setWinner(score.getWinner());
+        entity.setAcesPlayer1(score.getAcesPlayer1());
+        entity.setAcesPlayer2(score.getAcesPlayer2());
         return entity;
     }
 }

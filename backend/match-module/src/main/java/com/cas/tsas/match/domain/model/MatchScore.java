@@ -2,10 +2,6 @@ package com.cas.tsas.match.domain.model;
 
 import java.util.UUID;
 
-/**
- * Domain entity representing the running score of a match.
- * Pure POJO — no framework dependencies.
- */
 public class MatchScore {
 
     private UUID id;
@@ -21,6 +17,8 @@ public class MatchScore {
     private int currentSet;
     private boolean isDone;
     private String winner;
+    private int acesPlayer1;
+    private int acesPlayer2;
 
     public MatchScore() {}
 
@@ -29,7 +27,8 @@ public class MatchScore {
                       int gamesPlayer1, int gamesPlayer2,
                       int setsPlayer1, int setsPlayer2,
                       boolean isDeuce, Boolean isAdvantagePlayer1,
-                      int currentSet, boolean isDone, String winner) {
+                      int currentSet, boolean isDone, String winner,
+                      int acesPlayer1, int acesPlayer2) {
         this.id = id;
         this.matchId = matchId;
         this.pointsPlayer1 = pointsPlayer1;
@@ -43,6 +42,8 @@ public class MatchScore {
         this.currentSet = currentSet;
         this.isDone = isDone;
         this.winner = winner;
+        this.acesPlayer1 = acesPlayer1;
+        this.acesPlayer2 = acesPlayer2;
     }
 
     public UUID getId() { return id; }
@@ -83,4 +84,10 @@ public class MatchScore {
 
     public String getWinner() { return winner; }
     public void setWinner(String winner) { this.winner = winner; }
+
+    public int getAcesPlayer1() { return acesPlayer1; }
+    public void setAcesPlayer1(int acesPlayer1) { this.acesPlayer1 = acesPlayer1; }
+
+    public int getAcesPlayer2() { return acesPlayer2; }
+    public void setAcesPlayer2(int acesPlayer2) { this.acesPlayer2 = acesPlayer2; }
 }
