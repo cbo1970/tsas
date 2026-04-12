@@ -4,6 +4,7 @@ import com.cas.tsas.match.application.port.in.CreateMatchUseCase;
 import com.cas.tsas.match.application.port.in.RecordAceUseCase;
 import com.cas.tsas.match.application.port.in.RecordPointUseCase;
 import com.cas.tsas.match.application.port.in.SetScoreUseCase;
+import com.cas.tsas.match.application.port.in.SetServingPlayerUseCase;
 import com.cas.tsas.match.application.port.out.LoadMatchPort;
 import com.cas.tsas.match.application.port.out.LoadMatchScorePort;
 import com.cas.tsas.match.application.port.out.SaveMatchPort;
@@ -369,6 +370,68 @@ class MatchServiceTest {
             matchService.endMatch(MATCH_ID);
 
             verify(saveMatchScorePort, never()).saveMatchScore(any());
+        }
+    }
+
+    // =========================================================================
+    @Nested
+    class SetServingPlayer {
+
+        @Test
+        void throws_MatchNotFoundException_when_match_not_found() {
+            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() ->
+                matchService.setServingPlayer(
+                    new SetServingPlayerUseCase.SetServingPlayerCommand(MATCH_ID, true)))
+                .isInstanceOf(MatchNotFoundException.class);
+        }
+
+        @Test
+        void throws_IllegalStateException_when_match_already_completed() {
+            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(completedMatch()));
+
+            assertThatThrownBy(() ->
+                matchService.setServingPlayer(
+                    new SetServingPlayerUseCase.SetServingPlayerCommand(MATCH_ID, true)))
+                .isInstanceOf(IllegalStateException.class);
+        }
+
+        @Test
+        void sets_serving_player_to_1_for_player1() {
+            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(inProgressMatch()));
+            MatchScore score = freshScore();
+            when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
+            when(saveMatchScorePort.saveMatchScore(any())).thenAnswer(inv -> inv.getArgument(0));
+
+            MatchScore result = matchService.setServingPlayer(
+                    new SetServingPlayerUseCase.SetServingPlayerCommand(MATCH_ID, true));
+
+            assertThat(result.getServingPlayer()).isEqualTo(1);
+        }
+
+        @Test
+        void sets_serving_player_to_2_for_player2() {
+            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(inProgressMatch()));
+            MatchScore score = freshScore();
+            when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
+            when(saveMatchScorePort.saveMatchScore(any())).thenAnswer(inv -> inv.getArgument(0));
+
+            MatchScore result = matchService.setServingPlayer(
+                    new SetServingPlayerUseCase.SetServingPlayerCommand(MATCH_ID, false));
+
+            assertThat(result.getServingPlayer()).isEqualTo(2);
+        }
+
+        @Test
+        void throws_MatchNotFoundException_when_score_not_found() {
+            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(inProgressMatch()));
+            when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() ->
+                matchService.setServingPlayer(
+                    new SetServingPlayerUseCase.SetServingPlayerCommand(MATCH_ID, true)))
+                .isInstanceOf(MatchNotFoundException.class);
         }
     }
 }

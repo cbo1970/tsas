@@ -6,6 +6,7 @@ import com.cas.tsas.match.application.port.in.GetMatchUseCase;
 import com.cas.tsas.match.application.port.in.RecordAceUseCase;
 import com.cas.tsas.match.application.port.in.RecordPointUseCase;
 import com.cas.tsas.match.application.port.in.SetScoreUseCase;
+import com.cas.tsas.match.application.port.in.SetServingPlayerUseCase;
 import com.cas.tsas.match.application.port.out.LoadMatchPort;
 import com.cas.tsas.match.application.port.out.LoadMatchScorePort;
 import com.cas.tsas.match.application.port.out.SaveMatchPort;
@@ -25,7 +26,7 @@ import java.util.UUID;
 @Service
 @Transactional
 public class MatchService implements CreateMatchUseCase, GetMatchUseCase, RecordPointUseCase,
-        SetScoreUseCase, EndMatchUseCase, RecordAceUseCase {
+        SetScoreUseCase, EndMatchUseCase, RecordAceUseCase, SetServingPlayerUseCase {
 
     private final LoadMatchPort loadMatchPort;
     private final SaveMatchPort saveMatchPort;
@@ -187,6 +188,23 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
         }
 
         return saved;
+    }
+
+    @Override
+    public MatchScore setServingPlayer(SetServingPlayerCommand command) {
+        Match match = loadMatchPort.loadMatch(command.matchId())
+                .orElseThrow(() -> new MatchNotFoundException(command.matchId()));
+
+        if (match.getStatus() == MatchStatus.COMPLETED) {
+            throw new IllegalStateException("Match is already completed");
+        }
+
+        MatchScore score = loadMatchScorePort.loadMatchScore(command.matchId())
+                .orElseThrow(() -> new MatchNotFoundException(command.matchId()));
+
+        score.setServingPlayer(command.forPlayer1() ? 1 : 2);
+
+        return saveMatchScorePort.saveMatchScore(score);
     }
 
     @Override
