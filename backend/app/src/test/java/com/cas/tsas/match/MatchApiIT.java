@@ -172,4 +172,22 @@ class MatchApiIT extends AbstractIntegrationTest {
                     .andExpect(jsonPath("$.status").value("COMPLETED"));
         }
     }
+
+    // =========================================================================
+    @Nested
+    class RecordAce {
+
+        @Test
+        void acePlayer1_incrementsAceCounterAndScoresPoint() throws Exception {
+            UUID p1 = createPlayer();
+            UUID p2 = createPlayer();
+            UUID matchId = createMatch(p1, p2);
+
+            mockMvc.perform(post("/api/matches/{id}/ace/player1", matchId))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.acesPlayer1").value(1))
+                    .andExpect(jsonPath("$.acesPlayer2").value(0))
+                    .andExpect(jsonPath("$.pointsPlayer1").value(1));
+        }
+    }
 }

@@ -104,7 +104,7 @@ class MatchPersistenceAdapterIT {
         void saves_and_loads_score_by_match_id() {
             Match savedMatch = matchAdapter.saveMatch(newMatch());
             MatchScore score = new MatchScore(
-                    null, savedMatch.getId(), 2, 1, 3, 2, 1, 0, false, null, 2, false, null);
+                    null, savedMatch.getId(), 2, 1, 3, 2, 1, 0, false, null, 2, false, null, 0, 0);
 
             scoreAdapter.saveMatchScore(score);
 
