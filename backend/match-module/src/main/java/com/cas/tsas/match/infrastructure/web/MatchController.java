@@ -6,6 +6,7 @@ import com.cas.tsas.match.application.port.in.GetMatchUseCase;
 import com.cas.tsas.match.application.port.in.RecordAceUseCase;
 import com.cas.tsas.match.application.port.in.RecordPointUseCase;
 import com.cas.tsas.match.application.port.in.SetScoreUseCase;
+import com.cas.tsas.match.application.port.in.SetServingPlayerUseCase;
 import com.cas.tsas.match.infrastructure.web.dto.request.CreateMatchRequest;
 import com.cas.tsas.match.infrastructure.web.dto.request.SetScoreRequest;
 import com.cas.tsas.match.infrastructure.web.dto.response.MatchResponse;
@@ -28,19 +29,22 @@ public class MatchController {
     private final SetScoreUseCase setScoreUseCase;
     private final EndMatchUseCase endMatchUseCase;
     private final RecordAceUseCase recordAceUseCase;
+    private final SetServingPlayerUseCase setServingPlayerUseCase;
 
     public MatchController(CreateMatchUseCase createMatchUseCase,
                            GetMatchUseCase getMatchUseCase,
                            RecordPointUseCase recordPointUseCase,
                            SetScoreUseCase setScoreUseCase,
                            EndMatchUseCase endMatchUseCase,
-                           RecordAceUseCase recordAceUseCase) {
+                           RecordAceUseCase recordAceUseCase,
+                           SetServingPlayerUseCase setServingPlayerUseCase) {
         this.createMatchUseCase = createMatchUseCase;
         this.getMatchUseCase = getMatchUseCase;
         this.recordPointUseCase = recordPointUseCase;
         this.setScoreUseCase = setScoreUseCase;
         this.endMatchUseCase = endMatchUseCase;
         this.recordAceUseCase = recordAceUseCase;
+        this.setServingPlayerUseCase = setServingPlayerUseCase;
     }
 
     @PostMapping
@@ -92,6 +96,18 @@ public class MatchController {
     public MatchScoreResponse acePlayer2(@PathVariable UUID id) {
         var command = new RecordAceUseCase.RecordAceCommand(id, false);
         return MatchScoreResponse.from(recordAceUseCase.recordAce(command));
+    }
+
+    @PostMapping("/{id}/serve/player1")
+    public MatchScoreResponse servePlayer1(@PathVariable UUID id) {
+        var command = new SetServingPlayerUseCase.SetServingPlayerCommand(id, true);
+        return MatchScoreResponse.from(setServingPlayerUseCase.setServingPlayer(command));
+    }
+
+    @PostMapping("/{id}/serve/player2")
+    public MatchScoreResponse servePlayer2(@PathVariable UUID id) {
+        var command = new SetServingPlayerUseCase.SetServingPlayerCommand(id, false);
+        return MatchScoreResponse.from(setServingPlayerUseCase.setServingPlayer(command));
     }
 
     @PutMapping("/{id}/score")

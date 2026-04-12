@@ -183,6 +183,8 @@ class MatchApiIT extends AbstractIntegrationTest {
             UUID p2 = createPlayer();
             UUID matchId = createMatch(p1, p2);
 
+            mockMvc.perform(post("/api/matches/{id}/serve/player1", matchId)); // player1 serves
+
             mockMvc.perform(post("/api/matches/{id}/ace/player1", matchId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.acesPlayer1").value(1))
@@ -199,6 +201,68 @@ class MatchApiIT extends AbstractIntegrationTest {
             mockMvc.perform(post("/api/matches/{id}/end", matchId));
 
             mockMvc.perform(post("/api/matches/{id}/ace/player1", matchId))
+                    .andExpect(status().isConflict());
+        }
+
+        @Test
+        void returns_409_when_no_serving_player_set() throws Exception {
+            UUID p1 = createPlayer();
+            UUID p2 = createPlayer();
+            UUID matchId = createMatch(p1, p2);
+            // No /serve call — servingPlayer is null
+
+            mockMvc.perform(post("/api/matches/{id}/ace/player1", matchId))
+                    .andExpect(status().isConflict());
+        }
+
+        @Test
+        void returns_409_when_wrong_player_tries_to_ace() throws Exception {
+            UUID p1 = createPlayer();
+            UUID p2 = createPlayer();
+            UUID matchId = createMatch(p1, p2);
+
+            mockMvc.perform(post("/api/matches/{id}/serve/player1", matchId)); // player1 serves
+
+            mockMvc.perform(post("/api/matches/{id}/ace/player2", matchId)) // player2 tries to ace
+                    .andExpect(status().isConflict());
+        }
+    }
+
+    // =========================================================================
+    @Nested
+    class SetServingPlayer {
+
+        @Test
+        void sets_serving_player_1() throws Exception {
+            UUID p1 = createPlayer();
+            UUID p2 = createPlayer();
+            UUID matchId = createMatch(p1, p2);
+
+            mockMvc.perform(post("/api/matches/{id}/serve/player1", matchId))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.servingPlayer").value(1));
+        }
+
+        @Test
+        void sets_serving_player_2() throws Exception {
+            UUID p1 = createPlayer();
+            UUID p2 = createPlayer();
+            UUID matchId = createMatch(p1, p2);
+
+            mockMvc.perform(post("/api/matches/{id}/serve/player2", matchId))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.servingPlayer").value(2));
+        }
+
+        @Test
+        void returns_409_when_match_already_completed() throws Exception {
+            UUID p1 = createPlayer();
+            UUID p2 = createPlayer();
+            UUID matchId = createMatch(p1, p2);
+
+            mockMvc.perform(post("/api/matches/{id}/end", matchId));
+
+            mockMvc.perform(post("/api/matches/{id}/serve/player1", matchId))
                     .andExpect(status().isConflict());
         }
     }

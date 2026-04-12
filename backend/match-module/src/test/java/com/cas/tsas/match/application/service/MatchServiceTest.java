@@ -302,6 +302,7 @@ class MatchServiceTest {
         void increments_acesPlayer1_and_scores_point() {
             when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(inProgressMatch()));
             MatchScore score = freshScore();
+            score.setServingPlayer(1); // player1 serves
             when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
             when(saveMatchScorePort.saveMatchScore(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -316,6 +317,7 @@ class MatchServiceTest {
         void increments_acesPlayer2_for_player2() {
             when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(inProgressMatch()));
             MatchScore score = freshScore();
+            score.setServingPlayer(2); // player2 serves
             when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
             when(saveMatchScorePort.saveMatchScore(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -323,6 +325,31 @@ class MatchServiceTest {
 
             assertThat(result.getAcesPlayer2()).isEqualTo(1);
             assertThat(result.getAcesPlayer1()).isEqualTo(0);
+        }
+
+        @Test
+        void throws_IllegalStateException_when_no_serving_player_set() {
+            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(inProgressMatch()));
+            MatchScore score = freshScore(); // servingPlayer = null
+            when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
+
+            assertThatThrownBy(() ->
+                matchService.recordAce(new RecordAceUseCase.RecordAceCommand(MATCH_ID, true)))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("No serving player set");
+        }
+
+        @Test
+        void throws_IllegalStateException_when_wrong_player_tries_to_ace() {
+            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(inProgressMatch()));
+            MatchScore score = freshScore();
+            score.setServingPlayer(2); // player2 serves
+            when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
+
+            assertThatThrownBy(() ->
+                matchService.recordAce(new RecordAceUseCase.RecordAceCommand(MATCH_ID, true))) // player1 tries
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Player 1 is not serving");
         }
     }
 

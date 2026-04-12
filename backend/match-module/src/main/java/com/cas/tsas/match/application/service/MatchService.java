@@ -173,6 +173,17 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
         MatchScore score = loadMatchScorePort.loadMatchScore(command.matchId())
                 .orElseThrow(() -> new MatchNotFoundException(command.matchId()));
 
+        Integer serving = score.getServingPlayer();
+        if (serving == null) {
+            throw new IllegalStateException("No serving player set");
+        }
+        if (command.forPlayer1() && serving != 1) {
+            throw new IllegalStateException("Player 1 is not serving");
+        }
+        if (!command.forPlayer1() && serving != 2) {
+            throw new IllegalStateException("Player 2 is not serving");
+        }
+
         if (command.forPlayer1()) {
             score.setAcesPlayer1(score.getAcesPlayer1() + 1);
         } else {
