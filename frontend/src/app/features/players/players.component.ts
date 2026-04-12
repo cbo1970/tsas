@@ -90,7 +90,7 @@ import { PlayerDialogComponent } from './player-dialog.component';
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
             <tr mat-row *matRowDef="let row; columns: displayedColumns;"
                 [class.inactive-row]="row.active === false"
-                (dblclick)="openEditDialog(row)"></tr>
+                (click)="openEditDialog(row)"></tr>
           </table>
 
           @if (filteredPlayers().length === 0) {
