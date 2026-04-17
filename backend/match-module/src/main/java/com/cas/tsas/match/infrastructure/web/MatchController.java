@@ -8,6 +8,7 @@ import com.cas.tsas.match.application.port.in.RecordPointUseCase;
 import com.cas.tsas.match.application.port.in.SetScoreUseCase;
 import com.cas.tsas.match.application.port.in.SetServingPlayerUseCase;
 import com.cas.tsas.match.infrastructure.web.dto.request.CreateMatchRequest;
+import com.cas.tsas.match.infrastructure.web.dto.request.EndMatchWalkoverRequest;
 import com.cas.tsas.match.infrastructure.web.dto.request.SetScoreRequest;
 import com.cas.tsas.match.infrastructure.web.dto.response.MatchResponse;
 import com.cas.tsas.match.infrastructure.web.dto.response.MatchScoreResponse;
@@ -133,5 +134,11 @@ public class MatchController {
     @PostMapping("/{id}/end")
     public MatchResponse endMatch(@PathVariable UUID id) {
         return MatchResponse.from(endMatchUseCase.endMatch(id));
+    }
+
+    @PostMapping("/{id}/end/walkover")
+    public MatchResponse endMatchWalkover(@PathVariable UUID id,
+                                          @Valid @RequestBody EndMatchWalkoverRequest request) {
+        return MatchResponse.from(endMatchUseCase.endMatchWalkover(id, "PLAYER1".equals(request.winner())));
     }
 }

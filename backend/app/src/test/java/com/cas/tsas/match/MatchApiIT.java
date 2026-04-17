@@ -175,6 +175,77 @@ class MatchApiIT extends AbstractIntegrationTest {
 
     // =========================================================================
     @Nested
+    class EndMatchWalkover {
+
+        @Test
+        void player1_wins_sets_status_completed_and_winner() throws Exception {
+            UUID p1 = createPlayer();
+            UUID p2 = createPlayer();
+            UUID matchId = createMatch(p1, p2);
+
+            mockMvc.perform(post("/api/matches/{id}/end/walkover", matchId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of("winner", "PLAYER1"))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.status").value("COMPLETED"));
+
+            mockMvc.perform(get("/api/matches/{id}", matchId))
+                    .andExpect(jsonPath("$.score.winner").value("PLAYER1"))
+                    .andExpect(jsonPath("$.score.isDone").value(true));
+        }
+
+        @Test
+        void player2_wins_sets_winner_to_player2() throws Exception {
+            UUID p1 = createPlayer();
+            UUID p2 = createPlayer();
+            UUID matchId = createMatch(p1, p2);
+
+            mockMvc.perform(post("/api/matches/{id}/end/walkover", matchId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of("winner", "PLAYER2"))))
+                    .andExpect(status().isOk());
+
+            mockMvc.perform(get("/api/matches/{id}", matchId))
+                    .andExpect(jsonPath("$.score.winner").value("PLAYER2"));
+        }
+
+        @Test
+        void returns_400_for_invalid_winner_value() throws Exception {
+            UUID p1 = createPlayer();
+            UUID p2 = createPlayer();
+            UUID matchId = createMatch(p1, p2);
+
+            mockMvc.perform(post("/api/matches/{id}/end/walkover", matchId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of("winner", "INVALID"))))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void returns_404_for_unknown_match() throws Exception {
+            mockMvc.perform(post("/api/matches/{id}/end/walkover", UUID.randomUUID())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of("winner", "PLAYER1"))))
+                    .andExpect(status().isNotFound());
+        }
+
+        @Test
+        void returns_409_when_match_already_completed() throws Exception {
+            UUID p1 = createPlayer();
+            UUID p2 = createPlayer();
+            UUID matchId = createMatch(p1, p2);
+
+            mockMvc.perform(post("/api/matches/{id}/end", matchId));
+
+            mockMvc.perform(post("/api/matches/{id}/end/walkover", matchId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of("winner", "PLAYER1"))))
+                    .andExpect(status().isConflict());
+        }
+    }
+
+    // =========================================================================
+    @Nested
     class RecordAce {
 
         @Test

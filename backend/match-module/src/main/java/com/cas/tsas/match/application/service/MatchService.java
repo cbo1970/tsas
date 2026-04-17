@@ -242,4 +242,25 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
 
         return saved;
     }
+
+    @Override
+    public Match endMatchWalkover(UUID matchId, boolean player1Wins) {
+        Match match = loadMatchPort.loadMatch(matchId)
+                .orElseThrow(() -> new MatchNotFoundException(matchId));
+
+        if (match.getStatus() == MatchStatus.COMPLETED) {
+            throw new IllegalStateException("Match is already completed");
+        }
+
+        match.setStatus(MatchStatus.COMPLETED);
+        Match saved = saveMatchPort.saveMatch(match);
+
+        loadMatchScorePort.loadMatchScore(matchId).ifPresent(score -> {
+            score.setDone(true);
+            score.setWinner(player1Wins ? "PLAYER1" : "PLAYER2");
+            saveMatchScorePort.saveMatchScore(score);
+        });
+
+        return saved;
+    }
 }

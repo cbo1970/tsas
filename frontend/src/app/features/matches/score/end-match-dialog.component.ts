@@ -1,0 +1,63 @@
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MatRadioModule } from '@angular/material/radio';
+import { FormsModule } from '@angular/forms';
+
+export interface EndMatchDialogData {
+  player1Name: string;
+  player2Name: string;
+}
+
+export interface EndMatchDialogResult {
+  winner: 'PLAYER1' | 'PLAYER2';
+}
+
+@Component({
+  selector: 'app-end-match-dialog',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatDialogModule,
+    MatButtonModule,
+    MatRadioModule
+  ],
+  template: `
+    <h2 mat-dialog-title>Match beenden — w.o.</h2>
+    <mat-dialog-content>
+      <p class="hint">Wähle den Spieler, der das Match durch w.o. gewinnt:</p>
+      <mat-radio-group [(ngModel)]="selectedWinner" class="radio-group">
+        <mat-radio-button value="PLAYER1">{{ data.player1Name }}</mat-radio-button>
+        <mat-radio-button value="PLAYER2">{{ data.player2Name }}</mat-radio-button>
+      </mat-radio-group>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button mat-button (click)="cancel()">Abbrechen</button>
+      <button mat-raised-button color="warn" [disabled]="!selectedWinner" (click)="confirm()">
+        Match beenden
+      </button>
+    </mat-dialog-actions>
+  `,
+  styles: [`
+    .hint { margin: 0 0 16px; color: #555; }
+    .radio-group { display: flex; flex-direction: column; gap: 12px; }
+  `]
+})
+export class EndMatchDialogComponent {
+  private readonly dialogRef = inject(MatDialogRef<EndMatchDialogComponent>);
+  readonly data: EndMatchDialogData = inject(MAT_DIALOG_DATA);
+
+  selectedWinner: 'PLAYER1' | 'PLAYER2' | null = null;
+
+  cancel() {
+    this.dialogRef.close();
+  }
+
+  confirm() {
+    if (this.selectedWinner) {
+      this.dialogRef.close({ winner: this.selectedWinner } satisfies EndMatchDialogResult);
+    }
+  }
+}

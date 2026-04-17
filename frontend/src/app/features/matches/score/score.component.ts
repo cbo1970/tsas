@@ -11,6 +11,7 @@ import { ApiService } from '../../../core/services/api.service';
 import { Player } from '../../../core/models/player.model';
 import { MatchWithScore, MatchScore } from '../../../core/models/match.model';
 import { ScoreEditDialogComponent } from './score-edit-dialog.component';
+import { EndMatchDialogComponent, EndMatchDialogResult } from './end-match-dialog.component';
 
 @Component({
   selector: 'app-score',
@@ -542,12 +543,23 @@ export class ScoreComponent implements OnInit {
   }
 
   endMatch() {
-    this.api.endMatch(this.matchId).subscribe({
-      next: () => {
-        this.loadMatch();
-        this.snackBar.open('Match beendet', 'OK', { duration: 3000 });
-      },
-      error: () => this.snackBar.open('Fehler beim Beenden', 'OK', { duration: 3000 })
+    const ref = this.dialog.open(EndMatchDialogComponent, {
+      width: '360px',
+      data: {
+        player1Name: this.player1Name(),
+        player2Name: this.player2Name()
+      }
+    });
+
+    ref.afterClosed().subscribe((result: EndMatchDialogResult | undefined) => {
+      if (!result) return;
+      this.api.endMatchWalkover(this.matchId, result.winner).subscribe({
+        next: () => {
+          this.loadMatch();
+          this.snackBar.open('Match beendet (w.o.)', 'OK', { duration: 3000 });
+        },
+        error: () => this.snackBar.open('Fehler beim Beenden', 'OK', { duration: 3000 })
+      });
     });
   }
 

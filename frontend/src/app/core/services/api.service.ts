@@ -85,4 +85,8 @@ export class ApiService {
   endMatch(matchId: string): Observable<Match> {
     return this.http.post<Match>(`${this.base}/matches/${matchId}/end`, {});
   }
+
+  endMatchWalkover(matchId: string, winner: 'PLAYER1' | 'PLAYER2'): Observable<Match> {
+    return this.http.post<Match>(`${this.base}/matches/${matchId}/end/walkover`, { winner });
+  }
 }

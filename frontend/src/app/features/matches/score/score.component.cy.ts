@@ -100,6 +100,58 @@ describe('ScoreComponent', () => {
     });
   });
 
+  describe('"Match beenden" w.o. dialog', () => {
+    beforeEach(() => mountScore());
+
+    it('opens dialog with both player names as radio options', () => {
+      cy.contains('button', 'Match beenden').click();
+      cy.contains('Roger Federer').should('be.visible');
+      cy.contains('Rafael Nadal').should('be.visible');
+    });
+
+    it('confirm button is disabled until a player is selected', () => {
+      cy.contains('button', 'Match beenden').click();
+      cy.get('mat-dialog-actions').contains('button', 'Match beenden').should('be.disabled');
+    });
+
+    it('enables confirm button after selecting a player', () => {
+      cy.contains('button', 'Match beenden').click();
+      cy.contains('Roger Federer').click();
+      cy.get('mat-dialog-actions').contains('button', 'Match beenden').should('not.be.disabled');
+    });
+
+    it('calls walkover endpoint with PLAYER1 when player 1 selected and confirmed', () => {
+      cy.intercept('POST', '**/end/walkover', { statusCode: 200, body: { id: 'match-1', status: 'COMPLETED' } }).as('walkover');
+      cy.intercept('GET', '**/api/matches/match-1', makeMatch({ status: 'COMPLETED' })).as('reload');
+
+      cy.contains('button', 'Match beenden').click();
+      cy.contains('Roger Federer').click();
+      cy.get('mat-dialog-actions').contains('button', 'Match beenden').click();
+
+      cy.wait('@walkover').its('request.body').should('deep.equal', { winner: 'PLAYER1' });
+    });
+
+    it('calls walkover endpoint with PLAYER2 when player 2 selected and confirmed', () => {
+      cy.intercept('POST', '**/end/walkover', { statusCode: 200, body: { id: 'match-1', status: 'COMPLETED' } }).as('walkover');
+      cy.intercept('GET', '**/api/matches/match-1', makeMatch({ status: 'COMPLETED' })).as('reload');
+
+      cy.contains('button', 'Match beenden').click();
+      cy.contains('Rafael Nadal').click();
+      cy.get('mat-dialog-actions').contains('button', 'Match beenden').click();
+
+      cy.wait('@walkover').its('request.body').should('deep.equal', { winner: 'PLAYER2' });
+    });
+
+    it('does not call walkover endpoint when dialog is cancelled', () => {
+      cy.intercept('POST', '**/end/walkover').as('walkover');
+
+      cy.contains('button', 'Match beenden').click();
+      cy.contains('button', 'Abbrechen').click();
+
+      cy.get('@walkover.all').should('have.length', 0);
+    });
+  });
+
   describe('completed match', () => {
     beforeEach(() => {
       const completedMatch = makeMatch({

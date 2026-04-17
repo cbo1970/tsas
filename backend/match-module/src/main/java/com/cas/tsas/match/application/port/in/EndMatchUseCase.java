@@ -7,4 +7,6 @@ import java.util.UUID;
 public interface EndMatchUseCase {
 
     Match endMatch(UUID matchId);
+
+    Match endMatchWalkover(UUID matchId, boolean player1Wins);
 }
