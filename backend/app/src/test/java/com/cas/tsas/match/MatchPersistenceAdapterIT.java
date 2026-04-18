@@ -5,8 +5,10 @@ import com.cas.tsas.match.domain.model.MatchScore;
 import com.cas.tsas.match.domain.model.MatchStatus;
 import com.cas.tsas.match.infrastructure.persistence.mapper.MatchMapper;
 import com.cas.tsas.match.infrastructure.persistence.mapper.MatchScoreMapper;
+import com.cas.tsas.match.infrastructure.persistence.repository.MatchJpaRepository;
 import com.cas.tsas.match.infrastructure.persistence.repository.MatchPersistenceAdapter;
 import com.cas.tsas.match.infrastructure.persistence.repository.MatchScorePersistenceAdapter;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +46,7 @@ class MatchPersistenceAdapterIT {
 
     @Autowired MatchPersistenceAdapter matchAdapter;
     @Autowired MatchScorePersistenceAdapter scoreAdapter;
+    @Autowired MatchJpaRepository matchJpaRepository;
 
     private static final UUID PLAYER1_ID = UUID.randomUUID();
     private static final UUID PLAYER2_ID = UUID.randomUUID();
@@ -101,6 +104,11 @@ class MatchPersistenceAdapterIT {
     // =========================================================================
     @Nested
     class FindActiveMatchIdsByPlayerIds {
+
+        @BeforeEach
+        void setUp() {
+            matchJpaRepository.deleteAll();
+        }
 
         @Test
         void returns_match_id_for_player_in_active_match() {

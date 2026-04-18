@@ -47,6 +47,7 @@ public class MatchPersistenceAdapter implements LoadMatchPort, SaveMatchPort, Ha
 
     @Override
     public Map<UUID, UUID> findActiveMatchIdsByPlayerIds(Set<UUID> playerIds) {
+        // JPQL IN clause with empty collection throws at runtime in most JPA providers
         if (playerIds.isEmpty()) return Map.of();
         List<MatchJpaEntity> matches = repository.findByStatusAndPlayerIdIn(MatchStatus.IN_PROGRESS, playerIds);
         Map<UUID, UUID> result = new HashMap<>();
