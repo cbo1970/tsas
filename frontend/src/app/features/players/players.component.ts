@@ -72,13 +72,13 @@ import { PlayerDialogComponent } from './player-dialog.component';
             </ng-container>
 
             <ng-container matColumnDef="status">
-              <th mat-header-cell *matHeaderCellDef></th>
+              <th mat-header-cell *matHeaderCellDef class="status-header">Laufende<br>Matches</th>
               <td mat-cell *matCellDef="let player" class="status-cell">
                 @if (player.activeMatchId) {
-                  <button mat-icon-button color="primary"
+                  <button mat-icon-button
                           matTooltip="Laufendes Match anzeigen"
                           (click)="$event.stopPropagation(); goToMatch(player.activeMatchId)">
-                    <mat-icon>sports_tennis</mat-icon>
+                    <span class="tennis-ball">🎾</span>
                   </button>
                 }
               </td>
@@ -126,6 +126,8 @@ import { PlayerDialogComponent } from './player-dialog.component';
     .full-width { width: 100%; }
     .empty-state { text-align: center; padding: 48px; color: #666; }
     table { border-radius: 8px; overflow: hidden; }
+    .status-header { width: 48px; white-space: normal; text-align: center; line-height: 1.2; }
+    .tennis-ball { font-size: 20px; line-height: 1; }
     .status-cell { width: 48px; }
     .actions-cell { width: 56px; text-align: right; }
     .inactive-row { opacity: 0.45; }

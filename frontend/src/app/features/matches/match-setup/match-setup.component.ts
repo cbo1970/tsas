@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -39,7 +39,7 @@ import { Player } from '../../../core/models/player.model';
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Spieler 1</mat-label>
               <mat-select formControlName="player1Id">
-                @for (p of players(); track p.id) {
+                @for (p of availablePlayers(); track p.id) {
                   <mat-option [value]="p.id">{{ p.firstName }} {{ p.lastName }}</mat-option>
                 }
               </mat-select>
@@ -48,7 +48,7 @@ import { Player } from '../../../core/models/player.model';
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Spieler 2</mat-label>
               <mat-select formControlName="player2Id">
-                @for (p of players(); track p.id) {
+                @for (p of availablePlayers(); track p.id) {
                   <mat-option [value]="p.id">{{ p.firstName }} {{ p.lastName }}</mat-option>
                 }
               </mat-select>
@@ -103,6 +103,7 @@ export class MatchSetupComponent implements OnInit {
   private readonly snackBar = inject(MatSnackBar);
 
   players = signal<Player[]>([]);
+  availablePlayers = computed(() => this.players().filter(p => !p.activeMatchId));
   loading = signal(false);
 
   form = this.fb.group({

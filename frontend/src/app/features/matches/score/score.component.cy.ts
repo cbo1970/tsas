@@ -116,7 +116,7 @@ describe('ScoreComponent', () => {
 
     it('enables confirm button after selecting a player', () => {
       cy.contains('button', 'Match beenden').click();
-      cy.contains('Roger Federer').click();
+      cy.get('mat-dialog-container').contains('mat-radio-button', 'Roger Federer').find('input[type="radio"]').check({ force: true });
       cy.get('mat-dialog-actions').contains('button', 'Match beenden').should('not.be.disabled');
     });
 
@@ -125,7 +125,7 @@ describe('ScoreComponent', () => {
       cy.intercept('GET', '**/api/matches/match-1', makeMatch({ status: 'COMPLETED' })).as('reload');
 
       cy.contains('button', 'Match beenden').click();
-      cy.contains('Roger Federer').click();
+      cy.get('mat-dialog-container').contains('mat-radio-button', 'Roger Federer').find('input[type="radio"]').check({ force: true });
       cy.get('mat-dialog-actions').contains('button', 'Match beenden').click();
 
       cy.wait('@walkover').its('request.body').should('deep.equal', { winner: 'PLAYER1' });
@@ -136,7 +136,7 @@ describe('ScoreComponent', () => {
       cy.intercept('GET', '**/api/matches/match-1', makeMatch({ status: 'COMPLETED' })).as('reload');
 
       cy.contains('button', 'Match beenden').click();
-      cy.contains('Rafael Nadal').click();
+      cy.get('mat-dialog-container').contains('mat-radio-button', 'Rafael Nadal').find('input[type="radio"]').check({ force: true });
       cy.get('mat-dialog-actions').contains('button', 'Match beenden').click();
 
       cy.wait('@walkover').its('request.body').should('deep.equal', { winner: 'PLAYER2' });

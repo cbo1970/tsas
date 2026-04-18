@@ -11,4 +11,6 @@ public interface LoadMatchPort {
     Optional<Match> loadMatch(UUID id);
 
     List<Match> loadAllMatches();
+
+    boolean existsActiveMatchForPlayer(UUID playerId);
 }

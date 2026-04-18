@@ -86,6 +86,38 @@ class MatchApiIT extends AbstractIntegrationTest {
                             ))))
                     .andExpect(status().isNotFound());
         }
+
+        @Test
+        void returns_409_when_player1_already_has_active_match() throws Exception {
+            UUID p1 = createPlayer();
+            UUID p2 = createPlayer();
+            UUID p3 = createPlayer();
+            createMatch(p1, p2);
+
+            mockMvc.perform(post("/api/matches")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of(
+                                    "player1Id", p1, "player2Id", p3,
+                                    "setsToWin", 2, "matchTiebreak", false, "shortSet", false
+                            ))))
+                    .andExpect(status().isConflict());
+        }
+
+        @Test
+        void returns_409_when_player2_already_has_active_match() throws Exception {
+            UUID p1 = createPlayer();
+            UUID p2 = createPlayer();
+            UUID p3 = createPlayer();
+            createMatch(p1, p2);
+
+            mockMvc.perform(post("/api/matches")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of(
+                                    "player1Id", p3, "player2Id", p2,
+                                    "setsToWin", 2, "matchTiebreak", false, "shortSet", false
+                            ))))
+                    .andExpect(status().isConflict());
+        }
     }
 
     // =========================================================================
@@ -120,8 +152,10 @@ class MatchApiIT extends AbstractIntegrationTest {
         void returns_all_matches() throws Exception {
             UUID p1 = createPlayer();
             UUID p2 = createPlayer();
+            UUID p3 = createPlayer();
+            UUID p4 = createPlayer();
             createMatch(p1, p2);
-            createMatch(p1, p2);
+            createMatch(p3, p4);
 
             mockMvc.perform(get("/api/matches"))
                     .andExpect(status().isOk())

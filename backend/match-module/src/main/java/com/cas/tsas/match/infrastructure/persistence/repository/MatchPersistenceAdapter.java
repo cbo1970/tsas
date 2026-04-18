@@ -59,6 +59,11 @@ public class MatchPersistenceAdapter implements LoadMatchPort, SaveMatchPort, Ha
     }
 
     @Override
+    public boolean existsActiveMatchForPlayer(UUID playerId) {
+        return repository.existsByStatusAndPlayerId(MatchStatus.IN_PROGRESS, playerId);
+    }
+
+    @Override
     public Match saveMatch(Match match) {
         var entity = mapper.toEntity(match);
         var saved = repository.save(entity);

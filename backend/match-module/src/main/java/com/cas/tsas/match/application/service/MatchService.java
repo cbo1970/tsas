@@ -55,6 +55,13 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
         loadPlayerPort.loadPlayer(command.player2Id())
                 .orElseThrow(() -> new PlayerNotFoundException(command.player2Id()));
 
+        if (loadMatchPort.existsActiveMatchForPlayer(command.player1Id())) {
+            throw new IllegalStateException("Player 1 already has an active match");
+        }
+        if (loadMatchPort.existsActiveMatchForPlayer(command.player2Id())) {
+            throw new IllegalStateException("Player 2 already has an active match");
+        }
+
         Match match = new Match(
                 null,
                 command.player1Id(),
