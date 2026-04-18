@@ -3,6 +3,8 @@ package com.cas.tsas.player.application.port.in;
 import com.cas.tsas.player.domain.model.Player;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public interface SearchPlayerUseCase {
@@ -10,4 +12,6 @@ public interface SearchPlayerUseCase {
     Player findById(UUID id);
 
     List<Player> findAll();
+
+    Map<UUID, UUID> findActiveMatchIdsByPlayerIds(Set<UUID> playerIds);
 }

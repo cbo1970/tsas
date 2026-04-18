@@ -3,6 +3,7 @@ package com.cas.tsas.player.application.service;
 import com.cas.tsas.player.application.port.in.CreatePlayerUseCase;
 import com.cas.tsas.player.application.port.in.UpdatePlayerUseCase;
 import com.cas.tsas.player.application.port.out.DeletePlayerPort;
+import com.cas.tsas.player.application.port.out.FindActiveMatchPort;
 import com.cas.tsas.player.application.port.out.HasMatchesPort;
 import com.cas.tsas.player.application.port.out.LoadPlayerPort;
 import com.cas.tsas.player.application.port.out.SavePlayerPort;
@@ -20,7 +21,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,6 +39,7 @@ class PlayerServiceTest {
     @Mock private SavePlayerPort savePlayerPort;
     @Mock private DeletePlayerPort deletePlayerPort;
     @Mock private HasMatchesPort hasMatchesPort;
+    @Mock private FindActiveMatchPort findActiveMatchPort;
 
     @InjectMocks private PlayerService playerService;
 
@@ -231,6 +235,32 @@ class PlayerServiceTest {
 
             assertThatThrownBy(() -> playerService.deactivatePlayer(PLAYER_ID))
                     .isInstanceOf(PlayerNotFoundException.class);
+        }
+    }
+
+    // =========================================================================
+    @Nested
+    class FindActiveMatchIdsByPlayerIds {
+
+        @Test
+        void delegates_to_port_and_returns_result() {
+            UUID matchId = UUID.randomUUID();
+            when(findActiveMatchPort.findActiveMatchIdsByPlayerIds(Set.of(PLAYER_ID)))
+                    .thenReturn(Map.of(PLAYER_ID, matchId));
+
+            Map<UUID, UUID> result = playerService.findActiveMatchIdsByPlayerIds(Set.of(PLAYER_ID));
+
+            assertThat(result).containsEntry(PLAYER_ID, matchId);
+        }
+
+        @Test
+        void returns_empty_map_when_no_active_matches() {
+            when(findActiveMatchPort.findActiveMatchIdsByPlayerIds(Set.of(PLAYER_ID)))
+                    .thenReturn(Map.of());
+
+            Map<UUID, UUID> result = playerService.findActiveMatchIdsByPlayerIds(Set.of(PLAYER_ID));
+
+            assertThat(result).isEmpty();
         }
     }
 }

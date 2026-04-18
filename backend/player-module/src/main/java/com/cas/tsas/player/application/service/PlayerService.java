@@ -5,6 +5,7 @@ import com.cas.tsas.player.application.port.in.DeletePlayerUseCase;
 import com.cas.tsas.player.application.port.in.SearchPlayerUseCase;
 import com.cas.tsas.player.application.port.in.UpdatePlayerUseCase;
 import com.cas.tsas.player.application.port.out.DeletePlayerPort;
+import com.cas.tsas.player.application.port.out.FindActiveMatchPort;
 import com.cas.tsas.player.application.port.out.HasMatchesPort;
 import com.cas.tsas.player.application.port.out.LoadPlayerPort;
 import com.cas.tsas.player.application.port.out.SavePlayerPort;
@@ -14,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -24,13 +27,16 @@ public class PlayerService implements CreatePlayerUseCase, SearchPlayerUseCase, 
     private final SavePlayerPort savePlayerPort;
     private final DeletePlayerPort deletePlayerPort;
     private final HasMatchesPort hasMatchesPort;
+    private final FindActiveMatchPort findActiveMatchPort;
 
     public PlayerService(LoadPlayerPort loadPlayerPort, SavePlayerPort savePlayerPort,
-                         DeletePlayerPort deletePlayerPort, HasMatchesPort hasMatchesPort) {
+                         DeletePlayerPort deletePlayerPort, HasMatchesPort hasMatchesPort,
+                         FindActiveMatchPort findActiveMatchPort) {
         this.loadPlayerPort = loadPlayerPort;
         this.savePlayerPort = savePlayerPort;
         this.deletePlayerPort = deletePlayerPort;
         this.hasMatchesPort = hasMatchesPort;
+        this.findActiveMatchPort = findActiveMatchPort;
     }
 
     @Override
@@ -60,6 +66,12 @@ public class PlayerService implements CreatePlayerUseCase, SearchPlayerUseCase, 
     @Transactional(readOnly = true)
     public List<Player> findAll() {
         return loadPlayerPort.loadAllPlayers();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<UUID, UUID> findActiveMatchIdsByPlayerIds(Set<UUID> playerIds) {
+        return findActiveMatchPort.findActiveMatchIdsByPlayerIds(playerIds);
     }
 
     @Override
