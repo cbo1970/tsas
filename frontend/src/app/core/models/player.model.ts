@@ -14,6 +14,7 @@ export interface Player {
   birthDate?: string;
   active?: boolean;
   deletable?: boolean;
+  activeMatchId?: string | null;
 }
 
 export interface CreatePlayerRequest {
