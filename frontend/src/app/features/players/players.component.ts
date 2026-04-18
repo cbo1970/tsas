@@ -127,7 +127,8 @@ import { PlayerDialogComponent } from './player-dialog.component';
     .empty-state { text-align: center; padding: 48px; color: #666; }
     table { border-radius: 8px; overflow: hidden; }
     .status-header { width: 48px; white-space: normal; text-align: center; line-height: 1.2; }
-    .tennis-ball { font-size: 20px; line-height: 1; }
+    @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.25); opacity: 0.7; } }
+    .tennis-ball { font-size: 20px; line-height: 1; display: inline-block; animation: pulse 2s ease-in-out infinite; }
     .status-cell { width: 48px; }
     .actions-cell { width: 56px; text-align: right; }
     .inactive-row { opacity: 0.45; }

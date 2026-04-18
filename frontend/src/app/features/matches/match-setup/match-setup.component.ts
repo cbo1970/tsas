@@ -1,10 +1,11 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormControl, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
+import { MatInputModule } from '@angular/material/input';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatRadioModule } from '@angular/material/radio';
@@ -21,7 +22,8 @@ import { Player } from '../../../core/models/player.model';
     ReactiveFormsModule,
     MatCardModule,
     MatFormFieldModule,
-    MatSelectModule,
+    MatInputModule,
+    MatAutocompleteModule,
     MatButtonModule,
     MatSlideToggleModule,
     MatRadioModule,
@@ -38,20 +40,30 @@ import { Player } from '../../../core/models/player.model';
           <form [formGroup]="form" class="setup-form">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Spieler 1</mat-label>
-              <mat-select formControlName="player1Id">
-                @for (p of availablePlayers(); track p.id) {
-                  <mat-option [value]="p.id">{{ p.firstName }} {{ p.lastName }}</mat-option>
+              <input matInput [formControl]="player1Input"
+                     [matAutocomplete]="auto1"
+                     placeholder="Name eintippen…">
+              <mat-autocomplete #auto1="matAutocomplete"
+                                [displayWith]="displayPlayer.bind(this)"
+                                (optionSelected)="onPlayer1Selected($event.option.value)">
+                @for (p of filtered1(); track p.id) {
+                  <mat-option [value]="p">{{ p.lastName }} {{ p.firstName }}</mat-option>
                 }
-              </mat-select>
+              </mat-autocomplete>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Spieler 2</mat-label>
-              <mat-select formControlName="player2Id">
-                @for (p of availablePlayers(); track p.id) {
-                  <mat-option [value]="p.id">{{ p.firstName }} {{ p.lastName }}</mat-option>
+              <input matInput [formControl]="player2Input"
+                     [matAutocomplete]="auto2"
+                     placeholder="Name eintippen…">
+              <mat-autocomplete #auto2="matAutocomplete"
+                                [displayWith]="displayPlayer.bind(this)"
+                                (optionSelected)="onPlayer2Selected($event.option.value)">
+                @for (p of filtered2(); track p.id) {
+                  <mat-option [value]="p">{{ p.lastName }} {{ p.firstName }}</mat-option>
                 }
-              </mat-select>
+              </mat-autocomplete>
             </mat-form-field>
 
             <div class="form-row">
@@ -104,6 +116,16 @@ export class MatchSetupComponent implements OnInit {
 
   players = signal<Player[]>([]);
   availablePlayers = computed(() => this.players().filter(p => !p.activeMatchId));
+
+  player1Input = new FormControl<Player | string>('');
+  player2Input = new FormControl<Player | string>('');
+
+  filtered1 = computed(() => this.filterPlayers(this.player1Query()));
+  filtered2 = computed(() => this.filterPlayers(this.player2Query()));
+
+  private player1Query = signal('');
+  private player2Query = signal('');
+
   loading = signal(false);
 
   form = this.fb.group({
@@ -119,6 +141,46 @@ export class MatchSetupComponent implements OnInit {
       next: (players) => this.players.set(players),
       error: () => this.snackBar.open('Fehler beim Laden der Spieler', 'OK', { duration: 3000 })
     });
+
+    this.player1Input.valueChanges.subscribe(v => {
+      const q = typeof v === 'string' ? v : '';
+      this.player1Query.set(q);
+      if (typeof v !== 'object' || v === null) {
+        this.form.patchValue({ player1Id: '' });
+      }
+    });
+
+    this.player2Input.valueChanges.subscribe(v => {
+      const q = typeof v === 'string' ? v : '';
+      this.player2Query.set(q);
+      if (typeof v !== 'object' || v === null) {
+        this.form.patchValue({ player2Id: '' });
+      }
+    });
+  }
+
+  private filterPlayers(query: string): Player[] {
+    const term = query.toLowerCase().trim();
+    return this.availablePlayers().filter(p =>
+      !term ||
+      p.lastName.toLowerCase().includes(term) ||
+      p.firstName.toLowerCase().includes(term)
+    );
+  }
+
+  displayPlayer(player: Player | string | null): string {
+    if (!player || typeof player === 'string') return '';
+    return `${player.lastName} ${player.firstName}`;
+  }
+
+  onPlayer1Selected(player: Player) {
+    this.form.patchValue({ player1Id: player.id });
+    this.player1Query.set('');
+  }
+
+  onPlayer2Selected(player: Player) {
+    this.form.patchValue({ player2Id: player.id });
+    this.player2Query.set('');
   }
 
   startMatch() {

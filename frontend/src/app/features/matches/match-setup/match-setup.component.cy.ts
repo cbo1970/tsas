@@ -32,41 +32,47 @@ function mountSetup(players: Player[] = [FREE, BUSY, FREE2]) {
   cy.wait('@getPlayers');
 }
 
-describe('MatchSetupComponent — player filter', () => {
+describe('MatchSetupComponent — player autocomplete filter', () => {
 
   beforeEach(() => mountSetup());
 
-  it('shows available players in Spieler 1 dropdown', () => {
-    cy.get('mat-select').first().click();
-    cy.get('mat-option').contains('Roger Federer').should('exist');
-    cy.get('mat-option').contains('Anna Muster').should('exist');
+  it('shows available players when input is focused', () => {
+    cy.get('input').first().click();
+    cy.get('mat-option').contains('Federer Roger').should('exist');
+    cy.get('mat-option').contains('Muster Anna').should('exist');
   });
 
-  it('hides players with active match from Spieler 1 dropdown', () => {
-    cy.get('mat-select').first().click();
-    cy.get('mat-option').contains('Rafael Nadal').should('not.exist');
+  it('hides players with active match from Spieler 1', () => {
+    cy.get('input').first().click();
+    cy.get('mat-option').contains('Nadal Rafael').should('not.exist');
   });
 
-  it('shows available players in Spieler 2 dropdown', () => {
-    cy.get('mat-select').eq(1).click();
-    cy.get('mat-option').contains('Roger Federer').should('exist');
-    cy.get('mat-option').contains('Anna Muster').should('exist');
+  it('filters Spieler 1 options by typed name', () => {
+    cy.get('input').first().type('Fed');
+    cy.get('mat-option').contains('Federer Roger').should('exist');
+    cy.get('mat-option').contains('Muster Anna').should('not.exist');
   });
 
-  it('hides players with active match from Spieler 2 dropdown', () => {
-    cy.get('mat-select').eq(1).click();
-    cy.get('mat-option').contains('Rafael Nadal').should('not.exist');
+  it('shows available players when Spieler 2 input is focused', () => {
+    cy.get('input').eq(1).click();
+    cy.get('mat-option').contains('Federer Roger').should('exist');
+    cy.get('mat-option').contains('Muster Anna').should('exist');
   });
 
-  it('shows all players when none have an active match', () => {
-    mountSetup([FREE, FREE2]);
-    cy.get('mat-select').first().click();
-    cy.get('mat-option').should('have.length', 2);
+  it('hides players with active match from Spieler 2', () => {
+    cy.get('input').eq(1).click();
+    cy.get('mat-option').contains('Nadal Rafael').should('not.exist');
   });
 
-  it('shows empty dropdowns when all players have active matches', () => {
+  it('filters Spieler 2 options by typed name', () => {
+    cy.get('input').eq(1).type('Muster');
+    cy.get('mat-option').contains('Muster Anna').should('exist');
+    cy.get('mat-option').contains('Federer Roger').should('not.exist');
+  });
+
+  it('shows empty dropdown when all players have active matches', () => {
     mountSetup([BUSY]);
-    cy.get('mat-select').first().click();
+    cy.get('input').first().click();
     cy.get('mat-option').should('not.exist');
   });
 });
