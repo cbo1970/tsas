@@ -10,7 +10,7 @@ dependencies {
     implementation(project(":auth-module"))
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
-    runtimeOnly("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-core")
     runtimeOnly("org.flywaydb:flyway-database-postgresql")
     runtimeOnly("org.postgresql:postgresql")
     runtimeOnly("com.h2database:h2")

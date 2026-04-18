@@ -51,24 +51,24 @@ class MatchPersistenceAdapterIT {
     @Autowired MatchJpaRepository matchJpaRepository;
     @Autowired PlayerJpaRepository playerJpaRepository;
 
-    UUID PLAYER1_ID;
-    UUID PLAYER2_ID;
+    private UUID player1Id;
+    private UUID player2Id;
 
     @BeforeEach
     void insertPlayers() {
         PlayerJpaEntity p1 = new PlayerJpaEntity();
         p1.setFirstName("Player");
         p1.setLastName("One");
-        PLAYER1_ID = playerJpaRepository.save(p1).getId();
+        player1Id = playerJpaRepository.save(p1).getId();
 
         PlayerJpaEntity p2 = new PlayerJpaEntity();
         p2.setFirstName("Player");
         p2.setLastName("Two");
-        PLAYER2_ID = playerJpaRepository.save(p2).getId();
+        player2Id = playerJpaRepository.save(p2).getId();
     }
 
     Match newMatch() {
-        return new Match(null, PLAYER1_ID, PLAYER2_ID, 2, false, false, MatchStatus.IN_PROGRESS);
+        return new Match(null, player1Id, player2Id, 2, false, false, MatchStatus.IN_PROGRESS);
     }
 
     // =========================================================================
@@ -82,7 +82,7 @@ class MatchPersistenceAdapterIT {
             assertThat(matchAdapter.loadMatch(saved.getId()))
                     .isPresent()
                     .hasValueSatisfying(m -> {
-                        assertThat(m.getPlayer1Id()).isEqualTo(PLAYER1_ID);
+                        assertThat(m.getPlayer1Id()).isEqualTo(player1Id);
                         assertThat(m.getStatus()).isEqualTo(MatchStatus.IN_PROGRESS);
                     });
         }
@@ -108,7 +108,7 @@ class MatchPersistenceAdapterIT {
         @Test
         void returns_true_when_player_has_a_match() {
             matchAdapter.saveMatch(newMatch());
-            assertThat(matchAdapter.existsByPlayerId(PLAYER1_ID)).isTrue();
+            assertThat(matchAdapter.existsByPlayerId(player1Id)).isTrue();
         }
 
         @Test
@@ -130,26 +130,26 @@ class MatchPersistenceAdapterIT {
         void returns_match_id_for_player_in_active_match() {
             Match saved = matchAdapter.saveMatch(newMatch()); // IN_PROGRESS
 
-            Map<UUID, UUID> result = matchAdapter.findActiveMatchIdsByPlayerIds(Set.of(PLAYER1_ID));
+            Map<UUID, UUID> result = matchAdapter.findActiveMatchIdsByPlayerIds(Set.of(player1Id));
 
-            assertThat(result).containsEntry(PLAYER1_ID, saved.getId());
+            assertThat(result).containsEntry(player1Id, saved.getId());
         }
 
         @Test
         void returns_match_id_for_player2_as_well() {
             Match saved = matchAdapter.saveMatch(newMatch());
 
-            Map<UUID, UUID> result = matchAdapter.findActiveMatchIdsByPlayerIds(Set.of(PLAYER2_ID));
+            Map<UUID, UUID> result = matchAdapter.findActiveMatchIdsByPlayerIds(Set.of(player2Id));
 
-            assertThat(result).containsEntry(PLAYER2_ID, saved.getId());
+            assertThat(result).containsEntry(player2Id, saved.getId());
         }
 
         @Test
         void excludes_completed_matches() {
-            Match completed = new Match(null, PLAYER1_ID, PLAYER2_ID, 2, false, false, MatchStatus.COMPLETED);
+            Match completed = new Match(null, player1Id, player2Id, 2, false, false, MatchStatus.COMPLETED);
             matchAdapter.saveMatch(completed);
 
-            Map<UUID, UUID> result = matchAdapter.findActiveMatchIdsByPlayerIds(Set.of(PLAYER1_ID));
+            Map<UUID, UUID> result = matchAdapter.findActiveMatchIdsByPlayerIds(Set.of(player1Id));
 
             assertThat(result).isEmpty();
         }
