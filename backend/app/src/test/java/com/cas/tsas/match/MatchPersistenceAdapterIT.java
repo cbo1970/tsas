@@ -19,6 +19,8 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -93,6 +95,53 @@ class MatchPersistenceAdapterIT {
         @Test
         void returns_false_when_player_has_no_match() {
             assertThat(matchAdapter.existsByPlayerId(UUID.randomUUID())).isFalse();
+        }
+    }
+
+    // =========================================================================
+    @Nested
+    class FindActiveMatchIdsByPlayerIds {
+
+        @Test
+        void returns_match_id_for_player_in_active_match() {
+            Match saved = matchAdapter.saveMatch(newMatch()); // IN_PROGRESS
+
+            Map<UUID, UUID> result = matchAdapter.findActiveMatchIdsByPlayerIds(Set.of(PLAYER1_ID));
+
+            assertThat(result).containsEntry(PLAYER1_ID, saved.getId());
+        }
+
+        @Test
+        void returns_match_id_for_player2_as_well() {
+            Match saved = matchAdapter.saveMatch(newMatch());
+
+            Map<UUID, UUID> result = matchAdapter.findActiveMatchIdsByPlayerIds(Set.of(PLAYER2_ID));
+
+            assertThat(result).containsEntry(PLAYER2_ID, saved.getId());
+        }
+
+        @Test
+        void excludes_completed_matches() {
+            Match completed = new Match(null, PLAYER1_ID, PLAYER2_ID, 2, false, false, MatchStatus.COMPLETED);
+            matchAdapter.saveMatch(completed);
+
+            Map<UUID, UUID> result = matchAdapter.findActiveMatchIdsByPlayerIds(Set.of(PLAYER1_ID));
+
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        void returns_empty_map_for_player_with_no_match() {
+            Map<UUID, UUID> result = matchAdapter.findActiveMatchIdsByPlayerIds(Set.of(UUID.randomUUID()));
+
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        void returns_empty_map_when_input_is_empty() {
+            Map<UUID, UUID> result = matchAdapter.findActiveMatchIdsByPlayerIds(Set.of());
+
+            assertThat(result).isEmpty();
         }
     }
 
