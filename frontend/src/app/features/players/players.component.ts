@@ -77,7 +77,7 @@ import { PlayerDialogComponent } from './player-dialog.component';
                 @if (player.activeMatchId) {
                   <button mat-icon-button color="primary"
                           matTooltip="Laufendes Match anzeigen"
-                          (click)="goToMatch(player.activeMatchId); $event.stopPropagation()">
+                          (click)="$event.stopPropagation(); goToMatch(player.activeMatchId)">
                     <mat-icon>sports_tennis</mat-icon>
                   </button>
                 }
