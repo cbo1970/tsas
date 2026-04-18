@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,6 +11,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { ApiService } from '../../core/services/api.service';
 import { Player, CreatePlayerRequest } from '../../core/models/player.model';
@@ -29,7 +31,8 @@ import { PlayerDialogComponent } from './player-dialog.component';
     MatCardModule,
     MatSnackBarModule,
     MatFormFieldModule,
-    MatInputModule
+    MatInputModule,
+    MatTooltipModule
   ],
   template: `
     <div class="page-container">
@@ -66,6 +69,19 @@ import { PlayerDialogComponent } from './player-dialog.component';
             <ng-container matColumnDef="ranking">
               <th mat-header-cell *matHeaderCellDef mat-sort-header>Ranking</th>
               <td mat-cell *matCellDef="let player">{{ player.ranking ?? '–' }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let player" class="status-cell">
+                @if (player.activeMatchId) {
+                  <button mat-icon-button color="primary"
+                          matTooltip="Laufendes Match anzeigen"
+                          (click)="goToMatch(player.activeMatchId); $event.stopPropagation()">
+                    <mat-icon>sports_tennis</mat-icon>
+                  </button>
+                }
+              </td>
             </ng-container>
 
             <ng-container matColumnDef="actions">
@@ -110,6 +126,7 @@ import { PlayerDialogComponent } from './player-dialog.component';
     .full-width { width: 100%; }
     .empty-state { text-align: center; padding: 48px; color: #666; }
     table { border-radius: 8px; overflow: hidden; }
+    .status-cell { width: 48px; }
     .actions-cell { width: 56px; text-align: right; }
     .inactive-row { opacity: 0.45; }
     .inactive-btn { opacity: 0.3; }
@@ -120,11 +137,12 @@ export class PlayersComponent implements OnInit {
   private readonly api = inject(ApiService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly router = inject(Router);
 
   players = signal<Player[]>([]);
   searchTerm = signal('');
   sort = signal<Sort>({ active: 'lastName', direction: 'asc' });
-  displayedColumns = ['firstName', 'lastName', 'ranking', 'actions'];
+  displayedColumns = ['firstName', 'lastName', 'ranking', 'status', 'actions'];
 
   filteredPlayers = computed(() => {
     const term = this.searchTerm().toLowerCase().trim();
@@ -161,6 +179,10 @@ export class PlayersComponent implements OnInit {
       next: (players) => this.players.set(players),
       error: () => this.snackBar.open('Fehler beim Laden der Spieler', 'OK', { duration: 3000 })
     });
+  }
+
+  goToMatch(matchId: string) {
+    this.router.navigate(['/matches', matchId, 'score']);
   }
 
   openCreateDialog() {
