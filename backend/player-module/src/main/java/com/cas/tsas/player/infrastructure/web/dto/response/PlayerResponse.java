@@ -19,9 +19,10 @@ public record PlayerResponse(
         String nationality,
         LocalDate birthDate,
         boolean active,
-        boolean deletable
+        boolean deletable,
+        UUID activeMatchId
 ) {
-    public static PlayerResponse from(Player player, boolean deletable) {
+    public static PlayerResponse from(Player player, boolean deletable, UUID activeMatchId) {
         return new PlayerResponse(
                 player.getId(),
                 player.getFirstName(),
@@ -33,7 +34,8 @@ public record PlayerResponse(
                 player.getNationality(),
                 player.getBirthDate(),
                 player.isActive(),
-                deletable
+                deletable,
+                activeMatchId
         );
     }
 }
