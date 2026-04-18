@@ -109,6 +109,56 @@ class PlayerApiIT extends AbstractIntegrationTest {
 
     // =========================================================================
     @Nested
+    class ActiveMatchIndicator {
+
+        @Test
+        void activeMatchId_is_set_when_player_is_in_active_match() throws Exception {
+            UUID playerId = createPlayer("Max");
+
+            var match = new com.cas.tsas.match.infrastructure.persistence.entity.MatchJpaEntity();
+            match.setPlayer1Id(playerId);
+            match.setPlayer2Id(UUID.randomUUID());
+            match.setSetsToWin(2);
+            match.setMatchTiebreak(false);
+            match.setShortSet(false);
+            match.setStatus(com.cas.tsas.match.domain.model.MatchStatus.IN_PROGRESS);
+            var savedMatch = matchRepository.save(match);
+
+            mockMvc.perform(get("/api/players"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$[0].activeMatchId").value(savedMatch.getId().toString()));
+        }
+
+        @Test
+        void activeMatchId_is_null_when_player_has_no_active_match() throws Exception {
+            createPlayer("Max");
+
+            mockMvc.perform(get("/api/players"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$[0].activeMatchId").isEmpty());
+        }
+
+        @Test
+        void activeMatchId_is_null_when_players_match_is_completed() throws Exception {
+            UUID playerId = createPlayer("Max");
+
+            var match = new com.cas.tsas.match.infrastructure.persistence.entity.MatchJpaEntity();
+            match.setPlayer1Id(playerId);
+            match.setPlayer2Id(UUID.randomUUID());
+            match.setSetsToWin(2);
+            match.setMatchTiebreak(false);
+            match.setShortSet(false);
+            match.setStatus(com.cas.tsas.match.domain.model.MatchStatus.COMPLETED);
+            matchRepository.save(match);
+
+            mockMvc.perform(get("/api/players"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$[0].activeMatchId").isEmpty());
+        }
+    }
+
+    // =========================================================================
+    @Nested
     class UpdatePlayer {
 
         @Test
