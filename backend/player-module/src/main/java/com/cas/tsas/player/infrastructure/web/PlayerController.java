@@ -64,6 +64,7 @@ public class PlayerController {
     @GetMapping
     public List<PlayerResponse> listPlayers() {
         List<Player> players = searchPlayerUseCase.findAll();
+        if (players.isEmpty()) return List.of();
         Set<UUID> ids = players.stream().map(Player::getId).collect(Collectors.toSet());
         Map<UUID, UUID> activeMatchIds = searchPlayerUseCase.findActiveMatchIdsByPlayerIds(ids);
         return players.stream()
