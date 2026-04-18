@@ -114,10 +114,11 @@ class PlayerApiIT extends AbstractIntegrationTest {
         @Test
         void activeMatchId_is_set_when_player_is_in_active_match() throws Exception {
             UUID playerId = createPlayer("Max");
+            UUID player2Id = createPlayer("Anna");
 
             var match = new com.cas.tsas.match.infrastructure.persistence.entity.MatchJpaEntity();
             match.setPlayer1Id(playerId);
-            match.setPlayer2Id(UUID.randomUUID());
+            match.setPlayer2Id(player2Id);
             match.setSetsToWin(2);
             match.setMatchTiebreak(false);
             match.setShortSet(false);
@@ -141,10 +142,11 @@ class PlayerApiIT extends AbstractIntegrationTest {
         @Test
         void activeMatchId_is_null_when_players_match_is_completed() throws Exception {
             UUID playerId = createPlayer("Max");
+            UUID player2Id = createPlayer("Anna");
 
             var match = new com.cas.tsas.match.infrastructure.persistence.entity.MatchJpaEntity();
             match.setPlayer1Id(playerId);
-            match.setPlayer2Id(UUID.randomUUID());
+            match.setPlayer2Id(player2Id);
             match.setSetsToWin(2);
             match.setMatchTiebreak(false);
             match.setShortSet(false);

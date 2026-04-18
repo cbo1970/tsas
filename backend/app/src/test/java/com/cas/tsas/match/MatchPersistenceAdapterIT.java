@@ -8,6 +8,8 @@ import com.cas.tsas.match.infrastructure.persistence.mapper.MatchScoreMapper;
 import com.cas.tsas.match.infrastructure.persistence.repository.MatchJpaRepository;
 import com.cas.tsas.match.infrastructure.persistence.repository.MatchPersistenceAdapter;
 import com.cas.tsas.match.infrastructure.persistence.repository.MatchScorePersistenceAdapter;
+import com.cas.tsas.player.infrastructure.persistence.entity.PlayerJpaEntity;
+import com.cas.tsas.player.infrastructure.persistence.repository.PlayerJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -47,11 +49,25 @@ class MatchPersistenceAdapterIT {
     @Autowired MatchPersistenceAdapter matchAdapter;
     @Autowired MatchScorePersistenceAdapter scoreAdapter;
     @Autowired MatchJpaRepository matchJpaRepository;
+    @Autowired PlayerJpaRepository playerJpaRepository;
 
-    private static final UUID PLAYER1_ID = UUID.randomUUID();
-    private static final UUID PLAYER2_ID = UUID.randomUUID();
+    UUID PLAYER1_ID;
+    UUID PLAYER2_ID;
 
-    private static Match newMatch() {
+    @BeforeEach
+    void insertPlayers() {
+        PlayerJpaEntity p1 = new PlayerJpaEntity();
+        p1.setFirstName("Player");
+        p1.setLastName("One");
+        PLAYER1_ID = playerJpaRepository.save(p1).getId();
+
+        PlayerJpaEntity p2 = new PlayerJpaEntity();
+        p2.setFirstName("Player");
+        p2.setLastName("Two");
+        PLAYER2_ID = playerJpaRepository.save(p2).getId();
+    }
+
+    Match newMatch() {
         return new Match(null, PLAYER1_ID, PLAYER2_ID, 2, false, false, MatchStatus.IN_PROGRESS);
     }
 
