@@ -22,9 +22,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:https://localhost:8443/realms/tsas}
-          # In Docker, overridden to internal HTTP URL to avoid container cert-trust issues
-          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:https://localhost:8443/realms/tsas/protocol/openid-connect/certs}
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/tsas}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/tsas/protocol/openid-connect/certs}
 
 tsas:
   cors:

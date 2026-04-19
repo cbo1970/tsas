@@ -20,10 +20,12 @@
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
       "redirectUris": [
+        "http://localhost:4200/*",
         "https://localhost:4200/*",
         "https://localhost/*"
       ],
       "webOrigins": [
+        "http://localhost:4200",
         "https://localhost:4200",
         "https://localhost"
       ],

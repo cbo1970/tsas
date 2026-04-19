@@ -11,7 +11,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
-@Profile("local")
+@Profile("test")
 public class SecurityConfigLocal {
 
     @Bean
