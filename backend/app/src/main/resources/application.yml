@@ -18,18 +18,21 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
-  # TODO (V1): Uncomment and configure when Keycloak is set up
-  # security:
-  #   oauth2:
-  #     resourceserver:
-  #       jwt:
-  #         issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/tsas}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:https://localhost:8443/realms/tsas}
+          # In Docker, overridden to internal HTTP URL to avoid container cert-trust issues
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:https://localhost:8443/realms/tsas/protocol/openid-connect/certs}
 
 tsas:
   cors:
     allowed-origins:
       - "http://localhost:4200"
+      - "https://localhost:4200"
       - "http://192.168.1.101:4200"
+      - "https://192.168.1.101:4200"
 
 management:
   endpoints:
