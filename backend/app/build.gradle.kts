@@ -2,6 +2,10 @@ plugins {
     id("org.springframework.boot")
 }
 
+tasks.named<org.springframework.boot.gradle.tasks.run.BootRun>("bootRun") {
+    workingDir = rootProject.projectDir.parentFile
+}
+
 dependencies {
     implementation(project(":common-module"))
     implementation(project(":player-module"))

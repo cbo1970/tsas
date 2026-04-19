@@ -1,6 +1,17 @@
+server:
+  ssl:
+    certificate: docker/keycloak/certs/localhost.pem
+    certificate-private-key: docker/keycloak/certs/localhost-key.pem
+
 spring:
   jpa:
     show-sql: true
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:18080/realms/tsas/protocol/openid-connect/certs
 
 tsas:
   cors:

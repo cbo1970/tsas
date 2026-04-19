@@ -81,7 +81,10 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": {
-            "host": "0.0.0.0"
+            "host": "0.0.0.0",
+            "ssl": true,
+            "sslCert": "../docker/keycloak/certs/localhost.pem",
+            "sslKey": "../docker/keycloak/certs/localhost-key.pem"
           },
           "configurations": {
             "production": {
