@@ -1,4 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: ''
+  apiUrl: '',
+  keycloakIssuer: 'https://localhost:8443/realms/tsas',
+  keycloakClientId: 'tsas-frontend'
 };
