@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Map;
 import java.util.UUID;
@@ -20,7 +19,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class PlayerApiIT extends AbstractIntegrationTest {
 
-    @Autowired MockMvc mockMvc;
     @Autowired ObjectMapper objectMapper;
     @Autowired PlayerJpaRepository playerRepository;
     @Autowired MatchJpaRepository matchRepository;
