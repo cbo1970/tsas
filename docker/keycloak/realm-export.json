@@ -1,0 +1,35 @@
+{
+  "realm": "tsas",
+  "enabled": true,
+  "registrationAllowed": true,
+  "registrationEmailAsUsername": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "accessTokenLifespan": 900,
+  "ssoSessionMaxLifespan": 2592000,
+  "clients": [
+    {
+      "clientId": "tsas-frontend",
+      "name": "TSaS Frontend",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "https://localhost:4200/*",
+        "https://localhost/*"
+      ],
+      "webOrigins": [
+        "https://localhost:4200",
+        "https://localhost"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    }
+  ]
+}
