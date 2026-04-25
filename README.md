@@ -21,6 +21,19 @@ Web application for tennis match tracking and statistics.
 - Node.js / npm
 - Podman oder Docker mit Compose
 
+### 0. Zertifikat generieren (einmalig)
+
+Für HTTPS wird ein selbstsigniertes Zertifikat benötigt:
+
+```bash
+cd docker/keycloak/certs
+openssl req -x509 -newkey rsa:4096 -keyout localhost-key.pem -out localhost.pem \
+  -days 365 -nodes -subj "/CN=localhost" \
+  -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+```
+
+Das Zertifikat muss einmalig dem Browser / Betriebssystem als vertrauenswürdig hinzugefügt werden.
+
 ### 1. Keycloak starten
 
 ```bash
@@ -28,8 +41,13 @@ cd docker
 podman compose up keycloak -d
 ```
 
-Keycloak ist unter `http://localhost:8180` erreichbar (Admin: `admin` / `admin`).
+Keycloak ist unter **`https://localhost:8443`** erreichbar.
+
+**Admin-Konsole:** `https://localhost:8443/admin` → Login: `admin` / `admin`
+
 Der Realm `tsas` wird beim ersten Start automatisch importiert.
+
+> Keycloak ist zusätzlich über HTTP auf `http://localhost:18080` erreichbar (wird intern vom Backend für den JWKS-Abruf verwendet).
 
 ### 2. Backend starten
 
@@ -38,7 +56,7 @@ cd backend
 JAVA_HOME=/opt/java/jdk-25.0.1 ./gradlew bootRun --args='--spring.profiles.active=local'
 ```
 
-Backend läuft auf `http://localhost:8080`.
+Backend läuft auf **`https://localhost:8080`**.
 
 ### 3. Frontend starten
 
@@ -47,7 +65,7 @@ cd frontend
 npm start
 ```
 
-Frontend läuft auf `http://localhost:4200`.
+Frontend läuft auf **`https://localhost:4200`**.
 
 ---
 
@@ -85,9 +103,10 @@ podman compose up -d
 
 | Service | URL |
 |---------|-----|
-| Keycloak | `http://localhost:8180` |
-| Backend | `http://localhost:8080` |
-| Frontend | `http://localhost:80` |
+| Keycloak | `https://localhost:8443` (Admin: `https://localhost:8443/admin`) |
+| Keycloak HTTP (intern) | `http://localhost:18080` |
+| Backend | `https://localhost:8080` |
+| Frontend | `https://localhost:4200` |
 | PostgreSQL | `localhost:5432` |
 
 Zum Stoppen:

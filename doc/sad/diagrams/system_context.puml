@@ -1,0 +1,52 @@
+@startuml TSaS_System_Context
+
+!theme plain
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam padding 20
+skinparam nodeSep 100
+skinparam rankSep 120
+skinparam ArrowColor #555555
+skinparam ArrowFontSize 11
+skinparam ArrowFontColor #333333
+skinparam rectangleBorderColor #AAAAAA
+skinparam rectangleBorderThickness 2
+skinparam rectangleFontSize 12
+skinparam rectangleFontStyle bold
+skinparam rectangleBackgroundColor transparent
+skinparam nodeBackgroundColor #FFFFFF
+skinparam nodeBorderThickness 2
+
+title TSaS – Produktive Systemarchitektur
+
+actor "Benutzer\n(Browser)" as User
+
+rectangle "  Internet Edge  " as EDGE #F3E5F5 {
+  node "CDN / WAF\n(z.B. Cloudflare)" as CDN #EE82EE
+  node "Reverse Proxy\n(nginx / Traefik)" as PROXY #DDA0DD
+}
+
+rectangle "  DMZ – Public Subnet  " as DMZ #FFFDE7 {
+  node "Angular SPA\nhttps://www.tsas.ch" as SPA #C8E6C9
+}
+
+rectangle "  Private Subnet  " as PRIV #E3F2FD {
+  node "Spring Boot Backend\nhttps://api.tsas.ch" as API #BBDEFB
+  node "Keycloak\nhttps://auth.tsas.ch" as KC #FFE0B2
+}
+
+rectangle "  DB Subnet  " as DBNET #EFEBE9 {
+  node "PostgreSQL\nPort 5432 (intern)" as DB #D7CCC8
+}
+
+User  -down->  CDN   : HTTPS / 443
+CDN   -down->  PROXY : HTTPS / 443
+PROXY -down->  SPA   : HTTPS / 443
+PROXY -down->  API   : HTTPS / 443
+PROXY -down->  KC    : HTTPS / 443
+SPA   -right-> API   : REST + Bearer JWT\nHTTPS / 443
+SPA   -down->  KC    : OAuth2 PKCE\nHTTPS / 443
+API   -right-> KC    : JWKS-Abruf\nHTTPS / 443
+API   -down->  DB    : JDBC / TCP / 5432
+
+@enduml

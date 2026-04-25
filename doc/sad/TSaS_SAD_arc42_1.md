@@ -242,72 +242,87 @@ graph TB
     subgraph Host["🖥️ Docker Host"]
         subgraph compose["docker-compose"]
 
-            subgraph app["📦 tsas-app Container"]
-                FE["Angular Frontend<br/>(Node.js)<br/>:80"]
-                BE["Spring Boot API<br/>(Java 25)<br/>:8080"]
+            subgraph fe["📦 frontend Container"]
+                NGX["Nginx<br/>(Angular SPA)<br/>:80"]
             end
 
-            subgraph db["📦 tsas-db Container"]
+            subgraph be["📦 backend Container"]
+                BE["Spring Boot API<br/>(Java 21)<br/>:8080"]
+            end
+
+            subgraph db["📦 db Container"]
                 PG[("PostgreSQL 16<br/>:5432")]
-                VOL[("Volume:<br/>tsas-data")]
+                VOL[("Volume:<br/>postgres-data")]
             end
 
-            subgraph kc["📦 tsas-keycloak Container"]
-                KEY["Keycloak 24+<br/>:8443"]
+            subgraph kc["📦 keycloak Container"]
+                KEY["Keycloak 26<br/>:8443 (HTTPS)<br/>:18080 (HTTP intern)"]
             end
         end
     end
 
-    Browser["👤 Browser"] -- "HTTPS :80" --> FE
-    FE -- "REST/JSON :8080" --> BE
+    Browser["👤 Browser"] -- "HTTPS :443" --> NGX
+    NGX -- "HTTP-Proxy /api/ → :8080" --> BE
     BE -- "JDBC :5432" --> PG
-    BE -- "OAuth2/OIDC :8443" --> KEY
+    BE -- "JWKS HTTP :18080" --> KEY
+    Browser -- "OAuth2 PKCE HTTPS :8443" --> KEY
     PG --- VOL
 
-    style app fill:#C8E6C9,stroke:#2E7D32
-    style db fill:#BBDEFB,stroke:#1565C0
-    style kc fill:#FFF9C4,stroke:#F9A825
+    style fe fill:#C8E6C9,stroke:#2E7D32
+    style be fill:#BBDEFB,stroke:#1565C0
+    style db fill:#FFF9C4,stroke:#F9A825
+    style kc fill:#FFE0B2,stroke:#E65100
     style compose fill:#f8f9fa,stroke:#666
     style Host fill:#fff,stroke:#333
 ```
 
 | Container | Inhalt | Ports | Bemerkung |
 |-----------|--------|-------|-----------|
-| `tsas-app` | Angular Frontend (Node.js) + Spring Boot Backend | 80, 8080 | Beide Services laufen als eigenständige Prozesse in einem gemeinsamen Container. |
-| `tsas-db` | PostgreSQL 16 | 5432 | Persistentes Volume für Datenbank-Dateien. |
-| `tsas-keycloak` | Keycloak 24+ | 8443 | Separater Container, eigene PostgreSQL-Instanz oder Shared-DB möglich. |
+| `frontend` | Nginx + Angular SPA (statische Build-Artefakte) | 80 | Nginx liefert die SPA aus und proxied `/api/`-Requests an den Backend-Container. |
+| `backend` | Spring Boot API (Java 21) | 8080 | Nur intern erreichbar (kein direkter Portmapping nach aussen im Produktiv-Setup). |
+| `db` | PostgreSQL 16 | 5432 (intern) | Persistentes Volume. Kein Port-Mapping nach aussen. |
+| `keycloak` | Keycloak 26 | 8443 (HTTPS), 18080 (HTTP intern für JWKS) | Realm `tsas` wird beim Start automatisch importiert. |
 
 ### 7.2 Docker Compose Struktur
 
-Schematischer Aufbau der docker-compose.yml:
+Schematischer Aufbau der `docker/compose.yml`:
 
 ```yaml
 services:
-  tsas-app:
-    build: .
-    ports:
-      - "80:80"      # Node.js/Angular
-      - "8080:8080"  # Spring Boot API
-    depends_on:
-      - tsas-db
-      - tsas-keycloak
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://tsas-db:5432/tsas
-      - KEYCLOAK_AUTH_SERVER_URL=https://tsas-keycloak:8443
-
-  tsas-db:
-    image: postgres:16
+  db:
+    image: postgres:16-alpine
     volumes:
-      - tsas-data:/var/lib/postgresql/data
+      - ../volume/postgres:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=tsas
-      - POSTGRES_USER=tsas
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME:-tsas}
+      - POSTGRES_USER=${DB_USERNAME:-tsas}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-tsas}
 
-  tsas-keycloak:
-    image: quay.io/keycloak/keycloak:24.0
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.7
+    command: start-dev --import-realm
     ports:
-      - "8443:8443"
+      - "8443:8443"   # HTTPS (Browser OAuth2)
+      - "18080:8080"  # HTTP (interner JWKS-Abruf durch Backend)
+
+  backend:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      db: { condition: service_healthy }
+      keycloak: { condition: service_healthy }
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/tsas
+      - KEYCLOAK_ISSUER_URI=https://keycloak:8443/realms/tsas
+      - KEYCLOAK_JWK_SET_URI=http://keycloak:8080/realms/tsas/protocol/openid-connect/certs
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
 ```
 
 ---
@@ -352,7 +367,7 @@ Strukturiertes Logging via SLF4J/Logback im JSON-Format. Spring Boot Actuator st
 | ID | Entscheidung | Begründung | Status |
 |----|-------------|------------|--------|
 | ADR-01 | **Modularer Monolith statt Microservices** | Die Applikation ist in V1 klein und wird von einem kleinen Team entwickelt. Die Komplexität von Microservices (Service Discovery, verteilte Transaktionen, Netzwerk-Overhead) ist nicht gerechtfertigt. Die interne Modularisierung als Gradle Multi-Module-Projekt erzwingt klare Modulgrenzen auf Compile-Ebene und erleichtert die spätere Extraktion einzelner Module als eigenständige Microservices. | Akzeptiert |
-| ADR-02 | **Frontend und Backend in einem Docker Container** | Vereinfacht das Deployment und die Konfiguration (ein docker-compose Service weniger). Node.js dient als Frontend-Server und liefert die Angular-Applikation aus. Spring Boot läuft als separater Prozess im selben Container. | Akzeptiert |
+| ADR-02 | **Frontend und Backend in separaten Docker Containern** | Frontend (Angular, via Nginx) und Backend (Spring Boot) laufen in eigenständigen Containern. Nginx übernimmt das Ausliefern der statischen Angular-Artefakte und proxied `/api/`-Requests an den Backend-Container. Diese Trennung vereinfacht unabhängige Skalierung, ermöglicht saubere Separation of Concerns und entspricht dem üblichen Deployment-Muster für SPA + REST-Backend. | Akzeptiert |
 | ADR-03 | **Keycloak als Identity Provider** | Keycloak ist der De-facto-Standard für OIDC/OAuth2 und bietet out-of-the-box Support für User-Management, Rollen, federated IDPs und Self-Service-Registrierung. | Akzeptiert |
 | ADR-04 | **PostgreSQL als Datenbank** | Bewährte relationale Datenbank mit guter Spring-Integration. Das Datenmodell ist klar relational (Player, Match, Set, Point, Stats). Kein Bedarf für NoSQL. | Akzeptiert |
 | ADR-05 | **REST API als Schnittstellenformat** | JSON/REST ist Standard für Web-Applikationen, gut tooling-unterstützt und einfach zu dokumentieren (OpenAPI/Swagger). GraphQL wäre eine Alternative, erhöht aber die Komplexität unnötig. | Akzeptiert |
@@ -376,7 +391,7 @@ Strukturiertes Logging via SLF4J/Logback im JSON-Format. Spring Boot Actuator st
 | FA-05 | **Match erstellen** | Ein authentifizierter Benutzer kann über `POST /api/matches` ein neues Match anlegen. Pflichtfelder: `player1Id` und `player2Id` (müssen als Spieler existieren, sonst HTTP 404), `setsToWin` (2 oder 3), `matchTiebreak` (true/false), `shortSet` (true/false). Bei erfolgreicher Erstellung antwortet das API mit HTTP 201, der neuen Match-Ressource inklusive generierter UUID und Status `IN_PROGRESS`. Die Antwort erfolgt innerhalb von 250 ms. | V1 |
 | FA-06 | **Punkte erfassen** | Während eines laufenden Matches (Status `IN_PROGRESS`) kann ein authentifizierter Benutzer über `POST /api/matches/{id}/points` einen Punkt erfassen. Pflichtfelder: `pointType` (`WINNER`/`UNFORCED_ERROR`/`FORCED_ERROR`/`ACE`/`DOUBLE_FAULT`/`NET`/`OUT_LONG`/`OUT_SIDE`), `strokeType` (`FOREHAND`/`BACKHAND`/`SERVE`/`VOLLEY`/`SMASH`) und `direction` (`CROSS_COURT`/`DOWN_THE_LINE`/`MIDDLE`). Optionalfeld: `remark` (Freitext, max. 500 Zeichen). Das API antwortet mit HTTP 201 und dem aktualisierten Spielstand. Ungültige Enum-Werte oder fehlende Pflichtfelder werden mit HTTP 400 abgewiesen. Die Verarbeitung erfolgt innerhalb von 250 ms (95. Perzentil bei 100 gleichzeitigen Benutzern). | V1 |
 | FA-07 | **Spielstand anzeigen** | Nach jedem erfassten Punkt enthält die API-Antwort von `POST /api/matches/{id}/points` den vollständigen, korrekt berechneten Spielstand: laufende Punkte im Game (0/15/30/40/Vorteil/Tiebreak-Zählung), gewonnene Games pro Satz und gewonnene Sätze beider Spieler. Das Angular-Frontend aktualisiert die Anzeige auf Basis dieser Antwort innerhalb von 250 ms. Einstand und Vorteile sowie Tiebreak-Regeln müssen gemäss ITF-Regelwerk korrekt abgebildet sein. | V1 |
-| FA-08 | **Head-to-Head-Statistik** | Ein authentifizierter Benutzer kann über `GET /api/statistics/head-to-head?player1={id}&player2={id}` eine Statistik abrufen. Die Antwort enthält für beide Spieler: Anzahl Siege und Niederlagen, Winner% (Anteil direkter Gewinnschläge an allen Punkten), Unforced Error%, First Serve% (Anteil erster Aufschläge im Feld), Double Faults (absolut) und Aces (absolut). Die Berechnung muss auch bei 500 oder mehr gespeicherten Matches innerhalb von 60 Sekunden abgeschlossen sein. Nicht existierende Spieler-IDs werden mit HTTP 404 abgewiesen. | V1 |
+| FA-08 | **Head-to-Head-Statistik** | Ein authentifizierter Benutzer kann über `GET /api/statistics/head-to-head?player1={id}&player2={id}` eine Statistik abrufen. Die Antwort enthält für beide Spieler die folgenden Kennzahlen, jeweils als Absolutwert und Prozentwert (wo sinnvoll): **Aufschlag:** First Serve% (Anteil erster Aufschläge im Feld), First Serve Won%, Second Serve Won%, Aces (absolut), Double Faults (absolut). **Return:** Return Points Won% auf ersten Aufschlag, Return Points Won% auf zweiten Aufschlag, Break Points Won% (gewonnene von gespielten Break Points), Return Games Won%. **Rallye:** Winners% (Anteil direkter Gewinnschläge an allen Punkten), Unforced Error%, Net Points Won% (Anteil gewonnener Netzangriffe an allen Netzangriffen). **Match-Bilanz:** Siege und Niederlagen gegeneinander (absolut), Satzbilanz (gewonnene:verlorene Sätze gesamt). Die Berechnung muss auch bei 500 oder mehr gespeicherten Matches innerhalb von 60 Sekunden abgeschlossen sein. Nicht existierende Spieler-IDs werden mit HTTP 404 abgewiesen. | V1 |
 | FA-09 | **Google-Login** | Ein Benutzer kann sich auf dem Keycloak-Login-Bildschirm über die Schaltfläche «Mit Google anmelden» via OAuth2-Federation mit seinem Google-Konto authentifizieren. Beim ersten Google-Login wird automatisch ein TSaS-Benutzerkonto mit der verifizierten Google-E-Mail-Adresse angelegt (HTTP 201 intern). Nach dem Login hat der Benutzer identische Zugriffsrechte wie ein lokal registrierter Benutzer (HTTP 200 auf alle geschützten Endpunkte). Der gesamte Google-Login-Flow muss innerhalb von 5 Sekunden abgeschlossen sein. | V2 |
 | FA-10 | **Aufsprungpunkte erfassen** | Während der Punkterfassung kann ein authentifizierter Benutzer per Touch oder Mausklick auf eine massstabsgetreue, schematische Tennisfeld-Darstellung (Draufsicht, Abmessungen 23,77 m × 10,97 m) den Aufsprungpunkt des Balls markieren. Die normalisierten X/Y-Koordinaten (Gleitkommazahl, relativ zur Feldgrösse) werden als optionales Feld im `POST /api/matches/{id}/points` gespeichert. Die Touch/Klick-Eingabe muss innerhalb von 100 ms durch einen sichtbaren Marker auf der Darstellung bestätigt werden. | V3 |
 
@@ -416,7 +431,7 @@ Das relationale Datenmodell bildet die Kernentitäten der Tennismatch-Dokumentat
 
 | ID | Risiko | Thema | Beschreibung / Mitigation |
 |----|--------|-------|--------------------------|
-| R-01 | Hoch | **Single-Container-Deployment** | Frontend und Backend im selben Container erschweren unabhängiges Skalieren. Bei steigender Last muss auf separate Container umgestellt werden. |
+| R-01 | Niedrig | **Container-Skalierung** | Frontend (Nginx) und Backend (Spring Boot) laufen bereits in separaten Containern. Unabhängiges Skalieren ist damit grundsätzlich möglich. Bei hoher Last kann der Backend-Container horizontal skaliert werden; Nginx müsste dann als Load Balancer konfiguriert werden. |
 | R-02 | Mittel | **Keycloak-Komplexität** | Keycloak ist ein mächtiges Tool mit hohem Konfigurationsaufwand. Fehlkonfigurationen können zu Sicherheitslücken führen. |
 | R-03 | Mittel | **Swisstennis-API-Verfügbarkeit** | Die Integration in V4 hängt davon ab, ob Swisstennis eine API bereitstellt und den Zugriff genehmigt. Fallback: manuelle Dateneingabe. |
 | R-04 | Niedrig | **Performance bei grosser Datenmenge** | Bei vielen Matches und Punkten könnten Statistik-Berechnungen langsam werden. Mitigation: Indizes, Caching, ggf. materialized Views. |

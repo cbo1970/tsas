@@ -25,5 +25,6 @@ Die SVG-Dateien werden im selben Verzeichnis erzeugt.
 
 | Datei | Inhalt |
 |-------|--------|
+| `system_context.puml` | Systemübersicht – Services, Protokolle und Ports (Frontend, Backend, Keycloak, PostgreSQL) |
 | `backend_module.puml` | Backend – Fachliche Module (Übersicht) → Kapitel 5.2 |
 | `backend_clean_architecture.puml` | Backend – Clean Architecture Klassen-Detail → Kapitel 5.3 |
