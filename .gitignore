@@ -7,3 +7,4 @@ volume/
 # Git worktrees
 .worktrees/
 .idea/
+.superpowers/
