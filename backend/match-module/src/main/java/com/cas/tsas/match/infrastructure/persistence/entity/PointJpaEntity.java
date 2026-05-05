@@ -12,6 +12,8 @@ import java.util.UUID;
 @Table(name = "points")
 public class PointJpaEntity {
 
+    public PointJpaEntity() {}
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
