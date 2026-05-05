@@ -1,18 +1,22 @@
 package com.cas.tsas.match.application.service;
 
 import com.cas.tsas.match.application.port.in.CreateMatchUseCase;
-import com.cas.tsas.match.application.port.in.RecordAceUseCase;
 import com.cas.tsas.match.application.port.in.RecordPointUseCase;
 import com.cas.tsas.match.application.port.in.SetScoreUseCase;
 import com.cas.tsas.match.application.port.in.SetServingPlayerUseCase;
+import com.cas.tsas.match.application.port.out.CountPointsInGamePort;
 import com.cas.tsas.match.application.port.out.LoadMatchPort;
 import com.cas.tsas.match.application.port.out.LoadMatchScorePort;
 import com.cas.tsas.match.application.port.out.SaveMatchPort;
 import com.cas.tsas.match.application.port.out.SaveMatchScorePort;
+import com.cas.tsas.match.application.port.out.SavePointPort;
 import com.cas.tsas.match.domain.exception.MatchNotFoundException;
+import com.cas.tsas.match.domain.model.Direction;
 import com.cas.tsas.match.domain.model.Match;
 import com.cas.tsas.match.domain.model.MatchScore;
 import com.cas.tsas.match.domain.model.MatchStatus;
+import com.cas.tsas.match.domain.model.PointType;
+import com.cas.tsas.match.domain.model.StrokeType;
 import com.cas.tsas.player.application.port.out.LoadPlayerPort;
 import com.cas.tsas.player.domain.exception.PlayerNotFoundException;
 import com.cas.tsas.player.domain.model.Player;
@@ -30,6 +34,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
@@ -41,23 +46,21 @@ class MatchServiceTest {
     @Mock private LoadPlayerPort loadPlayerPort;
     @Mock private LoadMatchScorePort loadMatchScorePort;
     @Mock private SaveMatchScorePort saveMatchScorePort;
+    @Mock private SavePointPort savePointPort;
+    @Mock private CountPointsInGamePort countPointsInGamePort;
 
-    // ScoringService has no external deps — use real instance to avoid ByteBuddy issues with Java 21+
     private MatchService matchService;
 
     @BeforeEach
     void setUp() {
         matchService = new MatchService(loadMatchPort, saveMatchPort, loadPlayerPort,
-                loadMatchScorePort, saveMatchScorePort, new ScoringService());
+                loadMatchScorePort, saveMatchScorePort, new ScoringService(),
+                savePointPort, countPointsInGamePort);
     }
 
     private static final UUID MATCH_ID   = UUID.randomUUID();
     private static final UUID PLAYER1_ID = UUID.randomUUID();
     private static final UUID PLAYER2_ID = UUID.randomUUID();
-
-    // -------------------------------------------------------------------------
-    // Factories
-    // -------------------------------------------------------------------------
 
     private static Match inProgressMatch() {
         return new Match(MATCH_ID, PLAYER1_ID, PLAYER2_ID, 2, false, false, MatchStatus.IN_PROGRESS);
@@ -73,6 +76,11 @@ class MatchServiceTest {
 
     private static Player anyPlayer(UUID id) {
         return new Player(id, "Test", "Player", null, null, null, null, null, null);
+    }
+
+    private static RecordPointUseCase.RecordPointCommand winnerCommand() {
+        return new RecordPointUseCase.RecordPointCommand(
+                MATCH_ID, 1, PointType.WINNER, StrokeType.FOREHAND, Direction.CROSS_COURT, null);
     }
 
     // =========================================================================
@@ -174,28 +182,45 @@ class MatchServiceTest {
     @Nested
     class RecordPoint {
 
-        private final RecordPointUseCase.RecordPointCommand command =
-                new RecordPointUseCase.RecordPointCommand(MATCH_ID, true);
-
         @Test
         void applies_point_to_score_and_saves_it() {
-            MatchScore score = freshScore(); // p1 at 0 points
+            MatchScore score = freshScore();
             when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(inProgressMatch()));
             when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
             when(saveMatchScorePort.saveMatchScore(score)).thenReturn(score);
+            when(countPointsInGamePort.countPointsInGame(any(), anyInt(), anyInt())).thenReturn(0);
+            when(savePointPort.savePoint(any())).thenAnswer(inv -> inv.getArgument(0));
 
-            matchService.recordPoint(command);
+            matchService.recordPoint(winnerCommand());
 
-            // Real ScoringService increments p1 from 0 to 1 (15)
             assertThat(score.getPointsPlayer1()).isEqualTo(1);
             verify(saveMatchScorePort).saveMatchScore(score);
+            verify(savePointPort).savePoint(any());
+        }
+
+        @Test
+        void ace_point_type_increments_ace_counter_for_winner() {
+            MatchScore score = freshScore();
+            score.setServingPlayer(1);
+            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(inProgressMatch()));
+            when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
+            when(saveMatchScorePort.saveMatchScore(score)).thenReturn(score);
+            when(countPointsInGamePort.countPointsInGame(any(), anyInt(), anyInt())).thenReturn(0);
+            when(savePointPort.savePoint(any())).thenAnswer(inv -> inv.getArgument(0));
+
+            var aceCommand = new RecordPointUseCase.RecordPointCommand(
+                    MATCH_ID, 1, PointType.ACE, null, null, null);
+            matchService.recordPoint(aceCommand);
+
+            assertThat(score.getAcesPlayer1()).isEqualTo(1);
+            assertThat(score.getAcesPlayer2()).isEqualTo(0);
         }
 
         @Test
         void throws_MatchNotFoundException_when_match_not_found() {
             when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> matchService.recordPoint(command))
+            assertThatThrownBy(() -> matchService.recordPoint(winnerCommand()))
                     .isInstanceOf(MatchNotFoundException.class);
         }
 
@@ -203,7 +228,7 @@ class MatchServiceTest {
         void throws_IllegalStateException_when_match_already_completed() {
             when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(completedMatch()));
 
-            assertThatThrownBy(() -> matchService.recordPoint(command))
+            assertThatThrownBy(() -> matchService.recordPoint(winnerCommand()))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("already completed");
         }
@@ -216,8 +241,10 @@ class MatchServiceTest {
             when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(match));
             when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
             when(saveMatchScorePort.saveMatchScore(score)).thenReturn(score);
+            when(countPointsInGamePort.countPointsInGame(any(), anyInt(), anyInt())).thenReturn(0);
+            when(savePointPort.savePoint(any())).thenAnswer(inv -> inv.getArgument(0));
 
-            matchService.recordPoint(command);
+            matchService.recordPoint(winnerCommand());
 
             verify(saveMatchPort).saveMatch(argThat(m -> m.getStatus() == MatchStatus.COMPLETED));
         }
@@ -273,83 +300,6 @@ class MatchServiceTest {
             matchService.setScore(command);
 
             verify(saveMatchPort).saveMatch(argThat(m -> m.getStatus() == MatchStatus.IN_PROGRESS));
-        }
-    }
-
-    // =========================================================================
-    @Nested
-    class RecordAce {
-
-        @Test
-        void throws_MatchNotFoundException_when_match_not_found() {
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.empty());
-
-            assertThatThrownBy(() ->
-                matchService.recordAce(new RecordAceUseCase.RecordAceCommand(MATCH_ID, true)))
-                .isInstanceOf(MatchNotFoundException.class);
-        }
-
-        @Test
-        void throws_IllegalStateException_when_match_already_completed() {
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(completedMatch()));
-
-            assertThatThrownBy(() ->
-                matchService.recordAce(new RecordAceUseCase.RecordAceCommand(MATCH_ID, true)))
-                .isInstanceOf(IllegalStateException.class);
-        }
-
-        @Test
-        void increments_acesPlayer1_and_scores_point() {
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(inProgressMatch()));
-            MatchScore score = freshScore();
-            score.setServingPlayer(1); // player1 serves
-            when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
-            when(saveMatchScorePort.saveMatchScore(any())).thenAnswer(inv -> inv.getArgument(0));
-
-            MatchScore result = matchService.recordAce(new RecordAceUseCase.RecordAceCommand(MATCH_ID, true));
-
-            assertThat(result.getAcesPlayer1()).isEqualTo(1);
-            assertThat(result.getAcesPlayer2()).isEqualTo(0);
-            assertThat(result.getPointsPlayer1()).isEqualTo(1);
-        }
-
-        @Test
-        void increments_acesPlayer2_for_player2() {
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(inProgressMatch()));
-            MatchScore score = freshScore();
-            score.setServingPlayer(2); // player2 serves
-            when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
-            when(saveMatchScorePort.saveMatchScore(any())).thenAnswer(inv -> inv.getArgument(0));
-
-            MatchScore result = matchService.recordAce(new RecordAceUseCase.RecordAceCommand(MATCH_ID, false));
-
-            assertThat(result.getAcesPlayer2()).isEqualTo(1);
-            assertThat(result.getAcesPlayer1()).isEqualTo(0);
-        }
-
-        @Test
-        void throws_IllegalStateException_when_no_serving_player_set() {
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(inProgressMatch()));
-            MatchScore score = freshScore(); // servingPlayer = null
-            when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
-
-            assertThatThrownBy(() ->
-                matchService.recordAce(new RecordAceUseCase.RecordAceCommand(MATCH_ID, true)))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessage("No serving player set");
-        }
-
-        @Test
-        void throws_IllegalStateException_when_wrong_player_tries_to_ace() {
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(inProgressMatch()));
-            MatchScore score = freshScore();
-            score.setServingPlayer(2); // player2 serves
-            when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
-
-            assertThatThrownBy(() ->
-                matchService.recordAce(new RecordAceUseCase.RecordAceCommand(MATCH_ID, true))) // player1 tries
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessage("Player 1 is not serving");
         }
     }
 

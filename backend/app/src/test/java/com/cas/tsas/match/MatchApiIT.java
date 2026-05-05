@@ -3,6 +3,7 @@ package com.cas.tsas.match;
 import com.cas.tsas.AbstractIntegrationTest;
 import com.cas.tsas.match.infrastructure.persistence.repository.MatchJpaRepository;
 import com.cas.tsas.match.infrastructure.persistence.repository.MatchScoreJpaRepository;
+import com.cas.tsas.match.infrastructure.persistence.repository.PointJpaRepository;
 import com.cas.tsas.player.infrastructure.persistence.repository.PlayerJpaRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,10 +23,12 @@ class MatchApiIT extends AbstractIntegrationTest {
     @Autowired ObjectMapper objectMapper;
     @Autowired MatchJpaRepository matchRepository;
     @Autowired MatchScoreJpaRepository matchScoreRepository;
+    @Autowired PointJpaRepository pointRepository;
     @Autowired PlayerJpaRepository playerRepository;
 
     @BeforeEach
     void cleanUp() {
+        pointRepository.deleteAll();
         matchScoreRepository.deleteAll();
         matchRepository.deleteAll();
         playerRepository.deleteAll();
@@ -171,7 +174,14 @@ class MatchApiIT extends AbstractIntegrationTest {
             UUID p2 = createPlayer();
             UUID matchId = createMatch(p1, p2);
 
-            mockMvc.perform(post("/api/matches/{id}/score/player1", matchId))
+            mockMvc.perform(post("/api/matches/{id}/points", matchId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of(
+                                    "winner", 1,
+                                    "pointType", "WINNER",
+                                    "strokeType", "FOREHAND",
+                                    "direction", "CROSS_COURT"
+                            ))))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.pointsPlayer1").value(1));
         }
@@ -184,7 +194,12 @@ class MatchApiIT extends AbstractIntegrationTest {
 
             mockMvc.perform(post("/api/matches/{id}/end", matchId));
 
-            mockMvc.perform(post("/api/matches/{id}/score/player1", matchId))
+            mockMvc.perform(post("/api/matches/{id}/points", matchId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of(
+                                    "winner", 1,
+                                    "pointType", "WINNER"
+                            ))))
                     .andExpect(status().isConflict());
         }
     }
@@ -288,7 +303,12 @@ class MatchApiIT extends AbstractIntegrationTest {
 
             mockMvc.perform(post("/api/matches/{id}/serve/player1", matchId)); // player1 serves
 
-            mockMvc.perform(post("/api/matches/{id}/ace/player1", matchId))
+            mockMvc.perform(post("/api/matches/{id}/points", matchId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of(
+                                    "winner", 1,
+                                    "pointType", "ACE"
+                            ))))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.acesPlayer1").value(1))
                     .andExpect(jsonPath("$.acesPlayer2").value(0))
@@ -303,31 +323,32 @@ class MatchApiIT extends AbstractIntegrationTest {
 
             mockMvc.perform(post("/api/matches/{id}/end", matchId));
 
-            mockMvc.perform(post("/api/matches/{id}/ace/player1", matchId))
+            mockMvc.perform(post("/api/matches/{id}/points", matchId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of(
+                                    "winner", 1,
+                                    "pointType", "ACE"
+                            ))))
                     .andExpect(status().isConflict());
         }
 
         @Test
-        void returns_409_when_no_serving_player_set() throws Exception {
-            UUID p1 = createPlayer();
-            UUID p2 = createPlayer();
-            UUID matchId = createMatch(p1, p2);
-            // No /serve call — servingPlayer is null
-
-            mockMvc.perform(post("/api/matches/{id}/ace/player1", matchId))
-                    .andExpect(status().isConflict());
-        }
-
-        @Test
-        void returns_409_when_wrong_player_tries_to_ace() throws Exception {
+        void acePlayer2_incrementsAceCounterForPlayer2() throws Exception {
             UUID p1 = createPlayer();
             UUID p2 = createPlayer();
             UUID matchId = createMatch(p1, p2);
 
-            mockMvc.perform(post("/api/matches/{id}/serve/player1", matchId)); // player1 serves
+            mockMvc.perform(post("/api/matches/{id}/serve/player2", matchId)); // player2 serves
 
-            mockMvc.perform(post("/api/matches/{id}/ace/player2", matchId)) // player2 tries to ace
-                    .andExpect(status().isConflict());
+            mockMvc.perform(post("/api/matches/{id}/points", matchId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of(
+                                    "winner", 2,
+                                    "pointType", "ACE"
+                            ))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.acesPlayer2").value(1))
+                    .andExpect(jsonPath("$.acesPlayer1").value(0));
         }
     }
 
