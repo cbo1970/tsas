@@ -3,18 +3,21 @@ package com.cas.tsas.match.application.service;
 import com.cas.tsas.match.application.port.in.CreateMatchUseCase;
 import com.cas.tsas.match.application.port.in.EndMatchUseCase;
 import com.cas.tsas.match.application.port.in.GetMatchUseCase;
-import com.cas.tsas.match.application.port.in.RecordAceUseCase;
 import com.cas.tsas.match.application.port.in.RecordPointUseCase;
 import com.cas.tsas.match.application.port.in.SetScoreUseCase;
 import com.cas.tsas.match.application.port.in.SetServingPlayerUseCase;
+import com.cas.tsas.match.application.port.out.CountPointsInGamePort;
 import com.cas.tsas.match.application.port.out.LoadMatchPort;
 import com.cas.tsas.match.application.port.out.LoadMatchScorePort;
 import com.cas.tsas.match.application.port.out.SaveMatchPort;
 import com.cas.tsas.match.application.port.out.SaveMatchScorePort;
+import com.cas.tsas.match.application.port.out.SavePointPort;
 import com.cas.tsas.match.domain.exception.MatchNotFoundException;
 import com.cas.tsas.match.domain.model.Match;
 import com.cas.tsas.match.domain.model.MatchScore;
 import com.cas.tsas.match.domain.model.MatchStatus;
+import com.cas.tsas.match.domain.model.Point;
+import com.cas.tsas.match.domain.model.PointType;
 import com.cas.tsas.player.application.port.out.LoadPlayerPort;
 import com.cas.tsas.player.domain.exception.PlayerNotFoundException;
 import org.springframework.stereotype.Service;
@@ -26,7 +29,7 @@ import java.util.UUID;
 @Service
 @Transactional
 public class MatchService implements CreateMatchUseCase, GetMatchUseCase, RecordPointUseCase,
-        SetScoreUseCase, EndMatchUseCase, RecordAceUseCase, SetServingPlayerUseCase {
+        SetScoreUseCase, EndMatchUseCase, SetServingPlayerUseCase {
 
     private final LoadMatchPort loadMatchPort;
     private final SaveMatchPort saveMatchPort;
@@ -34,18 +37,24 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
     private final LoadMatchScorePort loadMatchScorePort;
     private final SaveMatchScorePort saveMatchScorePort;
     private final ScoringService scoringService;
+    private final SavePointPort savePointPort;
+    private final CountPointsInGamePort countPointsInGamePort;
 
     public MatchService(LoadMatchPort loadMatchPort, SaveMatchPort saveMatchPort,
                         LoadPlayerPort loadPlayerPort,
                         LoadMatchScorePort loadMatchScorePort,
                         SaveMatchScorePort saveMatchScorePort,
-                        ScoringService scoringService) {
+                        ScoringService scoringService,
+                        SavePointPort savePointPort,
+                        CountPointsInGamePort countPointsInGamePort) {
         this.loadMatchPort = loadMatchPort;
         this.saveMatchPort = saveMatchPort;
         this.loadPlayerPort = loadPlayerPort;
         this.loadMatchScorePort = loadMatchScorePort;
         this.saveMatchScorePort = saveMatchScorePort;
         this.scoringService = scoringService;
+        this.savePointPort = savePointPort;
+        this.countPointsInGamePort = countPointsInGamePort;
     }
 
     @Override
@@ -62,28 +71,13 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
             throw new IllegalStateException("Player 2 already has an active match");
         }
 
-        Match match = new Match(
-                null,
-                command.player1Id(),
-                command.player2Id(),
-                command.setsToWin(),
-                command.matchTiebreak(),
-                command.shortSet(),
-                MatchStatus.IN_PROGRESS
-        );
+        Match match = new Match(null, command.player1Id(), command.player2Id(),
+                command.setsToWin(), command.matchTiebreak(), command.shortSet(),
+                MatchStatus.IN_PROGRESS);
         Match saved = saveMatchPort.saveMatch(match);
 
-        // Create initial score
-        MatchScore score = new MatchScore(
-                null, saved.getId(),
-                0, 0,
-                0, 0,
-                0, 0,
-                false, null,
-                1, false, null,
-                0, 0,
-                null
-        );
+        MatchScore score = new MatchScore(null, saved.getId(),
+                0, 0, 0, 0, 0, 0, false, null, 1, false, null, 0, 0, null);
         saveMatchScorePort.saveMatchScore(score);
 
         return saved;
@@ -92,8 +86,7 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
     @Override
     @Transactional(readOnly = true)
     public Match findById(UUID id) {
-        return loadMatchPort.loadMatch(id)
-                .orElseThrow(() -> new MatchNotFoundException(id));
+        return loadMatchPort.loadMatch(id).orElseThrow(() -> new MatchNotFoundException(id));
     }
 
     @Override
@@ -105,8 +98,7 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
     @Override
     @Transactional(readOnly = true)
     public MatchScore getScore(UUID matchId) {
-        loadMatchPort.loadMatch(matchId)
-                .orElseThrow(() -> new MatchNotFoundException(matchId));
+        loadMatchPort.loadMatch(matchId).orElseThrow(() -> new MatchNotFoundException(matchId));
         return loadMatchScorePort.loadMatchScore(matchId)
                 .orElseThrow(() -> new MatchNotFoundException(matchId));
     }
@@ -123,8 +115,27 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
         MatchScore score = loadMatchScorePort.loadMatchScore(command.matchId())
                 .orElseThrow(() -> new MatchNotFoundException(command.matchId()));
 
-        scoringService.applyPoint(match, score, command.player1Scored());
+        boolean player1Scored = command.winner() == 1;
+        int setNumber = score.getCurrentSet();
+        int gameNumber = score.getGamesPlayer1() + score.getGamesPlayer2() + 1;
+        int pointNumber = countPointsInGamePort.countPointsInGame(
+                command.matchId(), setNumber, gameNumber) + 1;
+        boolean isBreakPoint = calculateIsBreakPoint(score);
 
+        savePointPort.savePoint(new Point(null, command.matchId(),
+                setNumber, gameNumber, pointNumber,
+                command.winner(), command.pointType(), command.strokeType(), command.direction(),
+                score.getServingPlayer(), isBreakPoint, command.remark()));
+
+        if (command.pointType() == PointType.ACE) {
+            if (player1Scored) {
+                score.setAcesPlayer1(score.getAcesPlayer1() + 1);
+            } else {
+                score.setAcesPlayer2(score.getAcesPlayer2() + 1);
+            }
+        }
+
+        scoringService.applyPoint(match, score, player1Scored);
         MatchScore saved = saveMatchScorePort.saveMatchScore(score);
 
         if (saved.isDone()) {
@@ -133,6 +144,23 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
         }
 
         return saved;
+    }
+
+    private boolean calculateIsBreakPoint(MatchScore score) {
+        Integer serving = score.getServingPlayer();
+        if (serving == null) return false;
+
+        boolean receiverIsP1 = serving == 2;
+        int receiverPts = receiverIsP1 ? score.getPointsPlayer1() : score.getPointsPlayer2();
+        int serverPts   = receiverIsP1 ? score.getPointsPlayer2() : score.getPointsPlayer1();
+
+        if (receiverPts == 3 && serverPts < 3) return true;
+
+        if (score.isDeuce() && score.getIsAdvantagePlayer1() != null) {
+            return receiverIsP1 == score.getIsAdvantagePlayer1();
+        }
+
+        return false;
     }
 
     @Override
@@ -169,46 +197,6 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
     }
 
     @Override
-    public MatchScore recordAce(RecordAceCommand command) {
-        Match match = loadMatchPort.loadMatch(command.matchId())
-                .orElseThrow(() -> new MatchNotFoundException(command.matchId()));
-
-        if (match.getStatus() == MatchStatus.COMPLETED) {
-            throw new IllegalStateException("Match is already completed");
-        }
-
-        MatchScore score = loadMatchScorePort.loadMatchScore(command.matchId())
-                .orElseThrow(() -> new MatchNotFoundException(command.matchId()));
-
-        Integer serving = score.getServingPlayer();
-        if (serving == null) {
-            throw new IllegalStateException("No serving player set");
-        }
-        if (command.forPlayer1() && serving != 1) {
-            throw new IllegalStateException("Player 1 is not serving");
-        }
-        if (!command.forPlayer1() && serving != 2) {
-            throw new IllegalStateException("Player 2 is not serving");
-        }
-
-        if (command.forPlayer1()) {
-            score.setAcesPlayer1(score.getAcesPlayer1() + 1);
-        } else {
-            score.setAcesPlayer2(score.getAcesPlayer2() + 1);
-        }
-
-        scoringService.applyPoint(match, score, command.forPlayer1());
-        MatchScore saved = saveMatchScorePort.saveMatchScore(score);
-
-        if (saved.isDone()) {
-            match.setStatus(MatchStatus.COMPLETED);
-            saveMatchPort.saveMatch(match);
-        }
-
-        return saved;
-    }
-
-    @Override
     public MatchScore setServingPlayer(SetServingPlayerCommand command) {
         Match match = loadMatchPort.loadMatch(command.matchId())
                 .orElseThrow(() -> new MatchNotFoundException(command.matchId()));
@@ -221,7 +209,6 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
                 .orElseThrow(() -> new MatchNotFoundException(command.matchId()));
 
         score.setServingPlayer(command.forPlayer1() ? 1 : 2);
-
         return saveMatchScorePort.saveMatchScore(score);
     }
 
@@ -233,11 +220,9 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
         match.setStatus(MatchStatus.COMPLETED);
         Match saved = saveMatchPort.saveMatch(match);
 
-        // Update score to done if not already
         loadMatchScorePort.loadMatchScore(matchId).ifPresent(score -> {
             if (!score.isDone()) {
                 score.setDone(true);
-                // Determine winner based on sets
                 if (score.getSetsPlayer1() > score.getSetsPlayer2()) {
                     score.setWinner("PLAYER1");
                 } else if (score.getSetsPlayer2() > score.getSetsPlayer1()) {

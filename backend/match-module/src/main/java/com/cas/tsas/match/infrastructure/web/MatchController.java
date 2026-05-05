@@ -3,12 +3,17 @@ package com.cas.tsas.match.infrastructure.web;
 import com.cas.tsas.match.application.port.in.CreateMatchUseCase;
 import com.cas.tsas.match.application.port.in.EndMatchUseCase;
 import com.cas.tsas.match.application.port.in.GetMatchUseCase;
-import com.cas.tsas.match.application.port.in.RecordAceUseCase;
 import com.cas.tsas.match.application.port.in.RecordPointUseCase;
 import com.cas.tsas.match.application.port.in.SetScoreUseCase;
 import com.cas.tsas.match.application.port.in.SetServingPlayerUseCase;
+import com.cas.tsas.match.domain.model.Direction;
+import com.cas.tsas.match.domain.model.Match;
+import com.cas.tsas.match.domain.model.MatchScore;
+import com.cas.tsas.match.domain.model.PointType;
+import com.cas.tsas.match.domain.model.StrokeType;
 import com.cas.tsas.match.infrastructure.web.dto.request.CreateMatchRequest;
 import com.cas.tsas.match.infrastructure.web.dto.request.EndMatchWalkoverRequest;
+import com.cas.tsas.match.infrastructure.web.dto.request.RecordPointRequest;
 import com.cas.tsas.match.infrastructure.web.dto.request.SetScoreRequest;
 import com.cas.tsas.match.infrastructure.web.dto.response.MatchResponse;
 import com.cas.tsas.match.infrastructure.web.dto.response.MatchScoreResponse;
@@ -29,7 +34,6 @@ public class MatchController {
     private final RecordPointUseCase recordPointUseCase;
     private final SetScoreUseCase setScoreUseCase;
     private final EndMatchUseCase endMatchUseCase;
-    private final RecordAceUseCase recordAceUseCase;
     private final SetServingPlayerUseCase setServingPlayerUseCase;
 
     public MatchController(CreateMatchUseCase createMatchUseCase,
@@ -37,14 +41,12 @@ public class MatchController {
                            RecordPointUseCase recordPointUseCase,
                            SetScoreUseCase setScoreUseCase,
                            EndMatchUseCase endMatchUseCase,
-                           RecordAceUseCase recordAceUseCase,
                            SetServingPlayerUseCase setServingPlayerUseCase) {
         this.createMatchUseCase = createMatchUseCase;
         this.getMatchUseCase = getMatchUseCase;
         this.recordPointUseCase = recordPointUseCase;
         this.setScoreUseCase = setScoreUseCase;
         this.endMatchUseCase = endMatchUseCase;
-        this.recordAceUseCase = recordAceUseCase;
         this.setServingPlayerUseCase = setServingPlayerUseCase;
     }
 
@@ -75,28 +77,21 @@ public class MatchController {
         return MatchWithScoreResponse.from(match, score);
     }
 
-    @PostMapping("/{id}/score/player1")
-    public MatchScoreResponse scorePlayer1(@PathVariable UUID id) {
-        var command = new RecordPointUseCase.RecordPointCommand(id, true);
-        return MatchScoreResponse.from(recordPointUseCase.recordPoint(command));
-    }
-
-    @PostMapping("/{id}/score/player2")
-    public MatchScoreResponse scorePlayer2(@PathVariable UUID id) {
-        var command = new RecordPointUseCase.RecordPointCommand(id, false);
-        return MatchScoreResponse.from(recordPointUseCase.recordPoint(command));
-    }
-
-    @PostMapping("/{id}/ace/player1")
-    public MatchScoreResponse acePlayer1(@PathVariable UUID id) {
-        var command = new RecordAceUseCase.RecordAceCommand(id, true);
-        return MatchScoreResponse.from(recordAceUseCase.recordAce(command));
-    }
-
-    @PostMapping("/{id}/ace/player2")
-    public MatchScoreResponse acePlayer2(@PathVariable UUID id) {
-        var command = new RecordAceUseCase.RecordAceCommand(id, false);
-        return MatchScoreResponse.from(recordAceUseCase.recordAce(command));
+    @PostMapping("/{id}/points")
+    @ResponseStatus(HttpStatus.CREATED)
+    public MatchWithScoreResponse recordPoint(@PathVariable UUID id,
+                                              @Valid @RequestBody RecordPointRequest request) {
+        var command = new RecordPointUseCase.RecordPointCommand(
+                id,
+                request.winner(),
+                request.pointType() != null ? PointType.valueOf(request.pointType()) : null,
+                request.strokeType() != null ? StrokeType.valueOf(request.strokeType()) : null,
+                request.direction() != null ? Direction.valueOf(request.direction()) : null,
+                request.remark()
+        );
+        MatchScore score = recordPointUseCase.recordPoint(command);
+        Match match = getMatchUseCase.findById(id);
+        return MatchWithScoreResponse.from(match, score);
     }
 
     @PostMapping("/{id}/serve/player1")

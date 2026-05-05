@@ -12,6 +12,8 @@ import { Player } from '../../../core/models/player.model';
 import { MatchWithScore, MatchScore } from '../../../core/models/match.model';
 import { ScoreEditDialogComponent } from './score-edit-dialog.component';
 import { EndMatchDialogComponent, EndMatchDialogResult } from './end-match-dialog.component';
+import { RecordPointDialogComponent, RecordPointDialogData } from './record-point-dialog.component';
+import { RecordPointRequest } from '../../../core/models/point.model';
 
 @Component({
   selector: 'app-score',
@@ -141,14 +143,6 @@ import { EndMatchDialogComponent, EndMatchDialogResult } from './end-match-dialo
           </div>
 
           <div class="bottom-area">
-            <button class="ace-btn"
-                    [disabled]="matchData()!.status === 'COMPLETED' || servingPlayer() !== 1"
-                    (click)="recordAce(true)">
-              <span class="ace-icon">🎾</span>
-              <span class="ace-count">{{ matchData()!.score.acesPlayer1 }}</span>
-              <span class="ace-lbl">Asse {{ player1Name() }}</span>
-            </button>
-
             <div class="action-buttons">
               <button mat-stroked-button (click)="openEditDialog()">
                 <mat-icon>edit</mat-icon>
@@ -161,14 +155,6 @@ import { EndMatchDialogComponent, EndMatchDialogResult } from './end-match-dialo
                 </button>
               }
             </div>
-
-            <button class="ace-btn"
-                    [disabled]="matchData()!.status === 'COMPLETED' || servingPlayer() !== 2"
-                    (click)="recordAce(false)">
-              <span class="ace-icon">🎾</span>
-              <span class="ace-count">{{ matchData()!.score.acesPlayer2 }}</span>
-              <span class="ace-lbl">Asse {{ player2Name() }}</span>
-            </button>
           </div>
         </div>
       } @else {
@@ -329,48 +315,19 @@ import { EndMatchDialogComponent, EndMatchDialogResult } from './end-match-dialo
     .sval-md { font-size: 28px; font-weight: 500; line-height: 1; }
     .deuce-lbl { color: #ffd54f; font-size: 9px; font-weight: bold; }
 
-    /* ── Bottom area (ace buttons + action buttons) ── */
+    /* ── Bottom area ── */
     .bottom-area {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
+      justify-content: center;
       width: 100%;
       margin-top: 20px;
-      gap: 12px;
     }
-
     .action-buttons {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 12px;
-      flex: 1;
     }
-    .action-buttons .mat-mdc-outlined-button {
-      color: white;
-      --mdc-outlined-button-outline-color: rgba(255,255,255,.6);
-    }
-
-    .ace-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      background: rgba(255,255,255,.1);
-      border: 1px solid rgba(255,255,255,.4);
-      border-radius: 10px;
-      padding: 10px 16px;
-      cursor: pointer;
-      color: white;
-      min-width: 80px;
-      transition: background 0.15s;
-    }
-    .ace-btn:hover:not([disabled]) { background: rgba(255,255,255,.2); }
-    .ace-btn:active:not([disabled]) { background: rgba(255,255,255,.28); }
-    .ace-btn[disabled] { opacity: 0.4; cursor: default; }
-    .ace-icon { font-size: 20px; line-height: 1; }
-    .ace-count { font-size: 28px; font-weight: bold; line-height: 1; }
-    .ace-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255,255,255,.7); text-align: center; }
     .loading { text-align: center; padding: 48px; color: #666; }
     .serve-indicator { font-size: 14px; }
   `]
@@ -420,25 +377,6 @@ export class ScoreComponent implements OnInit {
     this.api.getPlayer(p2Id).subscribe(p => this.player2.set(p));
   }
 
-  recordAce(forPlayer1: boolean) {
-    const m = this.matchData();
-    if (!m || m.status === 'COMPLETED') return;
-
-    const obs = forPlayer1
-      ? this.api.acePlayer1(this.matchId)
-      : this.api.acePlayer2(this.matchId);
-
-    obs.subscribe({
-      next: (score) => {
-        this.matchData.update(md => md ? { ...md, score } : md);
-        if (score.isDone) {
-          this.loadMatch();
-        }
-      },
-      error: () => this.snackBar.open('Fehler beim Speichern', 'OK', { duration: 3000 })
-    });
-  }
-
   setServe(forPlayer1: boolean) {
     const m = this.matchData();
     if (!m || m.status === 'COMPLETED') return;
@@ -459,27 +397,31 @@ export class ScoreComponent implements OnInit {
     if (this.servingPlayer() === null) {
       this.setServe(forPlayer1);
     } else {
-      this.scorePoint(forPlayer1);
+      this.openPointDialog(forPlayer1 ? 1 : 2);
     }
   }
 
-  scorePoint(player1Scored: boolean) {
+  openPointDialog(winner: 1 | 2) {
     const m = this.matchData();
     if (!m || m.status === 'COMPLETED') return;
 
-    const obs = player1Scored
-      ? this.api.scorePlayer1(this.matchId)
-      : this.api.scorePlayer2(this.matchId);
+    const winnerName = winner === 1 ? this.player1Name() : this.player2Name();
+    const data: RecordPointDialogData = { winner, winnerName };
 
-    obs.subscribe({
-      next: (score) => {
-        this.matchData.update(md => md ? { ...md, score } : md);
-        if (score.isDone) {
-          // Reload full match to get status
-          this.loadMatch();
-        }
-      },
-      error: () => this.snackBar.open('Fehler beim Speichern', 'OK', { duration: 3000 })
+    const ref = this.dialog.open(RecordPointDialogComponent, {
+      width: '420px',
+      data
+    });
+
+    ref.afterClosed().subscribe((result: RecordPointRequest | null) => {
+      if (!result) return;
+      this.api.recordPoint(this.matchId, result).subscribe({
+        next: (updated) => {
+          this.matchData.set(updated);
+          if (updated.score.isDone) this.loadMatch();
+        },
+        error: () => this.snackBar.open('Fehler beim Speichern', 'OK', { duration: 3000 })
+      });
     });
   }
 
