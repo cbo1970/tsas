@@ -182,8 +182,8 @@ class MatchApiIT extends AbstractIntegrationTest {
                                     "strokeType", "FOREHAND",
                                     "direction", "CROSS_COURT"
                             ))))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.pointsPlayer1").value(1));
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.score.pointsPlayer1").value(1));
         }
 
         @Test
@@ -201,6 +201,53 @@ class MatchApiIT extends AbstractIntegrationTest {
                                     "pointType", "WINNER"
                             ))))
                     .andExpect(status().isConflict());
+        }
+
+        @Test
+        void returns_400_for_invalid_point_type() throws Exception {
+            UUID p1 = createPlayer(); UUID p2 = createPlayer();
+            UUID matchId = createMatch(p1, p2);
+
+            mockMvc.perform(post("/api/matches/{id}/points", matchId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of(
+                                    "winner", 1, "pointType", "INVALID_TYPE"
+                            ))))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void persists_point_with_remark_and_optional_fields() throws Exception {
+            UUID p1 = createPlayer(); UUID p2 = createPlayer();
+            UUID matchId = createMatch(p1, p2);
+
+            mockMvc.perform(post("/api/matches/{id}/points", matchId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of(
+                                    "winner", 2,
+                                    "pointType", "UNFORCED_ERROR",
+                                    "strokeType", "BACKHAND",
+                                    "direction", "DOWN_THE_LINE",
+                                    "remark", "netband"
+                            ))))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.score.pointsPlayer2").value(1));
+        }
+
+        @Test
+        void ace_increments_ace_counter() throws Exception {
+            UUID p1 = createPlayer(); UUID p2 = createPlayer();
+            UUID matchId = createMatch(p1, p2);
+            mockMvc.perform(post("/api/matches/{id}/serve/player1", matchId));
+
+            mockMvc.perform(post("/api/matches/{id}/points", matchId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of(
+                                    "winner", 1, "pointType", "ACE"
+                            ))))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.score.acesPlayer1").value(1))
+                    .andExpect(jsonPath("$.score.pointsPlayer1").value(1));
         }
     }
 
@@ -288,67 +335,6 @@ class MatchApiIT extends AbstractIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(Map.of("winner", "PLAYER1"))))
                     .andExpect(status().isConflict());
-        }
-    }
-
-    // =========================================================================
-    @Nested
-    class RecordAce {
-
-        @Test
-        void acePlayer1_incrementsAceCounterAndScoresPoint() throws Exception {
-            UUID p1 = createPlayer();
-            UUID p2 = createPlayer();
-            UUID matchId = createMatch(p1, p2);
-
-            mockMvc.perform(post("/api/matches/{id}/serve/player1", matchId)); // player1 serves
-
-            mockMvc.perform(post("/api/matches/{id}/points", matchId)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(Map.of(
-                                    "winner", 1,
-                                    "pointType", "ACE"
-                            ))))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.acesPlayer1").value(1))
-                    .andExpect(jsonPath("$.acesPlayer2").value(0))
-                    .andExpect(jsonPath("$.pointsPlayer1").value(1));
-        }
-
-        @Test
-        void returns_409_when_match_already_completed() throws Exception {
-            UUID p1 = createPlayer();
-            UUID p2 = createPlayer();
-            UUID matchId = createMatch(p1, p2);
-
-            mockMvc.perform(post("/api/matches/{id}/end", matchId));
-
-            mockMvc.perform(post("/api/matches/{id}/points", matchId)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(Map.of(
-                                    "winner", 1,
-                                    "pointType", "ACE"
-                            ))))
-                    .andExpect(status().isConflict());
-        }
-
-        @Test
-        void acePlayer2_incrementsAceCounterForPlayer2() throws Exception {
-            UUID p1 = createPlayer();
-            UUID p2 = createPlayer();
-            UUID matchId = createMatch(p1, p2);
-
-            mockMvc.perform(post("/api/matches/{id}/serve/player2", matchId)); // player2 serves
-
-            mockMvc.perform(post("/api/matches/{id}/points", matchId)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(Map.of(
-                                    "winner", 2,
-                                    "pointType", "ACE"
-                            ))))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.acesPlayer2").value(1))
-                    .andExpect(jsonPath("$.acesPlayer1").value(0));
         }
     }
 

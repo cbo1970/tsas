@@ -7,6 +7,8 @@ import com.cas.tsas.match.application.port.in.RecordPointUseCase;
 import com.cas.tsas.match.application.port.in.SetScoreUseCase;
 import com.cas.tsas.match.application.port.in.SetServingPlayerUseCase;
 import com.cas.tsas.match.domain.model.Direction;
+import com.cas.tsas.match.domain.model.Match;
+import com.cas.tsas.match.domain.model.MatchScore;
 import com.cas.tsas.match.domain.model.PointType;
 import com.cas.tsas.match.domain.model.StrokeType;
 import com.cas.tsas.match.infrastructure.web.dto.request.CreateMatchRequest;
@@ -76,8 +78,9 @@ public class MatchController {
     }
 
     @PostMapping("/{id}/points")
-    public MatchScoreResponse recordPoint(@PathVariable UUID id,
-                                          @Valid @RequestBody RecordPointRequest request) {
+    @ResponseStatus(HttpStatus.CREATED)
+    public MatchWithScoreResponse recordPoint(@PathVariable UUID id,
+                                              @Valid @RequestBody RecordPointRequest request) {
         var command = new RecordPointUseCase.RecordPointCommand(
                 id,
                 request.winner(),
@@ -86,7 +89,9 @@ public class MatchController {
                 request.direction() != null ? Direction.valueOf(request.direction()) : null,
                 request.remark()
         );
-        return MatchScoreResponse.from(recordPointUseCase.recordPoint(command));
+        MatchScore score = recordPointUseCase.recordPoint(command);
+        Match match = getMatchUseCase.findById(id);
+        return MatchWithScoreResponse.from(match, score);
     }
 
     @PostMapping("/{id}/serve/player1")
