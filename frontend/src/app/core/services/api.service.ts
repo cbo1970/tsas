@@ -10,6 +10,7 @@ import {
   CreateMatchRequest,
   SetScoreRequest
 } from '../models/match.model';
+import { RecordPointRequest } from '../models/point.model';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -54,20 +55,8 @@ export class ApiService {
     return this.http.post<Match>(`${this.base}/matches`, request);
   }
 
-  scorePlayer1(matchId: string): Observable<MatchScore> {
-    return this.http.post<MatchScore>(`${this.base}/matches/${matchId}/score/player1`, {});
-  }
-
-  scorePlayer2(matchId: string): Observable<MatchScore> {
-    return this.http.post<MatchScore>(`${this.base}/matches/${matchId}/score/player2`, {});
-  }
-
-  acePlayer1(matchId: string): Observable<MatchScore> {
-    return this.http.post<MatchScore>(`${this.base}/matches/${matchId}/ace/player1`, {});
-  }
-
-  acePlayer2(matchId: string): Observable<MatchScore> {
-    return this.http.post<MatchScore>(`${this.base}/matches/${matchId}/ace/player2`, {});
+  recordPoint(matchId: string, request: RecordPointRequest): Observable<MatchWithScore> {
+    return this.http.post<MatchWithScore>(`${this.base}/matches/${matchId}/points`, request);
   }
 
   setServingPlayer1(matchId: string): Observable<MatchScore> {
