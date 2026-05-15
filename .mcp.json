@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "linear": {
+      "command": "node",
+      "args": ["/Users/cbo/.npm/_npx/935194573f4e6558/node_modules/@mseep/linear-mcp/build/index.js"],
+      "env": {
+        "LINEAR_API_KEY": "${LINEAR_API_KEY}"
+      }
+    }
+  }
+}
