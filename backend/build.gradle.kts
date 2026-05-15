@@ -1,5 +1,5 @@
 plugins {
-    id("org.springframework.boot") version "3.4.3" apply false
+    id("org.springframework.boot") version "4.0.6" apply false
     id("io.spring.dependency-management") version "1.1.7" apply false
 }
 
@@ -9,12 +9,12 @@ subprojects {
 
     configure<io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension> {
         imports {
-            mavenBom("org.springframework.boot:spring-boot-dependencies:3.4.3")
+            mavenBom("org.springframework.boot:spring-boot-dependencies:4.0.6")
         }
     }
 
     tasks.withType<JavaCompile> {
-        options.release = 21
+        options.release = 25
         options.compilerArgs.add("-parameters")
     }
 
@@ -24,8 +24,8 @@ subprojects {
 
     dependencies {
         "testImplementation"("org.springframework.boot:spring-boot-starter-test")
-        "testImplementation"("org.testcontainers:junit-jupiter")
-        "testImplementation"("org.testcontainers:postgresql")
+        "testImplementation"("org.testcontainers:testcontainers-junit-jupiter")
+        "testImplementation"("org.testcontainers:testcontainers-postgresql")
         "testRuntimeOnly"("org.junit.platform:junit-platform-launcher")
     }
 

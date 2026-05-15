@@ -52,7 +52,7 @@ The system follows a multi-tier architecture:
 
 ### Backend (Spring Boot — Gradle Kotlin DSL)
 
-Java 25 is the installed JDK; source/target compatibility is set to Java 21.
+Java 25 is the installed JDK and the source/target release (`options.release = 25`).
 Set `JAVA_HOME=/opt/java/jdk-25.0.1` before running Gradle commands.
 
 ```bash
@@ -91,7 +91,7 @@ ng lint                              # Lint
 
 ```
 tsas/
-├── backend/                         # Spring Boot 3.4.x backend (Gradle Kotlin DSL)
+├── backend/                         # Spring Boot 4.0.x backend (Gradle Kotlin DSL)
 │   ├── src/main/java/com/cas/tsas/
 │   │   ├── TsasBackendApplication.java
 │   │   ├── domain/                  # Enterprise rules — no framework deps

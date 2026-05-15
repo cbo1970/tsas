@@ -4,8 +4,6 @@ import com.cas.tsas.match.domain.model.Match;
 import com.cas.tsas.match.domain.model.MatchStatus;
 import com.cas.tsas.match.domain.model.Point;
 import com.cas.tsas.match.domain.model.PointType;
-import com.cas.tsas.match.infrastructure.persistence.mapper.MatchMapper;
-import com.cas.tsas.match.infrastructure.persistence.mapper.PointMapper;
 import com.cas.tsas.match.infrastructure.persistence.repository.MatchPersistenceAdapter;
 import com.cas.tsas.match.infrastructure.persistence.repository.PointPersistenceAdapter;
 import com.cas.tsas.player.infrastructure.persistence.entity.PlayerJpaEntity;
@@ -13,12 +11,12 @@ import com.cas.tsas.player.infrastructure.persistence.repository.PlayerJpaReposi
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -26,21 +24,22 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest
+@SpringBootTest
+@ActiveProfiles("test")
+@Transactional
 @Testcontainers
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({PointMapper.class, PointPersistenceAdapter.class,
-         MatchMapper.class, MatchPersistenceAdapter.class})
 class PointPersistenceAdapterIT {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
+    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16-alpine");
 
     @DynamicPropertySource
     static void configureDataSource(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
+        registry.add("spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.PostgreSQLDialect");
     }
 
     @Autowired PointPersistenceAdapter pointAdapter;
