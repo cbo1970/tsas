@@ -27,7 +27,7 @@ services:
     volumes:
       - ./keycloak:/opt/keycloak/data/import
       - ./keycloak/certs:/opt/keycloak/certs
-      - ../volume/keycloak:/opt/keycloak/data/h2
+      - keycloak_data:/opt/keycloak/data/h2
     ports:
       - "8443:8443"
       - "18080:8080"
@@ -64,3 +64,6 @@ services:
       - "80:80"
     depends_on:
       - backend
+
+volumes:
+  keycloak_data:
