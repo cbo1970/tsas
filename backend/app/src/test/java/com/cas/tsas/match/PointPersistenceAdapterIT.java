@@ -4,8 +4,6 @@ import com.cas.tsas.match.domain.model.Match;
 import com.cas.tsas.match.domain.model.MatchStatus;
 import com.cas.tsas.match.domain.model.Point;
 import com.cas.tsas.match.domain.model.PointType;
-import com.cas.tsas.match.infrastructure.persistence.mapper.MatchMapper;
-import com.cas.tsas.match.infrastructure.persistence.mapper.PointMapper;
 import com.cas.tsas.match.infrastructure.persistence.repository.MatchPersistenceAdapter;
 import com.cas.tsas.match.infrastructure.persistence.repository.PointPersistenceAdapter;
 import com.cas.tsas.player.infrastructure.persistence.entity.PlayerJpaEntity;
@@ -14,7 +12,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -31,8 +28,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 @Transactional
 @Testcontainers
-@Import({PointMapper.class, PointPersistenceAdapter.class,
-         MatchMapper.class, MatchPersistenceAdapter.class})
 class PointPersistenceAdapterIT {
 
     @Container

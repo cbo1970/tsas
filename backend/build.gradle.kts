@@ -24,7 +24,6 @@ subprojects {
 
     dependencies {
         "testImplementation"("org.springframework.boot:spring-boot-starter-test")
-        "implementation"("org.springframework.boot:spring-boot-jackson2")
         "testImplementation"("org.testcontainers:testcontainers-junit-jupiter")
         "testImplementation"("org.testcontainers:testcontainers-postgresql")
         "testRuntimeOnly"("org.junit.platform:junit-platform-launcher")

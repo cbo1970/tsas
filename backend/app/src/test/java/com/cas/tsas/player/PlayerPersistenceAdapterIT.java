@@ -4,13 +4,11 @@ import com.cas.tsas.player.domain.model.BackhandType;
 import com.cas.tsas.player.domain.model.Gender;
 import com.cas.tsas.player.domain.model.Handedness;
 import com.cas.tsas.player.domain.model.Player;
-import com.cas.tsas.player.infrastructure.persistence.mapper.PlayerMapper;
 import com.cas.tsas.player.infrastructure.persistence.repository.PlayerPersistenceAdapter;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -28,7 +26,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 @Transactional
 @Testcontainers
-@Import({PlayerMapper.class, PlayerPersistenceAdapter.class})
 class PlayerPersistenceAdapterIT {
 
     @Container
