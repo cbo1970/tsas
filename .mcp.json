@@ -1,6 +1,11 @@
 {
   "mcpServers": {
-    "linear": {
+      "github": {
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-github"],
+        "env": { "GITHUB_TOKEN": "$GITHUB_TOKEN" }
+      },
+      "linear": {
       "command": "node",
       "args": ["/Users/cbo/.npm/_npx/935194573f4e6558/node_modules/@mseep/linear-mcp/build/index.js"],
       "env": {
