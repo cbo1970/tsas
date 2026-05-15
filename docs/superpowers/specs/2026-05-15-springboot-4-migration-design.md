@@ -10,11 +10,16 @@
 
 Upgrade the TSaS backend from Spring Boot **3.4.3** to Spring Boot **4.0.6** (latest stable as of 2026-04-23). Scope is *clean migration*: do whatever the version bump forces, plus clean up Spring-deprecations that appear in code we have to touch. No new SB4 feature adoption.
 
+Along with the Spring Boot bump:
+- **Java source/target**: bump from `21` → `25`. Boot 4's updated Gradle plugin (ASM) reads JDK 25 class files (the Boot 3.4.x limitation noted in `MEMORY.md` is gone). JDK 25 is already the installed JDK on the dev machine.
+- **Keycloak Docker image** (`docker/compose.yml`): `26.0.7` → `26.6.1` (latest stable, same major — backward-compatible per Keycloak's semver).
+- **PostgreSQL Docker image**: stays on `16-alpine` (no major bump in this work).
+
 ## Out of Scope
 
 - Frontend (Angular). Only touched if the REST API surface changes, which is not expected.
-- Keycloak version bump.
-- Docker / Podman setup.
+- Postgres major version bump (16 → 17).
+- Podman host setup, certificate regeneration, realm export changes.
 - Adoption of new SB4 features (new Actuator endpoints, Observability API, etc.).
 - Refactoring unrelated to the migration.
 
@@ -28,15 +33,17 @@ Work happens in an isolated **git worktree** off `develop`, on branch `feature/s
 
 ## Sequence of Commits
 
-The work is split into up to 5 commits. Each commit must build green (`./gradlew build`) before the next begins. **Commits 2–5 may be omitted** if the corresponding concern needs no changes — the PR description must explicitly state which were skipped and why, so the negative finding stays documented.
+The work is split into up to 7 commits. Each commit must build green (`./gradlew build`) before the next begins. **Commits 3–6 may be omitted** if the corresponding concern needs no changes — the PR description must explicitly state which were skipped and why, so the negative finding stays documented.
 
 | # | Commit message | Inhalt |
 |---|---|---|
-| 1 | `chore(deps): bump Spring Boot 3.4.3 → 4.0.6` | Plugin version + BOM in `backend/build.gradle.kts`. Verify `io.spring.dependency-management 1.1.7` still compatible; bump if required. Nothing else. Expected: build red until later commits. |
-| 2 | `fix(security): adapt to Spring Security 7` | Whatever Security 7 changes break the current `SecurityConfig` / `SecurityConfigLocal` in `auth-module`. Current config already uses modern lambda DSL — expectation is minor adjustments. |
-| 3 | `fix(persistence): adapt to Hibernate 7 / Jakarta 11` | ID-generator strategies (Hibernate 7 stricter on `@GeneratedValue(AUTO)`), possible `@Column` default changes, Flyway plugin/driver compatibility. |
-| 4 | `fix(web): adapt to Spring Framework 7 / Jackson` | Affects `player-module`, `match-module`, `common-module` controllers and DTOs. Possible Jackson major-version package renames. |
-| 5 | `chore(test): adapt to upgraded JUnit / Testcontainers / Mockito` | Boot 4 BOM may pull newer JUnit Platform / Mockito with breaking changes. |
+| 1 | `chore(docker): bump Keycloak 26.0.7 → 26.6.1` | `docker/compose.yml` image tag. Verify realm import + JWKS endpoint still work. Standalone — no Boot-4 dependency. Restart container, run a basic auth flow against it before continuing. |
+| 2 | `chore(deps): bump Spring Boot 3.4.3 → 4.0.6, Java release 21 → 25` | Plugin + BOM version in `backend/build.gradle.kts`. `options.release = 25`. Verify `io.spring.dependency-management 1.1.7` still compatible; bump if required. Nothing else. Expected: build red until later commits. |
+| 3 | `fix(security): adapt to Spring Security 7` | Whatever Security 7 changes break the current `SecurityConfig` / `SecurityConfigLocal` in `auth-module`. Current config already uses modern lambda DSL — expectation is minor adjustments. |
+| 4 | `fix(persistence): adapt to Hibernate 7 / Jakarta 11` | ID-generator strategies (Hibernate 7 stricter on `@GeneratedValue(AUTO)`), possible `@Column` default changes, Flyway plugin/driver compatibility. |
+| 5 | `fix(web): adapt to Spring Framework 7 / Jackson` | Affects `player-module`, `match-module`, `common-module` controllers and DTOs. Possible Jackson major-version package renames. |
+| 6 | `chore(test): adapt to upgraded JUnit / Testcontainers / Mockito` | Boot 4 BOM may pull newer JUnit Platform / Mockito with breaking changes. |
+| 7 | `chore: update MEMORY.md + CLAUDE.md to reflect new versions` | Bump Spring Boot to 4.0.6, Java release target to 25 (drop the SB-3.4-ASM-restriction note), Keycloak to 26.6.1. |
 
 ## Per-Module Expectations
 
@@ -67,9 +74,10 @@ Before writing code, the implementation plan must read and reference:
 | Hibernate 7 `@GeneratedValue(AUTO)` behavior change breaks IT | Medium | Switch to explicit `IDENTITY` / `SEQUENCE`, check Flyway migrations |
 | Flyway plugin incompatible with Boot 4 | Low | Use BOM-managed version; pin separately only if BOM choice is broken |
 | Spring Security 7 default changes (CSRF/CORS) | Medium | Config is already explicit — should survive unchanged |
-| `local` profile (HTTPS + Keycloak) startup regression | Medium | Final-gate (`bootRun local`) catches this; fix lands in Commit 2 |
+| `local` profile (HTTPS + Keycloak) startup regression | Medium | Final-gate (`bootRun local`) catches this; fix lands in Commit 3 |
 | Test profile (`permitAll`) hides Security-path regression | High | `bootRun --spring.profiles.active=local` is mandatory in the final gate, not optional |
-| Java 21 release target incompatible with Boot 4 | Very low | Boot 4 requires Java 17+; 21 is supported |
+| Keycloak 26.6.1 changes JWKS/realm-export format | Low | Same major (26) — backward-compatible per Keycloak semver. Mitigation: smoke-test auth flow after Commit 1 before touching backend. |
+| JDK 25 enables a language/preview feature that breaks the build | Very low | Keep source level at `25` final (not `--enable-preview`). Compile-time errors surface immediately. |
 
 ## Verification
 
@@ -81,13 +89,14 @@ Must be green before the next commit. If a commit cannot be made green in isolat
 
 ### Final gate (before opening the PR)
 
-Mandatory — all five must pass:
+Mandatory — all six must pass:
 
 1. `./gradlew build` is green
-2. Keycloak (Podman) + PostgreSQL (Podman) are running locally
+2. Keycloak **26.6.1** + PostgreSQL 16 (both via Podman, fresh image pulls) are running locally
 3. `./gradlew bootRun --args='--spring.profiles.active=local'` starts without ERROR-level log lines
 4. `curl -k https://localhost:8080/actuator/health` returns `{"status":"UP"}`
-5. An authenticated call (e.g. `GET /players`) with a valid Keycloak JWT returns 200
+5. JWT acquisition against Keycloak 26.6.1 succeeds (token endpoint reachable, JWKS fetchable)
+6. An authenticated call (e.g. `GET /players`) with that JWT returns 200
 
 ### Rollback
 
@@ -96,13 +105,13 @@ Work happens in an isolated worktree on its own branch. If the migration becomes
 ## Definition of Done
 
 - `./gradlew build` is green
-- `bootRun --spring.profiles.active=local` starts cleanly
+- `bootRun --spring.profiles.active=local` starts cleanly against Keycloak 26.6.1 + Postgres 16
 - `/actuator/health` returns 200
-- Authenticated endpoint call with Keycloak JWT returns 200
+- Authenticated endpoint call with a JWT from Keycloak 26.6.1 returns 200
 - PR is opened, reviewed, squash-merged to `develop`
 - TEN-5 in Linear is set to **Done** (this time with real work behind it)
 - Worktree is cleaned up
-- `MEMORY.md` is updated to reflect Spring Boot 4.0.6
+- `MEMORY.md` + `CLAUDE.md` updated: Spring Boot 4.0.6, Java release 25, Keycloak 26.6.1; the Boot-3.4-ASM-restriction note is removed
 
 ## Next Step
 
