@@ -54,6 +54,9 @@ public class PointJpaEntity {
     @Column(name = "remark", length = 500)
     private String remark;
 
+    @Column(name = "serve_attempt")
+    private Integer serveAttempt;
+
     @Column(name = "recorded_at", nullable = false, updatable = false)
     private Instant recordedAt;
 
@@ -86,5 +89,7 @@ public class PointJpaEntity {
     public void setBreakPoint(boolean breakPoint) { isBreakPoint = breakPoint; }
     public String getRemark() { return remark; }
     public void setRemark(String remark) { this.remark = remark; }
+    public Integer getServeAttempt() { return serveAttempt; }
+    public void setServeAttempt(Integer serveAttempt) { this.serveAttempt = serveAttempt; }
     public Instant getRecordedAt() { return recordedAt; }
 }

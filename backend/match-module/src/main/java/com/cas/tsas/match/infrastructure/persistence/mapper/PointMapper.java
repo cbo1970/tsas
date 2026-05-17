@@ -21,6 +21,7 @@ public class PointMapper {
         entity.setServingPlayer(point.getServingPlayer());
         entity.setBreakPoint(point.isBreakPoint());
         entity.setRemark(point.getRemark());
+        entity.setServeAttempt(point.getServeAttempt());
         return entity;
     }
 
@@ -37,7 +38,8 @@ public class PointMapper {
                 entity.getDirection(),
                 entity.getServingPlayer(),
                 entity.isBreakPoint(),
-                entity.getRemark()
+                entity.getRemark(),
+                entity.getServeAttempt()
         );
     }
 }
