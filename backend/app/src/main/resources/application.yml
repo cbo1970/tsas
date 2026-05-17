@@ -25,7 +25,18 @@ spring:
           issuer-uri: ${KEYCLOAK_ISSUER_URI:https://localhost:8443/realms/tsas}
           jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:https://localhost:8443/realms/tsas/protocol/openid-connect/certs}
 
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      chat:
+        options:
+          model: ${OPENAI_MODEL:gpt-4o-mini}
+          temperature: 0.4
+
 tsas:
+  ai:
+    min-points-for-analysis: ${TSAS_AI_MIN_POINTS:10}
+
   cors:
     allowed-origins:
       - "http://localhost:4200"

@@ -4,6 +4,8 @@ import com.cas.tsas.match.domain.model.Match;
 import com.cas.tsas.match.domain.model.MatchStatus;
 import com.cas.tsas.match.domain.model.Point;
 import com.cas.tsas.match.domain.model.PointType;
+import com.cas.tsas.match.domain.model.StrokeType;
+import com.cas.tsas.match.domain.model.Direction;
 import com.cas.tsas.match.infrastructure.persistence.repository.MatchPersistenceAdapter;
 import com.cas.tsas.match.infrastructure.persistence.repository.PointPersistenceAdapter;
 import com.cas.tsas.player.infrastructure.persistence.entity.PlayerJpaEntity;
@@ -96,5 +98,52 @@ class PointPersistenceAdapterIT {
                     PointType.WINNER, null, null, null, false, null, null));
         }
         assertThat(pointAdapter.countPointsInGame(matchId, 1, 1)).isEqualTo(4);
+    }
+
+    @Test
+    void loadPointsByMatch_returns_all_points_in_set_game_point_order() {
+        pointAdapter.savePoint(new Point(null, matchId, 1, 2, 1, 2,
+                PointType.UNFORCED_ERROR, StrokeType.BACKHAND, Direction.DOWN_THE_LINE, 1, false, null, 1));
+        pointAdapter.savePoint(new Point(null, matchId, 1, 1, 2, 1,
+                PointType.WINNER, StrokeType.FOREHAND, Direction.CROSS_COURT, 1, false, null, 1));
+        pointAdapter.savePoint(new Point(null, matchId, 1, 1, 1, 1,
+                PointType.WINNER, StrokeType.FOREHAND, Direction.CROSS_COURT, 1, false, null, 1));
+        pointAdapter.savePoint(new Point(null, matchId, 2, 1, 1, 2,
+                PointType.UNFORCED_ERROR, StrokeType.BACKHAND, Direction.MIDDLE, 2, false, null, 2));
+
+        var points = pointAdapter.loadPointsByMatch(matchId);
+
+        assertThat(points).hasSize(4);
+        assertThat(points.get(0).getSetNumber()).isEqualTo(1);
+        assertThat(points.get(0).getGameNumber()).isEqualTo(1);
+        assertThat(points.get(0).getPointNumber()).isEqualTo(1);
+        assertThat(points.get(1).getPointNumber()).isEqualTo(2);
+        assertThat(points.get(2).getGameNumber()).isEqualTo(2);
+        assertThat(points.get(3).getSetNumber()).isEqualTo(2);
+    }
+
+    @Test
+    void loadPointsByMatch_returns_empty_list_for_match_with_no_points() {
+        assertThat(pointAdapter.loadPointsByMatch(matchId)).isEmpty();
+    }
+
+    @Test
+    void loadPointsByMatch_does_not_return_points_of_other_matches() {
+        PlayerJpaEntity p1 = new PlayerJpaEntity();
+        p1.setFirstName("X"); p1.setLastName("Y");
+        UUID p1Id = playerJpaRepository.save(p1).getId();
+        PlayerJpaEntity p2 = new PlayerJpaEntity();
+        p2.setFirstName("Z"); p2.setLastName("Q");
+        UUID p2Id = playerJpaRepository.save(p2).getId();
+        Match otherMatch = matchAdapter.saveMatch(
+                new Match(null, p1Id, p2Id, 2, false, false, MatchStatus.IN_PROGRESS));
+
+        pointAdapter.savePoint(new Point(null, matchId, 1, 1, 1, 1,
+                PointType.WINNER, null, null, 1, false, null, null));
+        pointAdapter.savePoint(new Point(null, otherMatch.getId(), 1, 1, 1, 1,
+                PointType.WINNER, null, null, 1, false, null, null));
+
+        assertThat(pointAdapter.loadPointsByMatch(matchId)).hasSize(1);
+        assertThat(pointAdapter.loadPointsByMatch(otherMatch.getId())).hasSize(1);
     }
 }

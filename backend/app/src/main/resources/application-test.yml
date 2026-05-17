@@ -17,3 +17,11 @@ spring:
     console:
       enabled: true
       path: /h2-console
+
+  ai:
+    openai:
+      api-key:   # leer → OpenAiLlmAdapter deaktiviert, FakeLlmClientAdapter übernimmt
+
+tsas:
+  ai:
+    min-points-for-analysis: 10

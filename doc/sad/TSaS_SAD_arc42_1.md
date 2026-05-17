@@ -49,6 +49,7 @@ TSaS soll eine webbasierte Applikation bereitstellen, mit der der aktuelle Spiel
 | QZ-03 | Performance – Datenerfassung | Das Erfassen eines einzelnen Punktes (POST /api/points) muss bei bis zu 100 gleichzeitigen Benutzern in maximal 250ms (95. Perzentil, serverseitig) abgeschlossen sein. | Hoch |
 | QZ-04 | Performance – Statistik | Die Berechnung einer Head-to-Head-Statistik zwischen zwei Spielern muss in maximal 60 Sekunden abgeschlossen sein, auch wenn über 500 Matches in der Datenbank vorliegen. | Mittel |
 | QZ-05 | Sicherheit | Alle API-Endpunkte (ausser /health) müssen durch ein gültiges OAuth2 Bearer Token geschützt sein. Unautorisierte Requests müssen mit HTTP 401 abgewiesen werden. | Hoch |
+| QZ-06 | Performance – KI-Analyse | Die KI-gestützte Match-Analyse (Postmortem) muss synchron innerhalb von 60 Sekunden generiert sein (Timeout des LLM-Aufrufs). Wiederholtes Lesen einer bereits generierten Analyse erfolgt aus der DB in < 250 ms. | Mittel |
 
 ### 1.3 Stakeholder
 
@@ -165,13 +166,15 @@ Die Anwendung wird als modularer Monolith realisiert. Diese Entscheidung basiert
 | **Datenbank** | PostgreSQL | Bekannt, verbreitet, Open Source, geringes Risiko. Gute Unterstützung für relationale Datenmodelle. |
 | **Security** | Keycloak | Standard für OIDC/OAuth2. Ermöglicht Einbettung von federated IDPs wie Google, Facebook. |
 | **Deployment** | Docker / Docker Compose | Konsistente Umgebung über Entwicklung, Test und Produktion hinweg. |
+| **KI / LLM** | Spring AI 2.0.x mit OpenAI (gpt-4o-mini Default) | Spring AI 2.x ist Boot-4-kompatibel und liefert die `ChatClient`-Abstraktion mit strukturiertem JSON-Output (BeanOutputConverter) für taktische Match-Analysen. OpenAI gewählt für die initiale Implementierung; der `LlmClientPort` im `ai-module` erlaubt späteren Wechsel auf Anthropic oder ein lokales LLM (Ollama) ohne Refactoring der Use Cases. |
 
 ### 4.3 Release-Planung
 
 | Version | Umfang |
 |---------|--------|
 | **Version 1 (MVP)** | Web-App: Punkteerfassung, Spielerverwaltung, Basis-Statistiken (Head-to-Head, Winner%, Serve%), Registrierung/Login via Keycloak |
-| **Version 2** | Google als federated IDP, erweiterte statistische Auswertungen, natives iOS-Frontend für iPad (Swift) |
+| **Version 1.x** | KI-gestützte Match-Analyse (Postmortem): Coach generiert per Klick eine strukturierte taktische Auswertung nach Match-Ende (Schlüsselmomente, Stärken/Schwächen beider Spieler, 3–5 Empfehlungen) |
+| **Version 2** | Google als federated IDP, erweiterte statistische Auswertungen, natives iOS-Frontend für iPad (Swift), KI-Live-Coaching während des Matches, KI-Vorbereitung auf einen Gegner (Head-to-Head-basiert) |
 | **Version 3** | Aufsprungpunkte via Touch auf skizziertem Tennisfeld im UI |
 | **Version 4** | Integration Swisstennis-API (falls möglich) |
 | **Version 5** | Kameraanbindung für automatische Aufsprungpunkt-Erfassung („Hawk Eye very light") |
@@ -199,8 +202,9 @@ Das Spring Boot Backend ist intern in fachliche Module aufgeteilt. Jedes Modul k
 | `player-module` | Verwaltung von Spielerprofilen (Name, Geschlecht, Ranking, Spielhand, Backhand-Typ). CRUD-Operationen und Suchfunktionalität. |
 | `match-module` | Erstellen und Verwalten von Begegnungen (Matches) mit Attributen wie Anzahl Gewinnsätze, Match-Tiebreak, Short Set. Verwaltung der Sets und Spiele. |
 | `scoring-module` | Erfassen des laufenden Spielstandes Punkt für Punkt. Verwaltung der fixen Attribute (Forehand Winner, Backhand Winner, Ace, Double Fault, etc.) und freier Bemerkungen. |
-| `statistics-module` | Berechnung und Bereitstellung von Statistiken: Head-to-Head, Winner%, Unforced Error%, First/Second Serve%, Double Faults, Aces. |
+| `statistics-module` | Berechnung und Bereitstellung von Statistiken: Head-to-Head, Winner%, Unforced Error%, First/Second Serve%, Double Faults, Aces. Aggregierte Match-Statistiken werden on-the-fly aus Points berechnet und sowohl an die REST-Schicht als auch an das `ai-module` als Input geliefert. |
 | `auth-module` | Integration mit Keycloak. Token-Validierung, Rollenprüfung, Benutzerverwaltung. |
+| `ai-module` | KI-gestützte Match-Analyse. Konsumiert `statistics-module` (aggregierte Stats) und `player-module` (Spielerdaten als Kontext), ruft via `LlmClientPort` ein LLM (Default OpenAI) und persistiert das Ergebnis als `MatchAnalysis` (1:1 zum Match, überschreibbar). REST: `POST/GET /api/matches/{id}/analysis`. |
 | `common-module` | Shared Kernel mit gemeinsamen DTOs, Exceptions, Konfigurationen und Utilities. |
 
 ---
@@ -219,7 +223,22 @@ Dieses Szenario beschreibt den typischen Ablauf, wenn ein Trainer während eines
 6. Das API gibt den aktualisierten Spielstand als JSON zurück (HTTP 200).
 7. Das Frontend aktualisiert die Anzeige des Spielstands.
 
-### 6.2 Szenario: Benutzer-Authentifizierung
+### 6.2 Szenario: KI-gestützte Match-Analyse (Postmortem)
+
+Dieses Szenario beschreibt die Generierung einer taktischen Match-Analyse nach Match-Ende:
+
+1. Der Coach öffnet ein beendetes Match (`MatchStatus = COMPLETED`) im Frontend und klickt auf „Taktische Analyse generieren".
+2. Das Frontend sendet `POST /api/matches/{id}/analysis` mit Bearer Token.
+3. Der `MatchAnalysisController` im `ai-module` ruft den `GenerateMatchAnalysisUseCase` (`MatchAnalysisService`) auf.
+4. Der Service prüft: Match-Status = COMPLETED (sonst HTTP 409), Punktzahl ≥ 10 (sonst HTTP 422, Kostenschutz).
+5. Der Service ruft das `statistics-module` für die aggregierten Kennzahlen und das `player-module` für Spielermetadaten (Name, Ranking, Handedness, Backhand-Typ).
+6. Der Service ruft `LlmClientPort.generateAnalysis(stats, metadata)`. Im Default-Profil ist dies der `OpenAiLlmAdapter` (Spring AI ChatClient → OpenAI Chat Completions API mit strukturiertem JSON-Output via BeanOutputConverter). Bei fehlendem oder leerem `OPENAI_API_KEY` übernimmt der `FakeLlmClientAdapter` (deterministisches Stub-Result) — nützlich für Tests und Entwicklung ohne Provider.
+7. Die strukturierte Antwort (Schlüsselmomente, eigene/gegnerische Stärken/Schwächen, 3–5 priorisierte Empfehlungen) wird als `MatchAnalysis` mit Status `COMPLETED` in der Tabelle `match_analysis` persistiert (1:1 zum Match, überschreibbar via UNIQUE-Constraint).
+8. Das API antwortet mit HTTP 200 und der vollständigen Analyse.
+9. Bei LLM-Fehlern (Netzwerk, 5xx, Parse-Fehler) wird ein `MatchAnalysis`-Datensatz mit Status `FAILED` und `errorMessage` persistiert, das API antwortet mit HTTP 502. Der Coach kann „Erneut versuchen" klicken; der nächste erfolgreiche Aufruf überschreibt den FAILED-Datensatz.
+10. `GET /api/matches/{id}/analysis` liefert die gespeicherte Analyse ohne erneuten LLM-Aufruf (HTTP 200) oder HTTP 404, falls noch keine generiert wurde.
+
+### 6.3 Szenario: Benutzer-Authentifizierung
 
 Der Login-Flow folgt dem Standard OAuth2 Authorization Code Flow mit PKCE:
 
@@ -375,6 +394,7 @@ Strukturiertes Logging via SLF4J/Logback im JSON-Format. Spring Boot Actuator st
 | ADR-08 | **Angular Material + ngx-charts als UI-Framework** | Die primären Nutzer (Coaches, Eltern) verwenden die App während eines Matches auf Tablet oder Smartphone. Angular Material erfüllt die daraus resultierenden Anforderungen out-of-the-box: touch-optimierte Komponenten, responsive Layouts und grosse interaktive Elemente für schnelle Punkterfassung. Als offizielle Google-Library ist Angular Material eng mit Angular verzahnt, gut dokumentiert und kostenlos. Für die Statistik-Darstellung (FA-08) wird ngx-charts ergänzt, das nahtlos mit Angular Material harmoniert und ebenfalls kostenfrei ist. Die evaluierte Alternative PrimeNG bietet mehr Komponenten, ist aber schwerer, erfordert mehr Konfiguration und wäre für V1 Over-Engineering. | Akzeptiert |
 | ADR-09 | **`angular-oauth2-oidc` statt `keycloak-angular` als Frontend OIDC-Library** | Für den Authorization Code + PKCE Flow im Angular-Frontend wurde `angular-oauth2-oidc` gegenüber `keycloak-angular` (keycloak-js Wrapper) bevorzugt. Gründe: (1) `angular-oauth2-oidc` ist eine generische, standard-konforme OIDC-Library — kein Keycloak-spezifisches Coupling im Frontend-Code. Bei einem zukünftigen IDP-Wechsel (z.B. Auth0, Okta) muss nur die Konfiguration angepasst werden, nicht der Code. (2) Die Library ist schlanker und hat keine Abhängigkeit auf `keycloak-js`, das eigene Release-Zyklen und Breaking Changes mitbringt. (3) `angular-oauth2-oidc` unterstützt PKCE nativ und ist aktiv gepflegt. **Implementierung:** `OAuthModuleConfig` in `core/auth/auth.config.ts`, HTTP-Interceptor für Bearer-Token-Injection, `CanActivateFn` Guard für alle Routes. | Akzeptiert |
 | ADR-07 | **Gradle Multi-Module statt Spring Modulith** | Spring Modulith wurde evaluiert, aber verworfen. Gründe: (1) Spring Modulith nutzt für die modul-übergreifende Kommunikation Application Events (Spring `@EventListener`/`ApplicationEventPublisher`), was standardmässig zu asynchroner Kommunikation führt – eine unnötige Komplexität für einen Use-Case, der synchrone Antworten erfordert. (2) Die Kommunikation zwischen Modulen lässt sich sauberer und direkter über explizite Interfaces im Application-Layer (Ports & Adapters / Clean Architecture) abbilden – ohne Framework-Magie und ohne Remote-Kommunikationssemantik für lokale Aufrufe. (3) Ein Gradle Multi-Module-Projekt erzwingt Modulgrenzen zur Compile-Zeit: unerwünschte Abhängigkeiten zwischen Modulen werden sofort als Build-Fehler sichtbar. (4) Die Gradle-Modul-Struktur erleichtert die spätere Extraktion einzelner Module als eigenständige Microservices, da jedes Modul bereits ein eigenständiges Build-Artefakt mit expliziten Abhängigkeiten darstellt. | Akzeptiert |
+| ADR-10 | **Spring AI mit OpenAI als initialer LLM-Provider; Provider-Abstraktion via `LlmClientPort`** | Für die KI-gestützte Match-Analyse (V1.x Postmortem, V2 Live-Coaching + Vorbereitung) wurde Spring AI 2.0.x mit dem OpenAI-Starter gewählt. Gründe: (1) Spring AI 2.x ist Boot-4-kompatibel und liefert mit `ChatClient.entity(Class)` strukturierten JSON-Output via BeanOutputConverter — kein fragiler String-Parser. (2) OpenAI als initialer Provider (Default `gpt-4o-mini` aus Kostengründen, austauschbar via Property) wegen ausgereifter API, hoher Reasoning-Qualität und einfacher Integration. (3) Die Provider-Abstraktion erfolgt über den Out-Port `LlmClientPort` im `ai-module`; ein zweiter Adapter (Anthropic, Ollama für lokales LLM) lässt sich später ohne Eingriff in den Use Case ergänzen. (4) Aktivierung des `OpenAiLlmAdapter` per `@ConditionalOnExpression` auf einen nicht-leeren `spring.ai.openai.api-key`; ohne Key übernimmt der `FakeLlmClientAdapter` via `@ConditionalOnMissingBean` (deterministisch, kostenfrei, geeignet für Tests und API-Key-freie Entwicklung). (5) Analyse wird einmal pro Match generiert und persistiert (1:1 zur `matches`-Tabelle via UNIQUE-Constraint, überschreibbar) — Kostenkontrolle und Reproduzierbarkeit. **Implementierung:** `ai-module` mit Clean Architecture (Domain `MatchAnalysis`, Use Cases `GenerateMatchAnalysisUseCase`/`GetMatchAnalysisUseCase`, Out-Ports `LlmClientPort`/`SaveMatchAnalysisPort`/`LoadMatchAnalysisPort`, Adapter `OpenAiLlmAdapter`/`FakeLlmClientAdapter`/`MatchAnalysisPersistenceAdapter`). Spring-Milestone-Repo nötig (Spring AI 2.0.0-M6). | Akzeptiert |
 
 ---
 
@@ -394,6 +414,7 @@ Strukturiertes Logging via SLF4J/Logback im JSON-Format. Spring Boot Actuator st
 | FA-08 | **Head-to-Head-Statistik** | Ein authentifizierter Benutzer kann über `GET /api/statistics/head-to-head?player1={id}&player2={id}` eine Statistik abrufen. Die Antwort enthält für beide Spieler die folgenden Kennzahlen, jeweils als Absolutwert und Prozentwert (wo sinnvoll): **Aufschlag:** First Serve% (Anteil erster Aufschläge im Feld), First Serve Won%, Second Serve Won%, Aces (absolut), Double Faults (absolut). **Return:** Return Points Won% auf ersten Aufschlag, Return Points Won% auf zweiten Aufschlag, Break Points Won% (gewonnene von gespielten Break Points), Return Games Won%. **Rallye:** Winners% (Anteil direkter Gewinnschläge an allen Punkten), Unforced Error%, Net Points Won% (Anteil gewonnener Netzangriffe an allen Netzangriffen). **Match-Bilanz:** Siege und Niederlagen gegeneinander (absolut), Satzbilanz (gewonnene:verlorene Sätze gesamt). Die Berechnung muss auch bei 500 oder mehr gespeicherten Matches innerhalb von 60 Sekunden abgeschlossen sein. Nicht existierende Spieler-IDs werden mit HTTP 404 abgewiesen. | V1 |
 | FA-09 | **Google-Login** | Ein Benutzer kann sich auf dem Keycloak-Login-Bildschirm über die Schaltfläche «Mit Google anmelden» via OAuth2-Federation mit seinem Google-Konto authentifizieren. Beim ersten Google-Login wird automatisch ein TSaS-Benutzerkonto mit der verifizierten Google-E-Mail-Adresse angelegt (HTTP 201 intern). Nach dem Login hat der Benutzer identische Zugriffsrechte wie ein lokal registrierter Benutzer (HTTP 200 auf alle geschützten Endpunkte). Der gesamte Google-Login-Flow muss innerhalb von 5 Sekunden abgeschlossen sein. | V2 |
 | FA-10 | **Aufsprungpunkte erfassen** | Während der Punkterfassung kann ein authentifizierter Benutzer per Touch oder Mausklick auf eine massstabsgetreue, schematische Tennisfeld-Darstellung (Draufsicht, Abmessungen 23,77 m × 10,97 m) den Aufsprungpunkt des Balls markieren. Die normalisierten X/Y-Koordinaten (Gleitkommazahl, relativ zur Feldgrösse) werden als optionales Feld im `POST /api/matches/{id}/points` gespeichert. Die Touch/Klick-Eingabe muss innerhalb von 100 ms durch einen sichtbaren Marker auf der Darstellung bestätigt werden. | V3 |
+| FA-11 | **KI-gestützte Match-Analyse (Postmortem)** | Für ein beendetes Match (Status `COMPLETED`) mit mindestens 10 erfassten Punkten kann ein authentifizierter Benutzer über `POST /api/matches/{id}/analysis` eine strukturierte taktische Auswertung generieren. Das Backend aggregiert die Match-Statistiken, baut einen Prompt aus Statistiken und Spielermetadaten (Name, Ranking, Handedness, Backhand-Typ) und ruft via Spring AI ein LLM (Default OpenAI `gpt-4o-mini`). Die Antwort enthält vier Textfelder (Schlüsselmomente, eigene Stärken, eigene Schwächen, gegnerische Stärken, gegnerische Schwächen) und 3–5 priorisierte Empfehlungen. Die Analyse wird in `match_analysis` persistiert (1:1 zum Match, überschreibbar). Antwort innerhalb von 60 s (Timeout). HTTP-Codes: 200 (erfolgreich), 404 (Match unbekannt), 409 (Match nicht `COMPLETED`), 422 (< 10 Points), 502 (LLM-Fehler — FAILED-Datensatz wird trotzdem persistiert). `GET /api/matches/{id}/analysis` liefert die gespeicherte Analyse aus der DB ohne erneuten LLM-Aufruf (< 250 ms). Sprache der Auswertung: Deutsch. | V1.x |
 
 ### 10.2 Nicht-funktionale Anforderungen (SMART)
 
@@ -423,7 +444,8 @@ Das relationale Datenmodell bildet die Kernentitäten der Tennismatch-Dokumentat
 | `MATCH_SET` | Einzelne Sätze eines Matches mit Games und optionalem Tiebreak. |
 | `CURRENT_SCORE` | Aktueller Live-Spielstand eines laufenden Matches (1:1 zu MATCH). |
 | `MATCH_STATS` | Aggregierte Statistiken pro Spieler und Match (1:2 zu MATCH). |
-| `POINT` | Einzelne Punkte mit Typ, Schlagart, Richtung und Rally-Länge. |
+| `POINT` | Einzelne Punkte mit Typ, Schlagart, Richtung, Rally-Länge und Aufschlag-Versuch (1./2. Aufschlag). |
+| `MATCH_ANALYSIS` | KI-generierte taktische Match-Analyse (1:1 zu `MATCH`, überschreibbar). Felder: Status (PENDING/COMPLETED/FAILED), vier Analyse-Textfelder, JSON-serialisierte Empfehlungsliste, verwendetes LLM-Modell, Generierungszeit, Fehlermeldung bei FAILED. |
 
 ---
 
@@ -436,6 +458,8 @@ Das relationale Datenmodell bildet die Kernentitäten der Tennismatch-Dokumentat
 | R-03 | Mittel | **Swisstennis-API-Verfügbarkeit** | Die Integration in V4 hängt davon ab, ob Swisstennis eine API bereitstellt und den Zugriff genehmigt. Fallback: manuelle Dateneingabe. |
 | R-04 | Niedrig | **Performance bei grosser Datenmenge** | Bei vielen Matches und Punkten könnten Statistik-Berechnungen langsam werden. Mitigation: Indizes, Caching, ggf. materialized Views. |
 | R-05 | Mittel | **iOS-Doppelentwicklung** | Die geplante native iOS-App (Swift) in V2 bedeutet doppelte Frontend-Entwicklung. Alternative: Progressive Web App (PWA) evaluieren. |
+| R-06 | Mittel | **OpenAI-Kosten** | Jeder POST auf die KI-Analyse löst einen kostenpflichtigen API-Call aus. Manueller Trigger + Persistenz (eine Analyse pro Match, überschreibbar) begrenzen das Volumen, Mindest-Punktzahl (≥ 10) verhindert Calls auf datenarme Matches. Modell-Default `gpt-4o-mini` für niedrige Kosten; Wechsel via Property möglich. Bei Bedarf späterer Wechsel auf lokales LLM (Ollama) via `LlmClientPort` ohne Refactoring. |
+| R-07 | Niedrig | **Spring AI Milestone-Abhängigkeit** | Spring AI 2.0.x ist zum Implementierungszeitpunkt im Milestone-Status (`2.0.0-M6`) — Spring-Milestone-Repo nötig. Risiko: API-Breaking-Changes vor 2.0.0-GA. Mitigation: Adapter ist dünn (`ChatClient`-Aufruf in einer Methode), Umstellung auf GA voraussichtlich trivial. |
 
 ---
 

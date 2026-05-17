@@ -1,2 +1,2 @@
 rootProject.name = "tsas-backend"
-include("app", "common-module", "player-module", "match-module", "statistics-module", "auth-module")
+include("app", "common-module", "player-module", "match-module", "statistics-module", "auth-module", "ai-module")

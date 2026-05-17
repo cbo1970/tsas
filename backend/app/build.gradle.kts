@@ -12,6 +12,7 @@ dependencies {
     implementation(project(":match-module"))
     implementation(project(":statistics-module"))
     implementation(project(":auth-module"))
+    implementation(project(":ai-module"))
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-flyway")
