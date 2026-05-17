@@ -125,7 +125,7 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
         savePointPort.savePoint(new Point(null, command.matchId(),
                 setNumber, gameNumber, pointNumber,
                 command.winner(), command.pointType(), command.strokeType(), command.direction(),
-                score.getServingPlayer(), isBreakPoint, command.remark(), null));
+                score.getServingPlayer(), isBreakPoint, command.remark(), command.serveAttempt()));
 
         if (command.pointType() == PointType.ACE) {
             if (player1Scored) {

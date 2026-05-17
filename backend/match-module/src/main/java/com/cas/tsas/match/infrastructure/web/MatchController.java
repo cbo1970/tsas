@@ -87,7 +87,8 @@ public class MatchController {
                 request.pointType() != null ? PointType.valueOf(request.pointType()) : null,
                 request.strokeType() != null ? StrokeType.valueOf(request.strokeType()) : null,
                 request.direction() != null ? Direction.valueOf(request.direction()) : null,
-                request.remark()
+                request.remark(),
+                request.serveAttempt()
         );
         MatchScore score = recordPointUseCase.recordPoint(command);
         Match match = getMatchUseCase.findById(id);

@@ -11,5 +11,6 @@ public record RecordPointRequest(
         @NotBlank String pointType,
         String strokeType,
         String direction,
-        @Length(max = 500) String remark
+        @Length(max = 500) String remark,
+        @Min(1) @Max(2) Integer serveAttempt
 ) {}
