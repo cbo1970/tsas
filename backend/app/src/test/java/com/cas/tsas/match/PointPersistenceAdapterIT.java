@@ -66,7 +66,7 @@ class PointPersistenceAdapterIT {
     @Test
     void saves_point_and_can_be_counted() {
         Point point = new Point(null, matchId, 1, 1, 1, 1,
-                PointType.WINNER, null, null, 1, false, null);
+                PointType.WINNER, null, null, 1, false, null, null);
 
         pointAdapter.savePoint(point);
 
@@ -81,9 +81,9 @@ class PointPersistenceAdapterIT {
     @Test
     void count_is_scoped_to_set_and_game() {
         pointAdapter.savePoint(new Point(null, matchId, 1, 1, 1, 1,
-                PointType.WINNER, null, null, null, false, null));
+                PointType.WINNER, null, null, null, false, null, null));
         pointAdapter.savePoint(new Point(null, matchId, 1, 2, 1, 2,
-                PointType.UNFORCED_ERROR, null, null, null, false, null));
+                PointType.UNFORCED_ERROR, null, null, null, false, null, null));
 
         assertThat(pointAdapter.countPointsInGame(matchId, 1, 1)).isEqualTo(1);
         assertThat(pointAdapter.countPointsInGame(matchId, 1, 2)).isEqualTo(1);
@@ -93,7 +93,7 @@ class PointPersistenceAdapterIT {
     void count_accumulates_multiple_points_in_same_game() {
         for (int i = 1; i <= 4; i++) {
             pointAdapter.savePoint(new Point(null, matchId, 1, 1, i, 1,
-                    PointType.WINNER, null, null, null, false, null));
+                    PointType.WINNER, null, null, null, false, null, null));
         }
         assertThat(pointAdapter.countPointsInGame(matchId, 1, 1)).isEqualTo(4);
     }

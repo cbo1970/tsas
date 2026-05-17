@@ -16,12 +16,13 @@ public class Point {
     private Integer servingPlayer;
     private boolean isBreakPoint;
     private String remark;
+    private Integer serveAttempt;
 
     public Point() {}
 
     public Point(UUID id, UUID matchId, int setNumber, int gameNumber, int pointNumber,
                  int winner, PointType pointType, StrokeType strokeType, Direction direction,
-                 Integer servingPlayer, boolean isBreakPoint, String remark) {
+                 Integer servingPlayer, boolean isBreakPoint, String remark, Integer serveAttempt) {
         this.id = id;
         this.matchId = matchId;
         this.setNumber = setNumber;
@@ -34,6 +35,7 @@ public class Point {
         this.servingPlayer = servingPlayer;
         this.isBreakPoint = isBreakPoint;
         this.remark = remark;
+        this.serveAttempt = serveAttempt;
     }
 
     public UUID getId() { return id; }
@@ -60,4 +62,6 @@ public class Point {
     public void setBreakPoint(boolean breakPoint) { isBreakPoint = breakPoint; }
     public String getRemark() { return remark; }
     public void setRemark(String remark) { this.remark = remark; }
+    public Integer getServeAttempt() { return serveAttempt; }
+    public void setServeAttempt(Integer serveAttempt) { this.serveAttempt = serveAttempt; }
 }

@@ -15,6 +15,7 @@ import com.cas.tsas.match.domain.model.Direction;
 import com.cas.tsas.match.domain.model.Match;
 import com.cas.tsas.match.domain.model.MatchScore;
 import com.cas.tsas.match.domain.model.MatchStatus;
+import com.cas.tsas.match.domain.model.Point;
 import com.cas.tsas.match.domain.model.PointType;
 import com.cas.tsas.match.domain.model.StrokeType;
 import com.cas.tsas.player.application.port.out.LoadPlayerPort;
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -80,7 +82,7 @@ class MatchServiceTest {
 
     private static RecordPointUseCase.RecordPointCommand winnerCommand() {
         return new RecordPointUseCase.RecordPointCommand(
-                MATCH_ID, 1, PointType.WINNER, StrokeType.FOREHAND, Direction.CROSS_COURT, null);
+                MATCH_ID, 1, PointType.WINNER, StrokeType.FOREHAND, Direction.CROSS_COURT, null, null);
     }
 
     // =========================================================================
@@ -209,7 +211,7 @@ class MatchServiceTest {
             when(savePointPort.savePoint(any())).thenAnswer(inv -> inv.getArgument(0));
 
             var aceCommand = new RecordPointUseCase.RecordPointCommand(
-                    MATCH_ID, 1, PointType.ACE, null, null, null);
+                    MATCH_ID, 1, PointType.ACE, null, null, null, null);
             matchService.recordPoint(aceCommand);
 
             assertThat(score.getAcesPlayer1()).isEqualTo(1);
@@ -231,6 +233,25 @@ class MatchServiceTest {
             assertThatThrownBy(() -> matchService.recordPoint(winnerCommand()))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("already completed");
+        }
+
+        @Test
+        void persists_serve_attempt_on_point() {
+            MatchScore score = freshScore();
+            score.setServingPlayer(1);
+            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(inProgressMatch()));
+            when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
+            when(saveMatchScorePort.saveMatchScore(score)).thenReturn(score);
+            when(countPointsInGamePort.countPointsInGame(any(), anyInt(), anyInt())).thenReturn(0);
+            when(savePointPort.savePoint(any())).thenAnswer(inv -> inv.getArgument(0));
+
+            var command = new RecordPointUseCase.RecordPointCommand(
+                    MATCH_ID, 1, PointType.WINNER, StrokeType.FOREHAND, Direction.CROSS_COURT, null, 2);
+            matchService.recordPoint(command);
+
+            ArgumentCaptor<Point> captor = ArgumentCaptor.forClass(Point.class);
+            verify(savePointPort).savePoint(captor.capture());
+            assertThat(captor.getValue().getServeAttempt()).isEqualTo(2);
         }
 
         @Test

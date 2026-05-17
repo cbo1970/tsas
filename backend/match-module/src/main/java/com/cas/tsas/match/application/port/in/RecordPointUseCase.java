@@ -17,6 +17,7 @@ public interface RecordPointUseCase {
             PointType pointType,
             StrokeType strokeType,
             Direction direction,
-            String remark
+            String remark,
+            Integer serveAttempt
     ) {}
 }
