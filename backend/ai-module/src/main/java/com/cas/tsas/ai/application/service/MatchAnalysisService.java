@@ -8,6 +8,7 @@ import com.cas.tsas.ai.application.port.out.LlmClientPort;
 import com.cas.tsas.ai.application.port.out.LoadMatchAnalysisPort;
 import com.cas.tsas.ai.application.port.out.SaveMatchAnalysisPort;
 import com.cas.tsas.ai.domain.exception.AnalysisGenerationException;
+import com.cas.tsas.ai.domain.exception.InsufficientMatchDataException;
 import com.cas.tsas.ai.domain.model.AnalysisStatus;
 import com.cas.tsas.ai.domain.model.MatchAnalysis;
 import com.cas.tsas.match.application.port.in.GetMatchUseCase;
@@ -60,7 +61,7 @@ public class MatchAnalysisService implements GenerateMatchAnalysisUseCase, GetMa
 
         MatchStatistics stats = statisticsUseCase.compute(matchId);
         if (stats.totalPoints() < minPointsForAnalysis) {
-            throw new IllegalStateException(
+            throw new InsufficientMatchDataException(
                     "Match must have at least " + minPointsForAnalysis + " points (found " +
                             stats.totalPoints() + ")");
         }

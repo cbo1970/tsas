@@ -4,6 +4,7 @@ import com.cas.tsas.ai.application.port.out.LlmClientPort;
 import com.cas.tsas.ai.application.port.out.LoadMatchAnalysisPort;
 import com.cas.tsas.ai.application.port.out.SaveMatchAnalysisPort;
 import com.cas.tsas.ai.domain.exception.AnalysisGenerationException;
+import com.cas.tsas.ai.domain.exception.InsufficientMatchDataException;
 import com.cas.tsas.ai.domain.model.AnalysisStatus;
 import com.cas.tsas.ai.domain.model.MatchAnalysis;
 import com.cas.tsas.ai.infrastructure.llm.FakeLlmClientAdapter;
@@ -119,7 +120,7 @@ class MatchAnalysisServiceTest {
         when(statisticsUseCase.compute(matchId)).thenReturn(stats(5));
 
         assertThatThrownBy(() -> service.generate(matchId))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(InsufficientMatchDataException.class)
                 .hasMessageContaining("at least 10 points");
 
         Mockito.verifyNoInteractions(savePort);

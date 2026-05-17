@@ -20,7 +20,7 @@ spring:
 
   ai:
     openai:
-      api-key: test-dummy-key-not-used
+      api-key:   # leer → OpenAiLlmAdapter deaktiviert, FakeLlmClientAdapter übernimmt
 
 tsas:
   ai:
