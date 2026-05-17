@@ -17,3 +17,11 @@ spring:
     console:
       enabled: true
       path: /h2-console
+
+  ai:
+    openai:
+      api-key: test-dummy-key-not-used
+
+tsas:
+  ai:
+    min-points-for-analysis: 10
