@@ -7,6 +7,7 @@ import { of } from 'rxjs';
 import { ScoreComponent } from './score.component';
 import { ApiService } from '../../../core/services/api.service';
 import { MatchWithScore } from '../../../core/models/match.model';
+import { PointType, StrokeType, Direction, RecordPointRequest } from '../../../core/models/point.model';
 
 const MOCK_SCORE = {
   matchId: 'match-1',
@@ -98,6 +99,32 @@ describe('ScoreComponent — inline scoring', () => {
     mockApi.setServingPlayer1.and.returnValue(of({ ...MOCK_SCORE, servingPlayer: 1 } as any));
     component.recordPoint(1, 'WINNER');
     expect(mockApi.setServingPlayer1).toHaveBeenCalled();
+    expect(mockApi.recordPoint).not.toHaveBeenCalled();
+    expect(component.matchData()?.score.servingPlayer).toBe(1);
+  });
+
+  it('should send player 2-specific pre-selection with the point', () => {
+    mockApi.recordPoint.and.returnValue(of(MOCK_MATCH));
+    component.strokeTypeP2.set('BACKHAND');
+    component.directionP2.set('DOWN_THE_LINE');
+    component.recordPoint(2, 'WINNER');
+    expect(mockApi.recordPoint).toHaveBeenCalledWith('match-1', {
+      winner: 2, pointType: 'WINNER',
+      strokeType: 'BACKHAND', direction: 'DOWN_THE_LINE',
+    });
+  });
+
+  it('should set serving player 2 on first tile click when no server set', () => {
+    component.matchData.set({ ...MOCK_MATCH, score: { ...MOCK_SCORE, servingPlayer: null } as any });
+    mockApi.setServingPlayer2.and.returnValue(of({ ...MOCK_SCORE, servingPlayer: 2 } as any));
+    component.recordPoint(2, 'WINNER');
+    expect(mockApi.setServingPlayer2).toHaveBeenCalled();
+    expect(mockApi.recordPoint).not.toHaveBeenCalled();
+  });
+
+  it('should not record point when match is completed', () => {
+    component.matchData.set({ ...MOCK_MATCH, status: 'COMPLETED' });
+    component.recordPoint(1, 'WINNER');
     expect(mockApi.recordPoint).not.toHaveBeenCalled();
   });
 });
