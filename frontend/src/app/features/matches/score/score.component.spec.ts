@@ -5,6 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
+import { By } from '@angular/platform-browser';
 import { ScoreComponent } from './score.component';
 import { ApiService } from '../../../core/services/api.service';
 import { MatchWithScore } from '../../../core/models/match.model';
@@ -128,5 +129,17 @@ describe('ScoreComponent — inline scoring', () => {
     component.matchData.set({ ...MOCK_MATCH, status: 'COMPLETED' });
     component.recordPoint(1, 'WINNER');
     expect(mockApi['recordPoint']).not.toHaveBeenCalled();
+  });
+
+  it('should render the tennis court container', () => {
+    const court = fixture.debugElement.query(By.css('.tennis-court'));
+    expect(court).toBeTruthy();
+  });
+
+  it('should render both player panels regardless of serving state', () => {
+    component.matchData.set({ ...MOCK_MATCH, score: { ...MOCK_SCORE, servingPlayer: 1 } as any });
+    fixture.detectChanges();
+    const panels = fixture.debugElement.queryAll(By.css('.player-panel'));
+    expect(panels).toHaveLength(2);
   });
 });
