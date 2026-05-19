@@ -6,7 +6,7 @@ Web application for tennis match tracking and statistics.
 
 | Layer | Technology |
 |-------|-----------|
-| Backend | Spring Boot 3.4.x (Java 21) |
+| Backend | Spring Boot 4.0.6 (Java 25) |
 | Auth | Keycloak 26 (OAuth2 / PKCE) |
 | Frontend | Angular 21 |
 | Database | PostgreSQL 16 |
@@ -34,11 +34,18 @@ openssl req -x509 -newkey rsa:4096 -keyout localhost-key.pem -out localhost.pem 
 
 Das Zertifikat muss einmalig dem Browser / Betriebssystem als vertrauenswürdig hinzugefügt werden.
 
-### 1. Keycloak starten
+### 1. Datenbank starten
 
 ```bash
-cd docker
-podman compose up keycloak -d
+podman compose -f docker/db/compose.yaml up -d
+```
+
+PostgreSQL läuft auf `localhost:5432`.
+
+### 2. Keycloak starten
+
+```bash
+podman compose -f docker/compose.yml up keycloak -d
 ```
 
 Keycloak ist unter **`https://localhost:8443`** erreichbar.
@@ -49,7 +56,7 @@ Der Realm `tsas` wird beim ersten Start automatisch importiert.
 
 > Keycloak ist zusätzlich über HTTP auf `http://localhost:18080` erreichbar (wird intern vom Backend für den JWKS-Abruf verwendet).
 
-### 2. Backend starten
+### 3. Backend starten
 
 ```bash
 cd backend
@@ -58,14 +65,14 @@ JAVA_HOME=/opt/java/jdk-25.0.1 ./gradlew bootRun --args='--spring.profiles.activ
 
 Backend läuft auf **`https://localhost:8080`**.
 
-### 3. Frontend starten
+### 4. Frontend starten
 
 ```bash
 cd frontend
 npm start
 ```
 
-Frontend läuft auf **`https://localhost:4200`**.
+Frontend (UI) läuft auf **`https://localhost:4200`**.
 
 ---
 
@@ -77,7 +84,7 @@ Frontend läuft auf **`https://localhost:4200`**.
 | `local` | PostgreSQL | JWT (Keycloak erforderlich) |
 | `test` | H2 in-memory | permitAll (kein Keycloak) |
 
-Das `test`-Profil wird ausschliesslich von der automatisierten Test-Suite verwendet (Testcontainers + Smoke-Test).
+Das `test`-Profil wird ausschliesslich von der automatisierten Test-Suite verwendet.
 
 ---
 
@@ -97,22 +104,21 @@ Integration Tests nutzen Testcontainers (PostgreSQL). Kein laufendes Keycloak er
 Alle Services als Container starten (Frontend + Backend + Keycloak + PostgreSQL):
 
 ```bash
-cd docker
-podman compose up -d
+podman compose -f docker/compose.yml up -d
 ```
 
 | Service | URL |
 |---------|-----|
+| **Frontend (UI)** | **`http://localhost`** |
+| Backend | `http://localhost:8080` |
 | Keycloak | `https://localhost:8443` (Admin: `https://localhost:8443/admin`) |
 | Keycloak HTTP (intern) | `http://localhost:18080` |
-| Backend | `https://localhost:8080` |
-| Frontend | `https://localhost:4200` |
-| PostgreSQL | `localhost:5432` |
+| PostgreSQL | nur im Docker-Netzwerk erreichbar (kein Host-Port) |
 
 Zum Stoppen:
 
 ```bash
-podman compose down
+podman compose -f docker/compose.yml down
 ```
 
 ### Konfiguration

@@ -1,9 +1,9 @@
-FROM eclipse-temurin:21-jdk-noble AS build
+FROM eclipse-temurin:25-jdk-noble AS build
 WORKDIR /app
 COPY backend/ .
 RUN chmod +x gradlew && ./gradlew bootJar -x test --no-daemon
 
-FROM eclipse-temurin:21-jre-noble
+FROM eclipse-temurin:25-jre-noble
 WORKDIR /app
 COPY --from=build /app/app/build/libs/app.jar app.jar
 EXPOSE 8080
