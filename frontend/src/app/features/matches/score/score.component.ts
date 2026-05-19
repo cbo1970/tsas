@@ -50,11 +50,11 @@ import { PointType, StrokeType, Direction, RecordPointRequest } from '../../../c
           </div>
         </div>
         <div class="strip-actions">
-          <button mat-icon-button (click)="openEditDialog()">
+          <button mat-icon-button data-testid="edit-score-btn" (click)="openEditDialog()">
             <mat-icon>edit</mat-icon>
           </button>
           @if (matchData() && matchData()!.status !== 'COMPLETED') {
-            <button mat-mini-fab color="warn" (click)="endMatch()">
+            <button mat-mini-fab color="warn" data-testid="end-match-btn" (click)="endMatch()">
               <mat-icon>stop</mat-icon>
             </button>
           }

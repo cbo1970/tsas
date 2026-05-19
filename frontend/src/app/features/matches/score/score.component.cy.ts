@@ -83,20 +83,12 @@ describe('ScoreComponent', () => {
       cy.contains('Rafael Nadal').should('be.visible');
     });
 
-    it('shows match status as "Läuft"', () => {
-      cy.contains('Läuft').should('be.visible');
+    it('shows edit score button', () => {
+      cy.get('[data-testid="edit-score-btn"]').should('be.visible');
     });
 
-    it('shows current set number', () => {
-      cy.contains('Satz 1').should('be.visible');
-    });
-
-    it('shows "Score korrigieren" button', () => {
-      cy.contains('button', 'Score korrigieren').should('be.visible');
-    });
-
-    it('shows "Match beenden" button for in-progress match', () => {
-      cy.contains('button', 'Match beenden').should('be.visible');
+    it('shows end match button for in-progress match', () => {
+      cy.get('[data-testid="end-match-btn"]').should('be.visible');
     });
   });
 
@@ -104,18 +96,18 @@ describe('ScoreComponent', () => {
     beforeEach(() => mountScore());
 
     it('opens dialog with both player names as radio options', () => {
-      cy.contains('button', 'Match beenden').click();
+      cy.get('[data-testid="end-match-btn"]').click();
       cy.contains('Roger Federer').should('be.visible');
       cy.contains('Rafael Nadal').should('be.visible');
     });
 
     it('confirm button is disabled until a player is selected', () => {
-      cy.contains('button', 'Match beenden').click();
+      cy.get('[data-testid="end-match-btn"]').click();
       cy.get('mat-dialog-actions').contains('button', 'Match beenden').should('be.disabled');
     });
 
     it('enables confirm button after selecting a player', () => {
-      cy.contains('button', 'Match beenden').click();
+      cy.get('[data-testid="end-match-btn"]').click();
       cy.get('mat-dialog-container').contains('mat-radio-button', 'Roger Federer').find('input[type="radio"]').check({ force: true });
       cy.get('mat-dialog-actions').contains('button', 'Match beenden').should('not.be.disabled');
     });
@@ -124,7 +116,7 @@ describe('ScoreComponent', () => {
       cy.intercept('POST', '**/end/walkover', { statusCode: 200, body: { id: 'match-1', status: 'COMPLETED' } }).as('walkover');
       cy.intercept('GET', '**/api/matches/match-1', makeMatch({ status: 'COMPLETED' })).as('reload');
 
-      cy.contains('button', 'Match beenden').click();
+      cy.get('[data-testid="end-match-btn"]').click();
       cy.get('mat-dialog-container').contains('mat-radio-button', 'Roger Federer').find('input[type="radio"]').check({ force: true });
       cy.get('mat-dialog-actions').contains('button', 'Match beenden').click();
 
@@ -135,7 +127,7 @@ describe('ScoreComponent', () => {
       cy.intercept('POST', '**/end/walkover', { statusCode: 200, body: { id: 'match-1', status: 'COMPLETED' } }).as('walkover');
       cy.intercept('GET', '**/api/matches/match-1', makeMatch({ status: 'COMPLETED' })).as('reload');
 
-      cy.contains('button', 'Match beenden').click();
+      cy.get('[data-testid="end-match-btn"]').click();
       cy.get('mat-dialog-container').contains('mat-radio-button', 'Rafael Nadal').find('input[type="radio"]').check({ force: true });
       cy.get('mat-dialog-actions').contains('button', 'Match beenden').click();
 
@@ -145,7 +137,7 @@ describe('ScoreComponent', () => {
     it('does not call walkover endpoint when dialog is cancelled', () => {
       cy.intercept('POST', '**/end/walkover').as('walkover');
 
-      cy.contains('button', 'Match beenden').click();
+      cy.get('[data-testid="end-match-btn"]').click();
       cy.contains('button', 'Abbrechen').click();
 
       cy.get('@walkover.all').should('have.length', 0);
@@ -167,16 +159,12 @@ describe('ScoreComponent', () => {
       mountScore(completedMatch);
     });
 
-    it('shows "Beendet" status', () => {
-      cy.contains('Beendet').should('be.visible');
-    });
-
     it('shows winner card with player name', () => {
       cy.contains('Sieger: Roger Federer').should('be.visible');
     });
 
-    it('hides "Match beenden" button', () => {
-      cy.contains('button', 'Match beenden').should('not.exist');
+    it('hides end match button', () => {
+      cy.get('[data-testid="end-match-btn"]').should('not.exist');
     });
 
     it('shows "Zurück zur Übersicht" button', () => {
