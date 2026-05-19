@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of } from 'rxjs';
+import { vi } from 'vitest';
 import { ScoreComponent } from './score.component';
 import { ApiService } from '../../../core/services/api.service';
 import { MatchWithScore } from '../../../core/models/match.model';
@@ -29,23 +30,24 @@ const MOCK_MATCH: MatchWithScore = {
 describe('ScoreComponent — inline scoring', () => {
   let fixture: ComponentFixture<ScoreComponent>;
   let component: ScoreComponent;
-  let mockApi: jasmine.SpyObj<ApiService>;
-  let mockDialog: jasmine.SpyObj<MatDialog>;
-  let mockSnackBar: jasmine.SpyObj<MatSnackBar>;
-  let mockRouter: jasmine.SpyObj<Router>;
+  let mockApi: Record<string, ReturnType<typeof vi.fn>>;
+  let mockDialog: Record<string, ReturnType<typeof vi.fn>>;
+  let mockSnackBar: Record<string, ReturnType<typeof vi.fn>>;
+  let mockRouter: Record<string, ReturnType<typeof vi.fn>>;
 
   beforeEach(async () => {
-    mockApi = jasmine.createSpyObj('ApiService', [
-      'getMatch', 'getPlayer', 'recordPoint',
-      'setServingPlayer1', 'setServingPlayer2',
-      'setScore', 'endMatchWalkover',
-    ]);
-    mockDialog = jasmine.createSpyObj('MatDialog', ['open']);
-    mockSnackBar = jasmine.createSpyObj('MatSnackBar', ['open']);
-    mockRouter = jasmine.createSpyObj('Router', ['navigate']);
-
-    mockApi.getMatch.and.returnValue(of(MOCK_MATCH));
-    mockApi.getPlayer.and.returnValue(of({ id: 'p1', firstName: 'Anna', lastName: 'Müller' } as any));
+    mockApi = {
+      getMatch: vi.fn().mockReturnValue(of(MOCK_MATCH)),
+      getPlayer: vi.fn().mockReturnValue(of({ id: 'p1', firstName: 'Anna', lastName: 'Müller' })),
+      recordPoint: vi.fn(),
+      setServingPlayer1: vi.fn(),
+      setServingPlayer2: vi.fn(),
+      setScore: vi.fn(),
+      endMatchWalkover: vi.fn(),
+    };
+    mockDialog = { open: vi.fn() };
+    mockSnackBar = { open: vi.fn() };
+    mockRouter = { navigate: vi.fn() };
 
     await TestBed.configureTestingModule({
       imports: [ScoreComponent],
@@ -74,21 +76,21 @@ describe('ScoreComponent — inline scoring', () => {
   });
 
   it('should call api.recordPoint directly without opening a dialog', () => {
-    mockApi.recordPoint.and.returnValue(of(MOCK_MATCH));
+    mockApi['recordPoint'].mockReturnValue(of(MOCK_MATCH));
     component.recordPoint(1, 'WINNER');
-    expect(mockDialog.open).not.toHaveBeenCalled();
-    expect(mockApi.recordPoint).toHaveBeenCalledWith('match-1', {
+    expect(mockDialog['open']).not.toHaveBeenCalled();
+    expect(mockApi['recordPoint']).toHaveBeenCalledWith('match-1', {
       winner: 1, pointType: 'WINNER',
       strokeType: 'FOREHAND', direction: 'CROSS_COURT',
     });
   });
 
   it('should send player-specific pre-selection with the point', () => {
-    mockApi.recordPoint.and.returnValue(of(MOCK_MATCH));
+    mockApi['recordPoint'].mockReturnValue(of(MOCK_MATCH));
     component.strokeTypeP1.set('BACKHAND');
     component.directionP1.set('DOWN_THE_LINE');
     component.recordPoint(1, 'WINNER');
-    expect(mockApi.recordPoint).toHaveBeenCalledWith('match-1', {
+    expect(mockApi['recordPoint']).toHaveBeenCalledWith('match-1', {
       winner: 1, pointType: 'WINNER',
       strokeType: 'BACKHAND', direction: 'DOWN_THE_LINE',
     });
@@ -96,19 +98,19 @@ describe('ScoreComponent — inline scoring', () => {
 
   it('should set serving player on first tile click when no server set', () => {
     component.matchData.set({ ...MOCK_MATCH, score: { ...MOCK_SCORE, servingPlayer: null } as any });
-    mockApi.setServingPlayer1.and.returnValue(of({ ...MOCK_SCORE, servingPlayer: 1 } as any));
+    mockApi['setServingPlayer1'].mockReturnValue(of({ ...MOCK_SCORE, servingPlayer: 1 }));
     component.recordPoint(1, 'WINNER');
-    expect(mockApi.setServingPlayer1).toHaveBeenCalled();
-    expect(mockApi.recordPoint).not.toHaveBeenCalled();
+    expect(mockApi['setServingPlayer1']).toHaveBeenCalled();
+    expect(mockApi['recordPoint']).not.toHaveBeenCalled();
     expect(component.matchData()?.score.servingPlayer).toBe(1);
   });
 
   it('should send player 2-specific pre-selection with the point', () => {
-    mockApi.recordPoint.and.returnValue(of(MOCK_MATCH));
+    mockApi['recordPoint'].mockReturnValue(of(MOCK_MATCH));
     component.strokeTypeP2.set('BACKHAND');
     component.directionP2.set('DOWN_THE_LINE');
     component.recordPoint(2, 'WINNER');
-    expect(mockApi.recordPoint).toHaveBeenCalledWith('match-1', {
+    expect(mockApi['recordPoint']).toHaveBeenCalledWith('match-1', {
       winner: 2, pointType: 'WINNER',
       strokeType: 'BACKHAND', direction: 'DOWN_THE_LINE',
     });
@@ -116,15 +118,15 @@ describe('ScoreComponent — inline scoring', () => {
 
   it('should set serving player 2 on first tile click when no server set', () => {
     component.matchData.set({ ...MOCK_MATCH, score: { ...MOCK_SCORE, servingPlayer: null } as any });
-    mockApi.setServingPlayer2.and.returnValue(of({ ...MOCK_SCORE, servingPlayer: 2 } as any));
+    mockApi['setServingPlayer2'].mockReturnValue(of({ ...MOCK_SCORE, servingPlayer: 2 }));
     component.recordPoint(2, 'WINNER');
-    expect(mockApi.setServingPlayer2).toHaveBeenCalled();
-    expect(mockApi.recordPoint).not.toHaveBeenCalled();
+    expect(mockApi['setServingPlayer2']).toHaveBeenCalled();
+    expect(mockApi['recordPoint']).not.toHaveBeenCalled();
   });
 
   it('should not record point when match is completed', () => {
     component.matchData.set({ ...MOCK_MATCH, status: 'COMPLETED' });
     component.recordPoint(1, 'WINNER');
-    expect(mockApi.recordPoint).not.toHaveBeenCalled();
+    expect(mockApi['recordPoint']).not.toHaveBeenCalled();
   });
 });
