@@ -1,5 +1,4 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -18,7 +17,6 @@ import { PointType, StrokeType, Direction, RecordPointRequest } from '../../../c
   selector: 'app-score',
   standalone: true,
   imports: [
-    CommonModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
@@ -330,10 +328,10 @@ import { PointType, StrokeType, Direction, RecordPointRequest } from '../../../c
         top: calc(8% + 4px);
         left: calc(8% + 6px);
         right: calc(8% + 6px);
-        bottom: 50%;
+        bottom: calc(50% + 4px);
       }
       .player-panel-right {
-        top: 50%;
+        top: calc(50% + 4px);
         left: calc(8% + 6px);
         right: calc(8% + 6px);
         bottom: calc(8% + 4px);
