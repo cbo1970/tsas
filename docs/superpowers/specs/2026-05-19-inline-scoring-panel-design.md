@@ -1,4 +1,4 @@
-# Inline Scoring Panel – Design
+erstelle # Inline Scoring Panel – Design
 
 **Datum:** 2026-05-19
 **Status:** Approved
