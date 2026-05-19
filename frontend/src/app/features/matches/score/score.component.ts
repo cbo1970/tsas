@@ -27,60 +27,82 @@ import { PointType, StrokeType, Direction, RecordPointRequest } from '../../../c
   ],
   template: `
     <div class="scoring-page">
-      @if (matchData()) {
 
-        <div class="score-strip">
-          <button mat-icon-button (click)="goToMatches()">
-            <mat-icon>arrow_back</mat-icon>
-          </button>
-          <div class="strip-center">
-            <div class="strip-player">
-              @if (servingPlayer() === 1) { <span>🎾 </span> }
-              <span class="strip-name">{{ player1Name() }}</span>
+      <div class="score-strip">
+        <button mat-icon-button (click)="goToMatches()">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <div class="strip-center">
+          <div class="strip-player">
+            @if (servingPlayer() === 1) { <span class="serve-ball">🎾</span> }
+            <span class="strip-name">{{ player1Name() }}</span>
+            @if (matchData()) {
               <span class="strip-pts">{{ formatPoints(matchData()!.score, true) }}</span>
               <span class="strip-sub">G:{{ matchData()!.score.gamesPlayer1 }} S:{{ matchData()!.score.setsPlayer1 }}</span>
-            </div>
-            <span class="strip-sep">:</span>
-            <div class="strip-player">
-              @if (servingPlayer() === 2) { <span>🎾 </span> }
-              <span class="strip-name">{{ player2Name() }}</span>
-              <span class="strip-pts">{{ formatPoints(matchData()!.score, false) }}</span>
-              <span class="strip-sub">G:{{ matchData()!.score.gamesPlayer2 }} S:{{ matchData()!.score.setsPlayer2 }}</span>
-            </div>
-          </div>
-          <div class="strip-actions">
-            <button mat-icon-button (click)="openEditDialog()">
-              <mat-icon>edit</mat-icon>
-            </button>
-            @if (matchData()!.status !== 'COMPLETED') {
-              <button mat-mini-fab color="warn" (click)="endMatch()">
-                <mat-icon>stop</mat-icon>
-              </button>
             }
           </div>
+          <span class="strip-sep">:</span>
+          <div class="strip-player">
+            @if (matchData()) {
+              <span class="strip-pts">{{ formatPoints(matchData()!.score, false) }}</span>
+              <span class="strip-sub">G:{{ matchData()!.score.gamesPlayer2 }} S:{{ matchData()!.score.setsPlayer2 }}</span>
+            }
+            <span class="strip-name">{{ player2Name() }}</span>
+            @if (servingPlayer() === 2) { <span class="serve-ball">🎾</span> }
+          </div>
         </div>
+        <div class="strip-actions">
+          <button mat-icon-button (click)="openEditDialog()">
+            <mat-icon>edit</mat-icon>
+          </button>
+          @if (matchData() && matchData()!.status !== 'COMPLETED') {
+            <button mat-mini-fab color="warn" (click)="endMatch()">
+              <mat-icon>stop</mat-icon>
+            </button>
+          }
+        </div>
+      </div>
 
-        @if (matchData()!.status === 'COMPLETED' && matchData()!.score.winner) {
-          <mat-card class="winner-card">
-            <mat-card-content>
-              <div class="winner-text">
-                <mat-icon>emoji_events</mat-icon>
-                <span>Sieger: {{ getWinnerName() }}</span>
-              </div>
-              <div class="final-score">
-                Satz: {{ matchData()!.score.setsPlayer1 }} : {{ matchData()!.score.setsPlayer2 }}
-              </div>
-              <button mat-raised-button color="primary" (click)="goToMatches()">
-                Zurück zur Übersicht
-              </button>
-            </mat-card-content>
-          </mat-card>
-        }
+      @if (!matchData()) {
+        <div class="loading">Lade Match...</div>
+      }
 
-        @if (matchData()!.status !== 'COMPLETED') {
-          <div class="panels">
+      @if (matchData()) {
+        <div class="tennis-court">
 
-            <div class="player-panel" [class.serving]="servingPlayer() === 1">
+          <!-- Court surface and lines -->
+          <div class="court-infield"></div>
+          <div class="court-line court-net"></div>
+          <div class="court-line court-singles-top"></div>
+          <div class="court-line court-singles-bottom"></div>
+          <div class="court-line court-service-left"></div>
+          <div class="court-line court-service-right"></div>
+          <div class="court-line court-center-left"></div>
+          <div class="court-line court-center-right"></div>
+
+          @if (matchData()!.status === 'COMPLETED') {
+            <div class="winner-overlay">
+              <mat-card class="winner-card">
+                <mat-card-content>
+                  <div class="winner-text">
+                    <mat-icon>emoji_events</mat-icon>
+                    <span>Sieger: {{ getWinnerName() }}</span>
+                  </div>
+                  <div class="final-score">
+                    Satz: {{ matchData()!.score.setsPlayer1 }} : {{ matchData()!.score.setsPlayer2 }}
+                  </div>
+                  <button mat-raised-button color="primary" (click)="goToMatches()">
+                    Zurück zur Übersicht
+                  </button>
+                </mat-card-content>
+              </mat-card>
+            </div>
+          }
+
+          @if (matchData()!.status !== 'COMPLETED') {
+
+            <!-- Player 1 panel (left half) -->
+            <div class="player-panel player-panel-left" [class.serving]="servingPlayer() === 1">
               <div class="panel-header">
                 <span class="panel-name">{{ player1Name() }}</span>
                 @if (servingPlayer() === null) {
@@ -112,9 +134,8 @@ import { PointType, StrokeType, Direction, RecordPointRequest } from '../../../c
               </div>
             </div>
 
-            <div class="panel-divider"></div>
-
-            <div class="player-panel" [class.serving]="servingPlayer() === 2">
+            <!-- Player 2 panel (right half) -->
+            <div class="player-panel player-panel-right" [class.serving]="servingPlayer() === 2">
               <div class="panel-header">
                 <span class="panel-name">{{ player2Name() }}</span>
                 @if (servingPlayer() === null) {
@@ -146,20 +167,19 @@ import { PointType, StrokeType, Direction, RecordPointRequest } from '../../../c
               </div>
             </div>
 
-          </div>
-        }
-
-      } @else {
-        <div class="loading">Lade Match...</div>
+          }
+        </div>
       }
+
     </div>
   `,
   styles: [`
+    /* ── Page ── */
     .scoring-page {
       display: flex;
       flex-direction: column;
       height: 100dvh;
-      background: #0d1b2a;
+      background: #1a5276;
       color: white;
       overflow: hidden;
     }
@@ -168,11 +188,12 @@ import { PointType, StrokeType, Direction, RecordPointRequest } from '../../../c
     .score-strip {
       display: flex;
       align-items: center;
-      background: #1a2e4a;
+      background: rgba(0,0,0,.82);
       padding: 6px 12px;
-      border-bottom: 1px solid rgba(255,255,255,.1);
+      border-bottom: 1px solid rgba(255,255,255,.15);
       flex-shrink: 0;
       gap: 8px;
+      z-index: 10;
     }
     .strip-center {
       flex: 1;
@@ -181,108 +202,252 @@ import { PointType, StrokeType, Direction, RecordPointRequest } from '../../../c
       justify-content: center;
       gap: 16px;
     }
-    .strip-player { display: flex; align-items: baseline; gap: 6px; }
+    .strip-player { display: flex; align-items: baseline; gap: 5px; }
     .strip-name   { font-size: 13px; font-weight: 600; }
     .strip-pts    { font-size: 22px; font-weight: 800; line-height: 1; }
     .strip-sub    { font-size: 10px; opacity: .5; }
     .strip-sep    { font-size: 20px; opacity: .3; }
+    .serve-ball   { font-size: 13px; }
     .strip-actions { display: flex; align-items: center; gap: 4px; }
 
-    /* ── Winner card ── */
-    .winner-card { margin: 16px; background: linear-gradient(135deg, #1a237e, #283593); color: white; }
-    .winner-text { display: flex; align-items: center; gap: 8px; font-size: 20px; font-weight: bold; margin-bottom: 8px; }
-    .final-score { font-size: 15px; margin-bottom: 16px; }
-
-    /* ── Panels ── */
-    .panels {
+    /* ── Tennis Court ── */
+    .tennis-court {
       flex: 1;
-      display: flex;
-      flex-direction: row;
+      position: relative;
+      background: #1a5276;
       overflow: hidden;
     }
-    @media (orientation: portrait) {
-      .panels { flex-direction: column; }
+
+    /* Infield surface */
+    .court-infield {
+      position: absolute;
+      top: 8%;
+      left: 8%;
+      right: 8%;
+      bottom: 8%;
+      background: #1565c0;
+      border: 2px solid white;
     }
 
-    .panel-divider {
-      width: 1px;
-      background: rgba(255,255,255,.08);
-      flex-shrink: 0;
-    }
-    @media (orientation: portrait) {
-      .panel-divider { width: auto; height: 1px; }
+    /* Court lines */
+    .court-line { position: absolute; background: white; }
+
+    /* Net (vertical center line) */
+    .court-net {
+      top: 8%;
+      bottom: 8%;
+      left: 50%;
+      width: 3px;
+      transform: translateX(-50%);
     }
 
+    /* Singles sidelines (horizontal — alleys are ~12.5% of court height) */
+    .court-singles-top {
+      left: 8%;
+      right: 8%;
+      top: 18.5%;
+      height: 2px;
+    }
+    .court-singles-bottom {
+      left: 8%;
+      right: 8%;
+      bottom: 18.5%;
+      height: 2px;
+    }
+
+    /* Service lines (vertical, ~27% from each side = 54% of half-court from baseline) */
+    .court-service-left {
+      left: 27%;
+      top: 18.5%;
+      bottom: 18.5%;
+      width: 2px;
+    }
+    .court-service-right {
+      right: 27%;
+      top: 18.5%;
+      bottom: 18.5%;
+      width: 2px;
+    }
+
+    /* Center service marks (horizontal, from service line to net at 50% height) */
+    .court-center-left {
+      left: 27%;
+      right: 50%;
+      top: 50%;
+      height: 1px;
+      transform: translateY(-0.5px);
+    }
+    .court-center-right {
+      left: 50%;
+      right: 27%;
+      top: 50%;
+      height: 1px;
+      transform: translateY(-0.5px);
+    }
+
+    /* ── Player panels (inside court halves) ── */
     .player-panel {
-      flex: 1;
-      padding: 10px 12px;
-      overflow-y: auto;
-      opacity: .75;
-      transition: opacity .2s;
+      position: absolute;
+      top: calc(8% + 4px);
+      bottom: calc(8% + 4px);
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      z-index: 5;
     }
-    .player-panel.serving { opacity: 1; }
+
+    /* Left panel: from left infield edge to net */
+    .player-panel-left {
+      left: calc(8% + 6px);
+      right: calc(50% + 4px);
+    }
+
+    /* Right panel: from net to right infield edge */
+    .player-panel-right {
+      left: calc(50% + 4px);
+      right: calc(8% + 6px);
+    }
+
+    /* Portrait: stack panels vertically */
+    @media (orientation: portrait) {
+      .court-net {
+        top: 50%;
+        left: 8%;
+        right: 8%;
+        bottom: auto;
+        width: auto;
+        height: 3px;
+        transform: translateY(-50%);
+      }
+      .court-singles-top,
+      .court-singles-bottom,
+      .court-service-left,
+      .court-service-right,
+      .court-center-left,
+      .court-center-right { display: none; }
+
+      .player-panel-left {
+        top: calc(8% + 4px);
+        left: calc(8% + 6px);
+        right: calc(8% + 6px);
+        bottom: 50%;
+      }
+      .player-panel-right {
+        top: 50%;
+        left: calc(8% + 6px);
+        right: calc(8% + 6px);
+        bottom: calc(8% + 4px);
+      }
+    }
 
     /* ── Panel header ── */
-    .panel-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-    .panel-name {
-      font-size: 11px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: .5px;
-      color: rgba(255,255,255,.6);
+    .panel-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+      flex-shrink: 0;
     }
-    .player-panel.serving .panel-name { color: #64b5f6; }
-    .serve-hint { font-size: 9px; color: rgba(255,255,255,.35); font-style: italic; }
+    .panel-name {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      color: rgba(255,255,255,.7);
+    }
+    /* Aufschläger: Name in Hellblau */
+    .player-panel.serving .panel-name { color: #90caf9; }
+
+    .serve-hint {
+      font-size: 8px;
+      color: rgba(255,255,255,.4);
+      font-style: italic;
+    }
 
     /* ── Point type grid ── */
     .point-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 5px;
-      margin-bottom: 10px;
+      gap: 4px;
+      margin-bottom: 8px;
+      flex-shrink: 0;
     }
     .tile {
-      background: rgba(255,255,255,.08);
+      background: rgba(255,255,255,.15);
       border: none;
-      border-radius: 8px;
-      padding: 8px 4px;
+      border-radius: 7px;
+      padding: 7px 3px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 3px;
+      gap: 2px;
       cursor: pointer;
       color: white;
       transition: background .15s;
-      min-height: 52px;
+      min-height: 46px;
     }
-    .tile:hover  { background: rgba(255,255,255,.16); }
-    .tile:active { background: rgba(255,255,255,.24); }
-    .tile-icon  { font-size: 16px; line-height: 1; }
-    .tile-label { font-size: 9px; line-height: 1.2; text-align: center; }
+    .tile:hover  { background: rgba(255,255,255,.25); }
+    .tile:active { background: rgba(255,255,255,.35); }
+    .tile-icon  { font-size: 15px; line-height: 1; }
+    .tile-label { font-size: 8px; line-height: 1.2; text-align: center; }
     .tile-empty { /* grid placeholder */ }
 
     /* ── Pills ── */
     .pill-row {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
       flex-wrap: wrap;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
+      flex-shrink: 0;
     }
     .pill-label {
-      font-size: 7px; text-transform: uppercase;
-      letter-spacing: .5px; color: rgba(255,255,255,.3);
-      min-width: 48px;
+      font-size: 7px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      color: rgba(255,255,255,.35);
+      min-width: 44px;
     }
     .pill {
-      background: rgba(255,255,255,.08);
-      border: none; border-radius: 20px;
-      padding: 3px 10px; font-size: 9px;
-      color: rgba(255,255,255,.6); cursor: pointer;
+      background: rgba(255,255,255,.15);
+      border: none;
+      border-radius: 20px;
+      padding: 2px 8px;
+      font-size: 8px;
+      color: rgba(255,255,255,.7);
+      cursor: pointer;
       transition: background .15s;
     }
-    .pill:hover { background: rgba(255,255,255,.16); }
+    .pill:hover  { background: rgba(255,255,255,.25); }
     .pill.active { background: #1565c0; color: white; font-weight: 700; }
 
-    .loading { text-align: center; padding: 48px; color: #666; }
+    /* ── Winner overlay ── */
+    .winner-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      background: rgba(0,0,0,.5);
+    }
+    .winner-card {
+      background: linear-gradient(135deg, #1a237e, #283593);
+      color: white;
+      max-width: 320px;
+      width: 90%;
+    }
+    .winner-text {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .final-score { font-size: 15px; margin-bottom: 16px; }
+
+    .loading { text-align: center; padding: 48px; color: rgba(255,255,255,.5); }
   `]
 })
 export class ScoreComponent implements OnInit {
@@ -302,14 +467,14 @@ export class ScoreComponent implements OnInit {
   directionP2  = signal<Direction>('CROSS_COURT');
 
   readonly pointTypes: { value: PointType; icon: string; label: string }[] = [
-    { value: 'WINNER',        icon: '🏆', label: 'Winner'   },
-    { value: 'UNFORCED_ERROR',icon: '😓', label: 'Eigenf.'  },
-    { value: 'FORCED_ERROR',  icon: '💨', label: 'Erz. F.'  },
-    { value: 'ACE',           icon: '🎯', label: 'Ass'      },
-    { value: 'DOUBLE_FAULT',  icon: '❌', label: 'DF'       },
-    { value: 'NET',           icon: '🔴', label: 'Netz'     },
-    { value: 'OUT_LONG',      icon: '↑',  label: 'Aus lang' },
-    { value: 'OUT_SIDE',      icon: '→',  label: 'Aus Seite'},
+    { value: 'WINNER',         icon: '🏆', label: 'Winner'    },
+    { value: 'UNFORCED_ERROR', icon: '😓', label: 'Eigenf.'   },
+    { value: 'FORCED_ERROR',   icon: '💨', label: 'Erz. F.'   },
+    { value: 'ACE',            icon: '🎯', label: 'Ass'       },
+    { value: 'DOUBLE_FAULT',   icon: '❌', label: 'DF'        },
+    { value: 'NET',            icon: '🔴', label: 'Netz'      },
+    { value: 'OUT_LONG',       icon: '↑',  label: 'Aus lang'  },
+    { value: 'OUT_SIDE',       icon: '→',  label: 'Aus Seite' },
   ];
 
   readonly strokeTypes: { value: StrokeType; label: string }[] = [
