@@ -1,4 +1,4 @@
-# Design Spec: KI-gestützte Match-Analyse (Postmortem)
+Punkt # Design Spec: KI-gestützte Match-Analyse (Postmortem)
 
 | Feld | Wert |
 |------|------|
