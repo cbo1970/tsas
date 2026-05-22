@@ -16,7 +16,15 @@ export class AuthService {
 
   private async doInit(): Promise<boolean> {
     this.oauthService.configure(authConfig);
-    await this.oauthService.loadDiscoveryDocumentAndTryLogin();
+    try {
+      await this.oauthService.loadDiscoveryDocumentAndTryLogin();
+    } catch {
+      this.oauthService.logOut(true);
+      return false;
+    }
+    if (this.oauthService.hasValidAccessToken()) {
+      this.oauthService.setupAutomaticSilentRefresh();
+    }
     return this.oauthService.hasValidAccessToken();
   }
 

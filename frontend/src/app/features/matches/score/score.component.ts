@@ -36,14 +36,12 @@ import { PointType, StrokeType, Direction, RecordPointRequest } from '../../../c
             <span class="strip-name">{{ player1Name() }}</span>
             @if (matchData()) {
               <span class="strip-pts">{{ formatPoints(matchData()!.score, true) }}</span>
-              <span class="strip-sub">G:{{ matchData()!.score.gamesPlayer1 }} S:{{ matchData()!.score.setsPlayer1 }}</span>
             }
           </div>
           <span class="strip-sep">:</span>
           <div class="strip-player">
             @if (matchData()) {
               <span class="strip-pts">{{ formatPoints(matchData()!.score, false) }}</span>
-              <span class="strip-sub">G:{{ matchData()!.score.gamesPlayer2 }} S:{{ matchData()!.score.setsPlayer2 }}</span>
             }
             <span class="strip-name">{{ player2Name() }}</span>
             @if (servingPlayer() === 2) { <span class="serve-ball">🎾</span> }
@@ -99,69 +97,117 @@ import { PointType, StrokeType, Direction, RecordPointRequest } from '../../../c
 
           @if (matchData()!.status !== 'COMPLETED') {
 
+            <!-- Games at net -->
+            <div class="net-games-col net-games-col-left">
+              @for (s of setHistory(); track $index) {
+                <span class="net-games past-set">{{ s.p1 }}</span>
+              }
+              <span class="net-games">{{ matchData()!.score.gamesPlayer1 }}</span>
+            </div>
+            <div class="net-games-col net-games-col-right">
+              @for (s of setHistory(); track $index) {
+                <span class="net-games past-set">{{ s.p2 }}</span>
+              }
+              <span class="net-games">{{ matchData()!.score.gamesPlayer2 }}</span>
+            </div>
+
+            <!-- Corridor scores -->
+            <div class="corridor-score corridor-score-left">
+              <span class="cs-pts">{{ formatPoints(matchData()!.score, true) }}</span>
+              <span class="cs-sets">{{ matchData()!.score.setsPlayer1 }} {{ matchData()!.score.setsPlayer1 === 1 ? 'Satz' : 'Sätze' }}</span>
+            </div>
+            <div class="corridor-score corridor-score-right">
+              <span class="cs-pts">{{ formatPoints(matchData()!.score, false) }}</span>
+              <span class="cs-sets">{{ matchData()!.score.setsPlayer2 }} {{ matchData()!.score.setsPlayer2 === 1 ? 'Satz' : 'Sätze' }}</span>
+            </div>
+
             <!-- Player 1 panel (left half) -->
             <div class="player-panel player-panel-left" [class.serving]="servingPlayer() === 1">
               <div class="panel-header">
-                <span class="panel-name">{{ player1Name() }}</span>
+                <div class="panel-name-row">
+                  <span class="panel-name">{{ player1Name() }}</span>
+                  @if (servingPlayer() === 1) { <span class="serve-ball-panel">🎾</span> }
+                </div>
                 @if (servingPlayer() === null) {
                   <span class="serve-hint">Tippen = Aufschlag setzen</span>
                 }
               </div>
               <div class="point-grid">
                 @for (pt of pointTypes; track pt.value) {
-                  <button class="tile" (click)="recordPoint(1, pt.value)">
+                  <button class="tile"
+                    [class.tile-disabled]="isServeOnly(pt.value) && servingPlayer() !== 1"
+                    [disabled]="isServeOnly(pt.value) && servingPlayer() !== 1"
+                    (click)="recordPoint(effectiveWinner(1, pt.value), pt.value)">
                     <span class="tile-icon">{{ pt.icon }}</span>
                     <span class="tile-label">{{ pt.label }}</span>
                   </button>
                 }
                 <div class="tile-empty"></div>
               </div>
-              <div class="pill-row">
-                <span class="pill-label">Schlagart</span>
-                @for (st of strokeTypes; track st.value) {
-                  <button class="pill" [class.active]="strokeTypeP1() === st.value"
-                          (click)="strokeTypeP1.set(st.value)">{{ st.label }}</button>
-                }
-              </div>
-              <div class="pill-row">
-                <span class="pill-label">Richtung</span>
-                @for (d of directions; track d.value) {
-                  <button class="pill" [class.active]="directionP1() === d.value"
-                          (click)="directionP1.set(d.value)">{{ d.label }}</button>
-                }
+              <div class="pill-section">
+                <div class="pill-col">
+                  <span class="pill-label">Schlagart</span>
+                  <div class="pill-buttons">
+                    @for (st of strokeTypes; track st.value) {
+                      <button class="pill" [class.active]="strokeTypeP1() === st.value"
+                              (click)="strokeTypeP1.set(st.value)">{{ st.label }}</button>
+                    }
+                  </div>
+                </div>
+                <div class="pill-col">
+                  <span class="pill-label">Richtung</span>
+                  <div class="pill-buttons">
+                    @for (d of directions; track d.value) {
+                      <button class="pill" [class.active]="directionP1() === d.value"
+                              (click)="directionP1.set(d.value)">{{ d.label }}</button>
+                    }
+                  </div>
+                </div>
               </div>
             </div>
 
             <!-- Player 2 panel (right half) -->
             <div class="player-panel player-panel-right" [class.serving]="servingPlayer() === 2">
               <div class="panel-header">
-                <span class="panel-name">{{ player2Name() }}</span>
+                <div class="panel-name-row">
+                  <span class="panel-name">{{ player2Name() }}</span>
+                  @if (servingPlayer() === 2) { <span class="serve-ball-panel">🎾</span> }
+                </div>
                 @if (servingPlayer() === null) {
                   <span class="serve-hint">Tippen = Aufschlag setzen</span>
                 }
               </div>
               <div class="point-grid">
                 @for (pt of pointTypes; track pt.value) {
-                  <button class="tile" (click)="recordPoint(2, pt.value)">
+                  <button class="tile"
+                    [class.tile-disabled]="isServeOnly(pt.value) && servingPlayer() !== 2"
+                    [disabled]="isServeOnly(pt.value) && servingPlayer() !== 2"
+                    (click)="recordPoint(effectiveWinner(2, pt.value), pt.value)">
                     <span class="tile-icon">{{ pt.icon }}</span>
                     <span class="tile-label">{{ pt.label }}</span>
                   </button>
                 }
                 <div class="tile-empty"></div>
               </div>
-              <div class="pill-row">
-                <span class="pill-label">Schlagart</span>
-                @for (st of strokeTypes; track st.value) {
-                  <button class="pill" [class.active]="strokeTypeP2() === st.value"
-                          (click)="strokeTypeP2.set(st.value)">{{ st.label }}</button>
-                }
-              </div>
-              <div class="pill-row">
-                <span class="pill-label">Richtung</span>
-                @for (d of directions; track d.value) {
-                  <button class="pill" [class.active]="directionP2() === d.value"
-                          (click)="directionP2.set(d.value)">{{ d.label }}</button>
-                }
+              <div class="pill-section">
+                <div class="pill-col">
+                  <span class="pill-label">Schlagart</span>
+                  <div class="pill-buttons">
+                    @for (st of strokeTypes; track st.value) {
+                      <button class="pill" [class.active]="strokeTypeP2() === st.value"
+                              (click)="strokeTypeP2.set(st.value)">{{ st.label }}</button>
+                    }
+                  </div>
+                </div>
+                <div class="pill-col">
+                  <span class="pill-label">Richtung</span>
+                  <div class="pill-buttons">
+                    @for (d of directions; track d.value) {
+                      <button class="pill" [class.active]="directionP2() === d.value"
+                              (click)="directionP2.set(d.value)">{{ d.label }}</button>
+                    }
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -212,7 +258,7 @@ import { PointType, StrokeType, Direction, RecordPointRequest } from '../../../c
     .tennis-court {
       flex: 1;
       position: relative;
-      background: #1a5276;
+      background: #1a3a5c;
       overflow: hidden;
     }
 
@@ -224,7 +270,8 @@ import { PointType, StrokeType, Direction, RecordPointRequest } from '../../../c
       right: 8%;
       bottom: 8%;
       background: #1565c0;
-      border: 2px solid white;
+      border: 3px solid white;
+      box-shadow: inset 0 0 40px rgba(0,0,0,0.25);
     }
 
     /* Court lines */
@@ -286,24 +333,28 @@ import { PointType, StrokeType, Direction, RecordPointRequest } from '../../../c
     /* ── Player panels (inside court halves) ── */
     .player-panel {
       position: absolute;
-      top: calc(8% + 4px);
-      bottom: calc(8% + 4px);
-      padding: 8px 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 10px 12px;
       display: flex;
       flex-direction: column;
       z-index: 5;
+      background: rgba(8, 18, 36, 0.88);
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.55);
     }
 
     /* Left panel: from left infield edge to net */
     .player-panel-left {
-      left: calc(8% + 6px);
-      right: calc(50% + 4px);
+      left: calc(8% + 10px);
+      right: calc(50% + 8px);
     }
 
     /* Right panel: from net to right infield edge */
     .player-panel-right {
-      left: calc(50% + 4px);
-      right: calc(8% + 6px);
+      left: calc(50% + 8px);
+      right: calc(8% + 10px);
     }
 
     /* Portrait: stack panels vertically */
@@ -325,29 +376,30 @@ import { PointType, StrokeType, Direction, RecordPointRequest } from '../../../c
       .court-center-right { display: none; }
 
       .player-panel-left {
-        top: calc(8% + 4px);
-        left: calc(8% + 6px);
-        right: calc(8% + 6px);
-        bottom: calc(50% + 4px);
+        top: 29%;
+        left: calc(8% + 10px);
+        right: calc(8% + 10px);
       }
       .player-panel-right {
-        top: calc(50% + 4px);
-        left: calc(8% + 6px);
-        right: calc(8% + 6px);
-        bottom: calc(8% + 4px);
+        top: 71%;
+        left: calc(8% + 10px);
+        right: calc(8% + 10px);
       }
     }
 
     /* ── Panel header ── */
     .panel-header {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 6px;
-      margin-bottom: 6px;
+      justify-content: center;
+      gap: 4px;
+      margin-bottom: 8px;
       flex-shrink: 0;
+      text-align: center;
     }
     .panel-name {
-      font-size: 10px;
+      font-size: 20px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: .5px;
@@ -356,8 +408,16 @@ import { PointType, StrokeType, Direction, RecordPointRequest } from '../../../c
     /* Aufschläger: Name in Hellblau */
     .player-panel.serving .panel-name { color: #90caf9; }
 
+    .panel-name-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .serve-ball-panel { font-size: 20px; line-height: 1; }
+
     .serve-hint {
-      font-size: 8px;
+      font-size: 16px;
       color: rgba(255,255,255,.4);
       font-style: italic;
     }
@@ -371,53 +431,68 @@ import { PointType, StrokeType, Direction, RecordPointRequest } from '../../../c
       flex-shrink: 0;
     }
     .tile {
-      background: rgba(255,255,255,.15);
+      background: #e67e22;
       border: none;
       border-radius: 7px;
-      padding: 7px 3px;
+      padding: 8px 6px;
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       align-items: center;
-      gap: 2px;
+      justify-content: flex-start;
+      gap: 6px;
       cursor: pointer;
       color: white;
-      transition: background .15s;
+      font-weight: 600;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+      transition: background .15s, transform .1s;
       min-height: 46px;
     }
-    .tile:hover  { background: rgba(255,255,255,.25); }
-    .tile:active { background: rgba(255,255,255,.35); }
-    .tile-icon  { font-size: 15px; line-height: 1; }
-    .tile-label { font-size: 8px; line-height: 1.2; text-align: center; }
+    .tile:hover  { background: #f39c12; transform: translateY(-1px); }
+    .tile:active { background: #ca6f1e; transform: translateY(0); box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+    .tile.tile-disabled { background: rgba(255,255,255,.08); color: rgba(255,255,255,.25); box-shadow: none; cursor: not-allowed; }
+    .tile.tile-disabled:hover { background: rgba(255,255,255,.08); transform: none; }
+    .tile.tile-disabled .tile-icon { opacity: .3; }
+    .tile-icon  { font-size: 22px; line-height: 1; flex-shrink: 0; }
+    .tile-label { font-size: 16px; line-height: 1.2; text-align: left; }
     .tile-empty { /* grid placeholder */ }
 
     /* ── Pills ── */
-    .pill-row {
+    .pill-section {
       display: flex;
-      align-items: center;
-      gap: 3px;
-      flex-wrap: wrap;
-      margin-bottom: 4px;
+      gap: 12px;
       flex-shrink: 0;
+      margin-top: 12px;
+    }
+    .pill-col {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 5px;
+      flex: 1;
+    }
+    .pill-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
     .pill-label {
-      font-size: 7px;
+      font-size: 14px;
       text-transform: uppercase;
       letter-spacing: .5px;
-      color: rgba(255,255,255,.35);
-      min-width: 44px;
+      color: rgba(255,255,255,.7);
     }
     .pill {
-      background: rgba(255,255,255,.15);
-      border: none;
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.15);
       border-radius: 20px;
-      padding: 2px 8px;
-      font-size: 8px;
-      color: rgba(255,255,255,.7);
+      padding: 4px 16px;
+      font-size: 16px;
+      color: rgba(255,255,255,.65);
       cursor: pointer;
       transition: background .15s;
     }
-    .pill:hover  { background: rgba(255,255,255,.25); }
-    .pill.active { background: #1565c0; color: white; font-weight: 700; }
+    .pill:hover  { background: rgba(255,255,255,.2); }
+    .pill.active { background: #e67e22; border-color: #e67e22; color: white; font-weight: 700; }
 
     /* ── Winner overlay ── */
     .winner-overlay {
@@ -445,6 +520,53 @@ import { PointType, StrokeType, Direction, RecordPointRequest } from '../../../c
     }
     .final-score { font-size: 15px; margin-bottom: 16px; }
 
+    /* ── Games at net ── */
+    .net-games-col {
+      position: absolute;
+      top: calc(8% + 6px);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      z-index: 7;
+      pointer-events: none;
+    }
+    .net-games-col-left  { right: calc(50% + 10px); align-items: flex-end; }
+    .net-games-col-right { left:  calc(50% + 10px); align-items: flex-start; }
+    .net-games {
+      font-size: 32px;
+      font-weight: 800;
+      color: #ccff00;
+      line-height: 1;
+    }
+    .net-games.past-set { font-size: 24px; opacity: .6; }
+
+    @media (orientation: portrait) {
+      .net-games-col-left  { top: calc(8% + 6px);  left: calc(8% + 10px); right: auto; align-items: flex-start; }
+      .net-games-col-right { top: calc(50% + 6px); left: calc(8% + 10px); }
+    }
+
+    /* ── Corridor score display ── */
+    .corridor-score {
+      position: absolute;
+      top: calc(8% + 6px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 6;
+      color: white;
+      pointer-events: none;
+    }
+    .corridor-score-left  { left: calc(8% + 4px);  right: calc(50% + 4px); }
+    .corridor-score-right { left: calc(50% + 4px);  right: calc(8% + 4px); }
+    .cs-pts  { font-size: 32px; font-weight: 800; line-height: 1; }
+    .cs-sets { font-size: 14px; color: rgba(255,255,255,.6); margin-top: 3px; }
+
+    @media (orientation: portrait) {
+      .corridor-score-left  { left: calc(8% + 4px); right: calc(8% + 4px); }
+      .corridor-score-right { top: calc(50% + 6px); left: calc(8% + 4px); right: calc(8% + 4px); }
+    }
+
     .loading { text-align: center; padding: 48px; color: rgba(255,255,255,.5); }
   `]
 })
@@ -455,9 +577,10 @@ export class ScoreComponent implements OnInit {
   private readonly dialog    = inject(MatDialog);
   private readonly snackBar  = inject(MatSnackBar);
 
-  matchData = signal<MatchWithScore | null>(null);
-  player1   = signal<Player | null>(null);
-  player2   = signal<Player | null>(null);
+  matchData  = signal<MatchWithScore | null>(null);
+  player1    = signal<Player | null>(null);
+  player2    = signal<Player | null>(null);
+  setHistory = signal<Array<{p1: number; p2: number}>>([]);
 
   strokeTypeP1 = signal<StrokeType>('FOREHAND');
   strokeTypeP2 = signal<StrokeType>('FOREHAND');
@@ -466,8 +589,8 @@ export class ScoreComponent implements OnInit {
 
   readonly pointTypes: { value: PointType; icon: string; label: string }[] = [
     { value: 'WINNER',         icon: '🏆', label: 'Winner'    },
-    { value: 'UNFORCED_ERROR', icon: '😓', label: 'Eigenf.'   },
-    { value: 'FORCED_ERROR',   icon: '💨', label: 'Erz. F.'   },
+    { value: 'UNFORCED_ERROR', icon: '😓', label: 'Unforced Err' },
+    { value: 'FORCED_ERROR',   icon: '💨', label: 'Forced Err' },
     { value: 'ACE',            icon: '🎯', label: 'Ass'       },
     { value: 'DOUBLE_FAULT',   icon: '❌', label: 'DF'        },
     { value: 'NET',            icon: '🔴', label: 'Netz'      },
@@ -478,7 +601,6 @@ export class ScoreComponent implements OnInit {
   readonly strokeTypes: { value: StrokeType; label: string }[] = [
     { value: 'FOREHAND', label: 'FH'        },
     { value: 'BACKHAND', label: 'RH'        },
-    { value: 'SERVE',    label: 'Aufschlag' },
     { value: 'VOLLEY',   label: 'Volley'    },
     { value: 'SMASH',    label: 'Smash'     },
   ];
@@ -541,6 +663,13 @@ export class ScoreComponent implements OnInit {
 
     this.api.recordPoint(this.matchId, request).subscribe({
       next: (updated) => {
+        const prev = this.matchData();
+        if (prev && updated.score.currentSet > prev.score.currentSet) {
+          let p1 = prev.score.gamesPlayer1;
+          let p2 = prev.score.gamesPlayer2;
+          if (updated.score.setsPlayer1 > prev.score.setsPlayer1) { p1 += 1; } else { p2 += 1; }
+          this.setHistory.update(h => [...h, { p1, p2 }]);
+        }
         this.matchData.set(updated);
         if (updated.score.isDone) this.loadMatch();
       },
@@ -606,6 +735,14 @@ export class ScoreComponent implements OnInit {
         error: () => this.snackBar.open('Fehler beim Beenden', 'OK', { duration: 3000 })
       });
     });
+  }
+
+  isServeOnly(pt: PointType): boolean {
+    return pt === 'ACE' || pt === 'DOUBLE_FAULT';
+  }
+
+  effectiveWinner(panelPlayer: 1 | 2, pt: PointType): 1 | 2 {
+    return pt === 'DOUBLE_FAULT' ? (panelPlayer === 1 ? 2 : 1) : panelPlayer;
   }
 
   goToMatches() {
