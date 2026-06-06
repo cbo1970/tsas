@@ -1,0 +1,1 @@
+ALTER TABLE points ALTER COLUMN point_type DROP NOT NULL;
