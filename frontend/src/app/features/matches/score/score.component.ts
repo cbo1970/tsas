@@ -344,14 +344,35 @@ export class ScoreComponent implements OnInit {
 
   private handlePointResponse(updated: MatchWithScore): void {
     const prev = this.matchData();
+    let setAdded = false;
+
     if (prev && updated.score.currentSet > prev.score.currentSet) {
       let p1 = prev.score.gamesPlayer1;
       let p2 = prev.score.gamesPlayer2;
       if (updated.score.setsPlayer1 > prev.score.setsPlayer1) { p1 += 1; } else { p2 += 1; }
       this.setHistory.update(h => [...h, { p1, p2 }]);
+      setAdded = true;
     }
+
     this.matchData.set(updated);
-    if (updated.score.isDone) this.loadMatch();
+
+    if (updated.score.isDone) {
+      if (!setAdded && prev) {
+        const p1Won = updated.score.setsPlayer1 > prev.score.setsPlayer1;
+        const p1 = updated.score.gamesPlayer1 + (p1Won ? 1 : 0);
+        const p2 = updated.score.gamesPlayer2 + (p1Won ? 0 : 1);
+        this.setHistory.update(h => [...h, { p1, p2 }]);
+      }
+      this.navigateToStatistics();
+    }
+  }
+
+  private navigateToStatistics(): void {
+    const sets = this.setHistory().map(s => `${s.p1}-${s.p2}`).join(',');
+    this.router.navigate(
+      ['/matches', this.matchId, 'statistics'],
+      { queryParams: { sets, p1: this.player1Name(), p2: this.player2Name() } }
+    );
   }
 
   private setServe(forPlayer1: boolean) {
