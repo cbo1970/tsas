@@ -36,6 +36,12 @@ public class MatchStatisticsService implements ComputeMatchStatisticsUseCase {
         int breakPointsTotal = 0;
 
         for (Point p : points) {
+            if (p.getPointType() == null) {
+                if (p.getWinner() == 1) acc1.pointsWon++;
+                else acc2.pointsWon++;
+                continue;
+            }
+
             int attribTo = PointAttribution.attributingPlayer(p);
             Accumulator attribAcc = attribTo == 1 ? acc1 : acc2;
             attribAcc.countAttributed(p);

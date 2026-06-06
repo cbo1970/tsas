@@ -162,4 +162,21 @@ class MatchStatisticsServiceTest {
         assertThat(s.player1().firstServePercentage()).isZero();
         assertThat(s.player1().secondServePercentage()).isZero();
     }
+
+    @Test
+    void nullPointTypeIsSkippedForAttribution() {
+        // Quick-point ohne pointType (TEN-33): nur pointsWon zählen, kein Absturz
+        Mockito.when(loadPort.loadPointsByMatch(matchId)).thenReturn(List.of(
+                p(1,1,1,1,null,StrokeType.FOREHAND,Direction.CROSS_COURT,1,false,null),
+                p(1,1,2,2,null,null,null,null,false,null)
+        ));
+
+        MatchStatistics s = service.compute(matchId);
+
+        assertThat(s.totalPoints()).isEqualTo(2);
+        assertThat(s.player1().pointsWon()).isEqualTo(1);
+        assertThat(s.player2().pointsWon()).isEqualTo(1);
+        assertThat(s.player1().winners()).isZero();
+        assertThat(s.player2().winners()).isZero();
+    }
 }
