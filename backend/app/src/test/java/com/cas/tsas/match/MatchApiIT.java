@@ -15,6 +15,7 @@ import org.springframework.http.MediaType;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -266,7 +267,8 @@ class MatchApiIT extends AbstractIntegrationTest {
         void records_point_with_serve_attempt() throws Exception {
             UUID p1 = createPlayer(); UUID p2 = createPlayer();
             UUID matchId = createMatch(p1, p2);
-            mockMvc.perform(post("/api/matches/{id}/serve/player1", matchId));
+            mockMvc.perform(post("/api/matches/{id}/serve/player1", matchId))
+                    .andExpect(status().isOk());
 
             mockMvc.perform(post("/api/matches/{id}/points", matchId)
                             .contentType(MediaType.APPLICATION_JSON)
@@ -275,6 +277,10 @@ class MatchApiIT extends AbstractIntegrationTest {
                             ))))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.score.pointsPlayer1").value(1));
+
+            var points = pointRepository.findAll();
+            assertThat(points).hasSize(1);
+            assertThat(points.get(0).getServeAttempt()).isEqualTo(1);
         }
     }
 

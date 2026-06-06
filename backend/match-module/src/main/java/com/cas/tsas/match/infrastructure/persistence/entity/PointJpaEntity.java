@@ -34,7 +34,7 @@ public class PointJpaEntity {
     private int winner;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "point_type", nullable = false, length = 50)
+    @Column(name = "point_type", nullable = true, length = 50)
     private PointType pointType;
 
     @Enumerated(EnumType.STRING)
