@@ -11,7 +11,7 @@ import { Player } from '../../../core/models/player.model';
 import { MatchWithScore, MatchScore } from '../../../core/models/match.model';
 import { ScoreEditDialogComponent } from './score-edit-dialog.component';
 import { EndMatchDialogComponent, EndMatchDialogResult } from './end-match-dialog.component';
-import { PointType, StrokeType, Direction, RecordPointRequest } from '../../../core/models/point.model';
+import { PointType, StrokeType, RecordPointRequest } from '../../../core/models/point.model';
 
 @Component({
   selector: 'app-score',
@@ -25,398 +25,213 @@ import { PointType, StrokeType, Direction, RecordPointRequest } from '../../../c
   ],
   templateUrl: './score.component.html',
   styles: [`
-    /* ── Page ── */
+    :host { display: block; height: 100dvh; }
+
     .scoring-page {
       display: flex;
       flex-direction: column;
       height: 100dvh;
-      background: #1a5276;
+      background: #0f172a;
       color: white;
       overflow: hidden;
+      font-family: sans-serif;
     }
 
-    /* ── Score strip ── */
-    .score-strip {
-      display: flex;
-      align-items: center;
-      background: rgba(0,0,0,.82);
-      padding: 6px 12px;
-      border-bottom: 1px solid rgba(255,255,255,.15);
+    /* ── Score header ── */
+    .score-header {
+      background: rgba(0,0,0,.8);
+      padding: 10px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
       flex-shrink: 0;
+    }
+    .header-grid {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
       gap: 8px;
-      z-index: 10;
     }
-    .strip-center {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
+    .player-half-left  { text-align: center; }
+    .player-half-right { text-align: center; }
+    .player-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: rgba(255,255,255,.75);
     }
-    .strip-player { display: flex; align-items: baseline; gap: 5px; }
-    .strip-name   { font-size: 13px; font-weight: 600; }
-    .strip-pts    { font-size: 22px; font-weight: 800; line-height: 1; }
-    .strip-sub    { font-size: 10px; opacity: .5; }
-    .strip-sep    { font-size: 20px; opacity: .3; }
-    .serve-ball   { font-size: 13px; }
-    .strip-actions { display: flex; align-items: center; gap: 4px; }
-
-    /* ── Tennis Court ── */
-    .tennis-court {
-      flex: 1;
-      position: relative;
-      background: #1a3a5c;
-      overflow: hidden;
+    .player-name.serving { color: #4ade80; }
+    .score-center { display: flex; align-items: center; gap: 8px; }
+    .sep { opacity: .3; }
+    .games-num {
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1;
     }
-
-    /* Infield surface */
-    .court-infield {
-      position: absolute;
-      top: 8%;
-      left: 8%;
-      right: 8%;
-      bottom: 8%;
-      background: #1565c0;
-      border: 3px solid white;
-      box-shadow: inset 0 0 40px rgba(0,0,0,0.25);
+    .games-num.winning { color: #4ade80; }
+    .pts-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 34px;
+      font-weight: 900;
+      line-height: 1;
+      cursor: pointer;
+      border-radius: 6px;
+      padding: 2px 10px;
+      transition: background .15s;
     }
-
-    /* Court lines */
-    .court-line { position: absolute; background: white; }
-
-    /* Net (vertical center line) */
-    .court-net {
-      top: 8%;
-      bottom: 8%;
-      left: 50%;
-      width: 3px;
-      transform: translateX(-50%);
-    }
-
-    /* Singles sidelines (horizontal — alleys are ~12.5% of court height) */
-    .court-singles-top {
-      left: 8%;
-      right: 8%;
-      top: 18.5%;
-      height: 2px;
-    }
-    .court-singles-bottom {
-      left: 8%;
-      right: 8%;
-      bottom: 18.5%;
-      height: 2px;
-    }
-
-    /* Service lines (vertical, ~27% from each side = 54% of half-court from baseline) */
-    .court-service-left {
-      left: 27%;
-      top: 18.5%;
-      bottom: 18.5%;
-      width: 2px;
-    }
-    .court-service-right {
-      right: 27%;
-      top: 18.5%;
-      bottom: 18.5%;
-      width: 2px;
-    }
-
-    /* Center service marks (horizontal, from service line to net at 50% height) */
-    .court-center-left {
-      left: 27%;
-      right: 50%;
-      top: 50%;
-      height: 1px;
-      transform: translateY(-0.5px);
-    }
-    .court-center-right {
-      left: 50%;
-      right: 27%;
-      top: 50%;
-      height: 1px;
-      transform: translateY(-0.5px);
-    }
-
-    /* ── Player panels (inside court halves) ── */
-    .player-panel {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      z-index: 5;
-      background: rgba(8, 18, 36, 0.88);
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.12);
-      box-shadow: 0 6px 24px rgba(0,0,0,0.55);
-    }
-
-    /* Left panel: from left infield edge to net */
-    .player-panel-left {
-      left: calc(8% + 10px);
-      right: calc(50% + 8px);
-    }
-
-    /* Right panel: from net to right infield edge */
-    .player-panel-right {
-      left: calc(50% + 8px);
-      right: calc(8% + 10px);
-    }
-
-    /* Portrait: stack panels vertically */
-    @media (orientation: portrait) {
-      .court-net {
-        top: 50%;
-        left: 8%;
-        right: 8%;
-        bottom: auto;
-        width: auto;
-        height: 3px;
-        transform: translateY(-50%);
-      }
-      .court-singles-top,
-      .court-singles-bottom,
-      .court-service-left,
-      .court-service-right,
-      .court-center-left,
-      .court-center-right { display: none; }
-
-      .player-panel-left {
-        top: 29%;
-        left: calc(8% + 10px);
-        right: calc(8% + 10px);
-      }
-      .player-panel-right {
-        top: 71%;
-        left: calc(8% + 10px);
-        right: calc(8% + 10px);
-      }
-    }
-
-    /* ── Panel header ── */
-    .panel-header {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      margin-bottom: 8px;
-      flex-shrink: 0;
+    .pts-btn:hover { background: rgba(255,255,255,.12); }
+    .pts-btn.p1 { color: #4ade80; }
+    .pts-label {
+      font-size: 10px;
+      opacity: .4;
+      letter-spacing: .5px;
       text-align: center;
     }
-    .panel-name {
-      font-size: 20px;
-      font-weight: 700;
-      text-transform: uppercase;
+    .set-history {
+      text-align: center;
+      margin-top: 4px;
+      font-size: 10px;
+      opacity: .35;
       letter-spacing: .5px;
-      color: rgba(255,255,255,.7);
     }
-    /* Aufschläger: Name in Hellblau */
-    .player-panel.serving .panel-name { color: #90caf9; }
-
-    .panel-name-row {
+    .header-actions {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    .serve-ball-panel { font-size: 20px; line-height: 1; }
-
-    .serve-hint {
-      font-size: 16px;
-      color: rgba(255,255,255,.4);
-      font-style: italic;
-    }
-
-    /* ── Point type grid ── */
-    .point-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      justify-content: flex-end;
       gap: 4px;
-      margin-bottom: 8px;
-      flex-shrink: 0;
+      margin-top: 6px;
     }
-    .tile {
-      background: #e67e22;
-      border: none;
-      border-radius: 7px;
-      padding: 8px 6px;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 6px;
-      cursor: pointer;
-      color: white;
-      font-weight: 600;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-      transition: background .15s, transform .1s;
-      min-height: 46px;
-    }
-    .tile:hover  { background: #f39c12; transform: translateY(-1px); }
-    .tile:active { background: #ca6f1e; transform: translateY(0); box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
-    .tile.tile-disabled { background: rgba(255,255,255,.08); color: rgba(255,255,255,.25); box-shadow: none; cursor: not-allowed; }
-    .tile.tile-disabled:hover { background: rgba(255,255,255,.08); transform: none; }
-    .tile.tile-disabled .tile-icon { opacity: .3; }
-    .tile-icon  { font-size: 22px; line-height: 1; flex-shrink: 0; }
-    .tile-label { font-size: 16px; line-height: 1.2; text-align: left; }
-    .tile-empty { /* grid placeholder */ }
 
-    /* ── Pills ── */
-    .pill-section {
-      display: flex;
-      gap: 12px;
-      flex-shrink: 0;
-      margin-top: 12px;
-    }
-    .pill-col {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 5px;
+    /* ── Observation panels ── */
+    .panels-area {
       flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 12px;
+      overflow-y: auto;
     }
-    .pill-buttons {
+    .obs-panel {
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 10px;
+      padding: 10px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
     }
-    .pill-label {
-      font-size: 14px;
-      text-transform: uppercase;
+    .obs-panel.serving {
+      background: rgba(74,222,128,.08);
+      border-color: rgba(74,222,128,.3);
+    }
+    .panel-title {
+      font-size: 11px;
+      font-weight: 700;
       letter-spacing: .5px;
+      text-align: center;
       color: rgba(255,255,255,.7);
     }
-    .pill {
-      background: rgba(255,255,255,.1);
-      border: 1px solid rgba(255,255,255,.15);
-      border-radius: 20px;
-      padding: 4px 16px;
-      font-size: 16px;
-      color: rgba(255,255,255,.65);
+    .obs-panel.serving .panel-title { color: #4ade80; }
+    .serve-badge { font-size: 9px; opacity: .6; font-weight: 400; }
+
+    .section-label {
+      font-size: 9px;
+      opacity: .5;
+      letter-spacing: .5px;
+      margin-top: 4px;
+    }
+    .section-label.green { color: #4ade80; opacity: .8; }
+    .section-label.red   { color: #fca5a5; opacity: .8; }
+
+    /* Context toggle buttons (yellow) */
+    .ctx-row { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+    .ctx-btn {
+      background: rgba(254,240,138,.1);
+      border: 1px solid rgba(254,240,138,.2);
+      border-radius: 5px;
+      padding: 6px 4px;
+      text-align: center;
+      font-size: 12px;
+      color: rgba(254,240,138,.5);
       cursor: pointer;
       transition: background .15s;
     }
-    .pill:hover  { background: rgba(255,255,255,.2); }
-    .pill.active { background: #e67e22; border-color: #e67e22; color: white; font-weight: 700; }
+    .ctx-btn.active {
+      background: #854d0e;
+      border-color: #fef08a;
+      color: #fef08a;
+      font-weight: 600;
+    }
+
+    /* Observation buttons */
+    .obs-row-2 { display: grid; grid-template-columns: 1fr 1fr;     gap: 4px; }
+    .obs-row-1 { display: grid; grid-template-columns: 1fr;         gap: 4px; }
+    .obs-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
+
+    .obs-btn {
+      border: none;
+      border-radius: 5px;
+      padding: 7px 4px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .obs-btn:hover  { opacity: .85; }
+    .obs-btn:active { opacity: .7; }
+    .obs-btn.err-sm { font-size: 11px; padding: 6px 2px; }
+
+    .win-btn {
+      background: #166534;
+      border: 1px solid #4ade80;
+      color: #4ade80;
+    }
+    .err-btn {
+      background: #7f1d1d;
+      border: 1px solid #fca5a5;
+      color: #fca5a5;
+    }
 
     /* ── Winner overlay ── */
     .winner-overlay {
-      position: absolute;
+      position: fixed;
       inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 20;
-      background: rgba(0,0,0,.5);
+      background: rgba(0,0,0,.6);
     }
     .winner-card {
-      background: linear-gradient(135deg, #1a237e, #283593);
+      background: linear-gradient(135deg,#1a237e,#283593);
       color: white;
+      border-radius: 12px;
+      padding: 24px;
       max-width: 320px;
       width: 90%;
+      text-align: center;
     }
-    .winner-text {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 20px;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-    .final-score { font-size: 15px; margin-bottom: 16px; }
-
-    /* ── Games at net ── */
-    .net-games-col {
-      position: absolute;
-      top: calc(8% + 6px);
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      z-index: 7;
-      pointer-events: none;
-    }
-    .net-games-col-left  { right: calc(50% + 10px); align-items: flex-end; }
-    .net-games-col-right { left:  calc(50% + 10px); align-items: flex-start; }
-    .net-games {
-      font-size: 32px;
-      font-weight: 800;
-      color: #ccff00;
-      line-height: 1;
-    }
-    .net-games.past-set { font-size: 24px; opacity: .6; }
-
-    @media (orientation: portrait) {
-      .net-games-col-left  { top: calc(8% + 6px);  left: calc(8% + 10px); right: auto; align-items: flex-start; }
-      .net-games-col-right { top: calc(50% + 6px); left: calc(8% + 10px); }
-    }
-
-    /* ── Corridor score display ── */
-    .corridor-score {
-      position: absolute;
-      top: calc(8% + 6px);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 6;
-      color: white;
-      pointer-events: none;
-    }
-    .corridor-score-left  { left: calc(8% + 4px);  right: calc(50% + 4px); }
-    .corridor-score-right { left: calc(50% + 4px);  right: calc(8% + 4px); }
-    .cs-pts  { font-size: 32px; font-weight: 800; line-height: 1; }
-    .cs-sets { font-size: 14px; color: rgba(255,255,255,.6); margin-top: 3px; }
-
-    @media (orientation: portrait) {
-      .corridor-score-left  { left: calc(8% + 4px); right: calc(8% + 4px); }
-      .corridor-score-right { top: calc(50% + 6px); left: calc(8% + 4px); right: calc(8% + 4px); }
-    }
+    .winner-text { font-size: 22px; font-weight: bold; margin-bottom: 8px; }
+    .final-score { font-size: 15px; color: rgba(255,255,255,.7); margin-bottom: 16px; }
 
     .loading { text-align: center; padding: 48px; color: rgba(255,255,255,.5); }
   `]
 })
 export class ScoreComponent implements OnInit {
-  private readonly api       = inject(ApiService);
-  private readonly route     = inject(ActivatedRoute);
-  private readonly router    = inject(Router);
-  private readonly dialog    = inject(MatDialog);
-  private readonly snackBar  = inject(MatSnackBar);
+  private readonly api      = inject(ApiService);
+  private readonly route    = inject(ActivatedRoute);
+  private readonly router   = inject(Router);
+  private readonly dialog   = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
 
   matchData  = signal<MatchWithScore | null>(null);
   player1    = signal<Player | null>(null);
   player2    = signal<Player | null>(null);
   setHistory = signal<Array<{p1: number; p2: number}>>([]);
 
-  strokeTypeP1 = signal<StrokeType>('FOREHAND');
-  strokeTypeP2 = signal<StrokeType>('FOREHAND');
-  directionP1  = signal<Direction>('CROSS_COURT');
-  directionP2  = signal<Direction>('CROSS_COURT');
-
-  readonly pointTypes: { value: PointType; icon: string; label: string }[] = [
-    { value: 'WINNER',         icon: '🏆', label: 'Winner'    },
-    { value: 'UNFORCED_ERROR', icon: '😓', label: 'Unforced Err' },
-    { value: 'FORCED_ERROR',   icon: '💨', label: 'Forced Err' },
-    { value: 'ACE',            icon: '🎯', label: 'Ass'       },
-    { value: 'DOUBLE_FAULT',   icon: '❌', label: 'DF'        },
-    { value: 'NET',            icon: '🔴', label: 'Netz'      },
-    { value: 'OUT_LONG',       icon: '↑',  label: 'Aus lang'  },
-    { value: 'OUT_SIDE',       icon: '→',  label: 'Aus Seite' },
-  ];
-
-  readonly strokeTypes: { value: StrokeType; label: string }[] = [
-    { value: 'FOREHAND', label: 'FH'        },
-    { value: 'BACKHAND', label: 'RH'        },
-    { value: 'VOLLEY',   label: 'Volley'    },
-    { value: 'SMASH',    label: 'Smash'     },
-  ];
-
-  readonly directions: { value: Direction; label: string }[] = [
-    { value: 'CROSS_COURT',   label: 'Cross' },
-    { value: 'DOWN_THE_LINE', label: 'DTL'   },
-    { value: 'MIDDLE',        label: 'Mitte' },
-  ];
+  serviceContextP1 = signal<1 | 2 | null>(null);
+  serviceContextP2 = signal<1 | 2 | null>(null);
+  strokeTypeP1     = signal<StrokeType | null>(null);
+  strokeTypeP2     = signal<StrokeType | null>(null);
 
   player1Name = computed(() => {
     const p = this.player1();
@@ -429,6 +244,15 @@ export class ScoreComponent implements OnInit {
   });
 
   servingPlayer = computed(() => this.matchData()?.score?.servingPlayer ?? null);
+
+  setHistoryText = computed(() => {
+    const history = this.setHistory();
+    const m = this.matchData();
+    if (!m) return '';
+    const past = history.map((s, i) => `Satz ${i + 1}: ${s.p1}:${s.p2}`).join(' · ');
+    const current = `Satz ${(history.length + 1)} laufend`;
+    return past ? `${past} · ${current}` : current;
+  });
 
   private matchId = '';
 
@@ -452,43 +276,86 @@ export class ScoreComponent implements OnInit {
     this.api.getPlayer(p2Id).subscribe(p => this.player2.set(p));
   }
 
-  recordPoint(winner: 1 | 2, pointType: PointType): void {
+  recordQuickPoint(winner: 1 | 2): void {
     const m = this.matchData();
     if (!m || m.status === 'COMPLETED') return;
+    if (this.servingPlayer() === null) { this.setServe(winner === 1); return; }
+    this.api.recordPoint(this.matchId, { winner }).subscribe({
+      next: (updated) => this.handlePointResponse(updated),
+      error: () => this.snackBar.open('Fehler beim Speichern', 'OK', { duration: 3000 })
+    });
+  }
 
-    if (this.servingPlayer() === null) {
-      this.setServe(winner === 1);
+  recordObservation(panel: 1 | 2, pointType: PointType): void {
+    const m = this.matchData();
+    if (!m || m.status === 'COMPLETED') return;
+    if (this.servingPlayer() === null) { this.setServe(panel === 1); return; }
+
+    if (pointType === 'ACE' && this.servingPlayer() !== panel) {
+      this.snackBar.open('Ass nur für den Aufschläger', 'OK', { duration: 3000 });
+      return;
+    }
+    if (pointType === 'DOUBLE_FAULT' && this.servingPlayer() !== panel) {
+      this.snackBar.open('Doppelfehler nur für den Aufschläger', 'OK', { duration: 3000 });
       return;
     }
 
-    const request: RecordPointRequest = {
-      winner,
-      pointType,
-      strokeType: winner === 1 ? this.strokeTypeP1() : this.strokeTypeP2(),
-      direction:  winner === 1 ? this.directionP1()  : this.directionP2(),
-    };
+    const winner: 1 | 2 = (pointType === 'ACE' || pointType === 'WINNER') ? panel : (panel === 1 ? 2 : 1);
+    const serveAttempt = panel === 1 ? this.serviceContextP1() : this.serviceContextP2();
+    const strokeType   = panel === 1 ? this.strokeTypeP1()     : this.strokeTypeP2();
+
+    const request: RecordPointRequest = { winner, pointType, serveAttempt, strokeType };
 
     this.api.recordPoint(this.matchId, request).subscribe({
       next: (updated) => {
-        const prev = this.matchData();
-        if (prev && updated.score.currentSet > prev.score.currentSet) {
-          let p1 = prev.score.gamesPlayer1;
-          let p2 = prev.score.gamesPlayer2;
-          if (updated.score.setsPlayer1 > prev.score.setsPlayer1) { p1 += 1; } else { p2 += 1; }
-          this.setHistory.update(h => [...h, { p1, p2 }]);
-        }
-        this.matchData.set(updated);
-        if (updated.score.isDone) this.loadMatch();
+        this.handlePointResponse(updated);
+        this.resetContextForPanel(panel);
       },
       error: () => this.snackBar.open('Fehler beim Speichern', 'OK', { duration: 3000 })
     });
+  }
+
+  toggleService(panel: 1 | 2, attempt: 1 | 2): void {
+    if (panel === 1) {
+      this.serviceContextP1.update(v => v === attempt ? null : attempt);
+    } else {
+      this.serviceContextP2.update(v => v === attempt ? null : attempt);
+    }
+  }
+
+  toggleStroke(panel: 1 | 2, type: StrokeType): void {
+    if (panel === 1) {
+      this.strokeTypeP1.update(v => v === type ? null : type);
+    } else {
+      this.strokeTypeP2.update(v => v === type ? null : type);
+    }
+  }
+
+  private resetContextForPanel(panel: 1 | 2): void {
+    if (panel === 1) {
+      this.serviceContextP1.set(null);
+      this.strokeTypeP1.set(null);
+    } else {
+      this.serviceContextP2.set(null);
+      this.strokeTypeP2.set(null);
+    }
+  }
+
+  private handlePointResponse(updated: MatchWithScore): void {
+    const prev = this.matchData();
+    if (prev && updated.score.currentSet > prev.score.currentSet) {
+      const p1 = prev.score.gamesPlayer1;
+      const p2 = prev.score.gamesPlayer2;
+      this.setHistory.update(h => [...h, { p1, p2 }]);
+    }
+    this.matchData.set(updated);
+    if (updated.score.isDone) this.loadMatch();
   }
 
   private setServe(forPlayer1: boolean) {
     const obs = forPlayer1
       ? this.api.setServingPlayer1(this.matchId)
       : this.api.setServingPlayer2(this.matchId);
-
     obs.subscribe({
       next: (score) => this.matchData.update(md => md ? { ...md, score } : md),
       error: () => this.snackBar.open('Fehler beim Speichern', 'OK', { duration: 3000 })
@@ -535,21 +402,10 @@ export class ScoreComponent implements OnInit {
     ref.afterClosed().subscribe((result: EndMatchDialogResult | undefined) => {
       if (!result) return;
       this.api.endMatchWalkover(this.matchId, result.winner).subscribe({
-        next: () => {
-          this.loadMatch();
-          this.snackBar.open('Match beendet (w.o.)', 'OK', { duration: 3000 });
-        },
+        next: () => { this.loadMatch(); this.snackBar.open('Match beendet (w.o.)', 'OK', { duration: 3000 }); },
         error: () => this.snackBar.open('Fehler beim Beenden', 'OK', { duration: 3000 })
       });
     });
-  }
-
-  isServeOnly(pt: PointType): boolean {
-    return pt === 'ACE' || pt === 'DOUBLE_FAULT';
-  }
-
-  effectiveWinner(panelPlayer: 1 | 2, pt: PointType): 1 | 2 {
-    return pt === 'DOUBLE_FAULT' ? (panelPlayer === 1 ? 2 : 1) : panelPlayer;
   }
 
   goToMatches() {
