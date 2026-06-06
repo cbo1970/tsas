@@ -250,6 +250,7 @@ export class ScoreComponent implements OnInit {
     const m = this.matchData();
     if (!m) return '';
     const past = history.map((s, i) => `Satz ${i + 1}: ${s.p1}:${s.p2}`).join(' · ');
+    if (m.score.isDone) return past;
     const current = `Satz ${(history.length + 1)} laufend`;
     return past ? `${past} · ${current}` : current;
   });
@@ -344,8 +345,9 @@ export class ScoreComponent implements OnInit {
   private handlePointResponse(updated: MatchWithScore): void {
     const prev = this.matchData();
     if (prev && updated.score.currentSet > prev.score.currentSet) {
-      const p1 = prev.score.gamesPlayer1;
-      const p2 = prev.score.gamesPlayer2;
+      let p1 = prev.score.gamesPlayer1;
+      let p2 = prev.score.gamesPlayer2;
+      if (updated.score.setsPlayer1 > prev.score.setsPlayer1) { p1 += 1; } else { p2 += 1; }
       this.setHistory.update(h => [...h, { p1, p2 }]);
     }
     this.matchData.set(updated);

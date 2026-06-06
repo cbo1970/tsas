@@ -9,7 +9,7 @@ import { By } from '@angular/platform-browser';
 import { ScoreComponent } from './score.component';
 import { ApiService } from '../../../core/services/api.service';
 import { MatchWithScore } from '../../../core/models/match.model';
-import { PointType, StrokeType, Direction, RecordPointRequest } from '../../../core/models/point.model';
+import { PointType, StrokeType } from '../../../core/models/point.model';
 
 const MOCK_SCORE = {
   matchId: 'match-1',
@@ -66,70 +66,141 @@ describe('ScoreComponent — inline scoring', () => {
     fixture.detectChanges();
   });
 
-  it('should default strokeType to FOREHAND for both players', () => {
+  // ── Signal defaults ─────────────────────────────────────────────────────────
+
+  it('should default strokeType to null for both players', () => {
+    expect(component.strokeTypeP1()).toBeNull();
+    expect(component.strokeTypeP2()).toBeNull();
+  });
+
+  it('should default serviceContext to null for both players', () => {
+    expect(component.serviceContextP1()).toBeNull();
+    expect(component.serviceContextP2()).toBeNull();
+  });
+
+  // ── toggleStroke ─────────────────────────────────────────────────────────────
+
+  it('should set strokeType when toggled on', () => {
+    component.toggleStroke(1, 'FOREHAND');
     expect(component.strokeTypeP1()).toBe('FOREHAND');
-    expect(component.strokeTypeP2()).toBe('FOREHAND');
   });
 
-  it('should default direction to CROSS_COURT for both players', () => {
-    expect(component.directionP1()).toBe('CROSS_COURT');
-    expect(component.directionP2()).toBe('CROSS_COURT');
+  it('should clear strokeType when toggled off (same value)', () => {
+    component.toggleStroke(1, 'BACKHAND');
+    component.toggleStroke(1, 'BACKHAND');
+    expect(component.strokeTypeP1()).toBeNull();
   });
 
-  it('should call api.recordPoint directly without opening a dialog', () => {
+  it('should toggle strokeType independently for each panel', () => {
+    component.toggleStroke(1, 'FOREHAND');
+    component.toggleStroke(2, 'BACKHAND');
+    expect(component.strokeTypeP1()).toBe('FOREHAND');
+    expect(component.strokeTypeP2()).toBe('BACKHAND');
+  });
+
+  // ── toggleService ─────────────────────────────────────────────────────────────
+
+  it('should set serviceContext when toggled on', () => {
+    component.toggleService(1, 1);
+    expect(component.serviceContextP1()).toBe(1);
+  });
+
+  it('should clear serviceContext when toggled off (same value)', () => {
+    component.toggleService(2, 2);
+    component.toggleService(2, 2);
+    expect(component.serviceContextP2()).toBeNull();
+  });
+
+  // ── recordQuickPoint ──────────────────────────────────────────────────────────
+
+  it('should call api.recordPoint without pointType for recordQuickPoint', () => {
     mockApi['recordPoint'].mockReturnValue(of(MOCK_MATCH));
-    component.recordPoint(1, 'WINNER');
+    component.recordQuickPoint(1);
     expect(mockDialog['open']).not.toHaveBeenCalled();
-    expect(mockApi['recordPoint']).toHaveBeenCalledWith('match-1', {
-      winner: 1, pointType: 'WINNER',
-      strokeType: 'FOREHAND', direction: 'CROSS_COURT',
-    });
+    expect(mockApi['recordPoint']).toHaveBeenCalledWith('match-1', { winner: 1 });
   });
 
-  it('should send player-specific pre-selection with the point', () => {
+  it('should call api.recordPoint for player 2 via recordQuickPoint', () => {
     mockApi['recordPoint'].mockReturnValue(of(MOCK_MATCH));
-    component.strokeTypeP1.set('BACKHAND');
-    component.directionP1.set('DOWN_THE_LINE');
-    component.recordPoint(1, 'WINNER');
-    expect(mockApi['recordPoint']).toHaveBeenCalledWith('match-1', {
-      winner: 1, pointType: 'WINNER',
-      strokeType: 'BACKHAND', direction: 'DOWN_THE_LINE',
-    });
+    component.recordQuickPoint(2);
+    expect(mockApi['recordPoint']).toHaveBeenCalledWith('match-1', { winner: 2 });
   });
 
-  it('should set serving player on first tile click when no server set', () => {
+  it('should set serving player on recordQuickPoint when no server set (player 1)', () => {
     component.matchData.set({ ...MOCK_MATCH, score: { ...MOCK_SCORE, servingPlayer: null } as any });
     mockApi['setServingPlayer1'].mockReturnValue(of({ ...MOCK_SCORE, servingPlayer: 1 }));
-    component.recordPoint(1, 'WINNER');
+    component.recordQuickPoint(1);
     expect(mockApi['setServingPlayer1']).toHaveBeenCalled();
     expect(mockApi['recordPoint']).not.toHaveBeenCalled();
-    expect(component.matchData()?.score.servingPlayer).toBe(1);
   });
 
-  it('should send player 2-specific pre-selection with the point', () => {
-    mockApi['recordPoint'].mockReturnValue(of(MOCK_MATCH));
-    component.strokeTypeP2.set('BACKHAND');
-    component.directionP2.set('DOWN_THE_LINE');
-    component.recordPoint(2, 'WINNER');
-    expect(mockApi['recordPoint']).toHaveBeenCalledWith('match-1', {
-      winner: 2, pointType: 'WINNER',
-      strokeType: 'BACKHAND', direction: 'DOWN_THE_LINE',
-    });
-  });
-
-  it('should set serving player 2 on first tile click when no server set', () => {
+  it('should set serving player 2 on recordQuickPoint when no server set', () => {
     component.matchData.set({ ...MOCK_MATCH, score: { ...MOCK_SCORE, servingPlayer: null } as any });
     mockApi['setServingPlayer2'].mockReturnValue(of({ ...MOCK_SCORE, servingPlayer: 2 }));
-    component.recordPoint(2, 'WINNER');
+    component.recordQuickPoint(2);
     expect(mockApi['setServingPlayer2']).toHaveBeenCalled();
     expect(mockApi['recordPoint']).not.toHaveBeenCalled();
   });
 
-  it('should not record point when match is completed', () => {
+  it('should not record point when match is completed (recordQuickPoint)', () => {
     component.matchData.set({ ...MOCK_MATCH, status: 'COMPLETED' });
-    component.recordPoint(1, 'WINNER');
+    component.recordQuickPoint(1);
     expect(mockApi['recordPoint']).not.toHaveBeenCalled();
   });
+
+  // ── recordObservation ─────────────────────────────────────────────────────────
+
+  it('should call api.recordPoint with pointType and context for recordObservation', () => {
+    mockApi['recordPoint'].mockReturnValue(of(MOCK_MATCH));
+    component.toggleStroke(1, 'BACKHAND');
+    component.toggleService(1, 1);
+    component.recordObservation(1, 'WINNER');
+    expect(mockApi['recordPoint']).toHaveBeenCalledWith('match-1', {
+      winner: 1,
+      pointType: 'WINNER',
+      serveAttempt: 1,
+      strokeType: 'BACKHAND',
+    });
+  });
+
+  it('should derive correct winner for error observation (opponent wins)', () => {
+    mockApi['recordPoint'].mockReturnValue(of(MOCK_MATCH));
+    component.recordObservation(1, 'UNFORCED_ERROR');
+    expect(mockApi['recordPoint']).toHaveBeenCalledWith('match-1', expect.objectContaining({
+      winner: 2,
+      pointType: 'UNFORCED_ERROR',
+    }));
+  });
+
+  it('should not record point when match is completed (recordObservation)', () => {
+    component.matchData.set({ ...MOCK_MATCH, status: 'COMPLETED' });
+    component.recordObservation(1, 'WINNER');
+    expect(mockApi['recordPoint']).not.toHaveBeenCalled();
+  });
+
+  it('should reset context signals after successful recordObservation', () => {
+    mockApi['recordPoint'].mockReturnValue(of(MOCK_MATCH));
+    component.toggleStroke(1, 'FOREHAND');
+    component.toggleService(1, 2);
+    component.recordObservation(1, 'WINNER');
+    expect(component.strokeTypeP1()).toBeNull();
+    expect(component.serviceContextP1()).toBeNull();
+  });
+
+  it('should reject ACE if the panel is not serving', () => {
+    // MOCK_SCORE has servingPlayer: 2, so panel 1 is NOT serving
+    component.recordObservation(1, 'ACE');
+    expect(mockSnackBar['open']).toHaveBeenCalledWith('Ass nur für den Aufschläger', 'OK', expect.any(Object));
+    expect(mockApi['recordPoint']).not.toHaveBeenCalled();
+  });
+
+  it('should reject DOUBLE_FAULT if the panel is not serving', () => {
+    component.recordObservation(1, 'DOUBLE_FAULT');
+    expect(mockSnackBar['open']).toHaveBeenCalledWith('Doppelfehler nur für den Aufschläger', 'OK', expect.any(Object));
+    expect(mockApi['recordPoint']).not.toHaveBeenCalled();
+  });
+
+  // ── DOM ───────────────────────────────────────────────────────────────────────
 
   it('should render the tennis court container', () => {
     const court = fixture.debugElement.query(By.css('.tennis-court'));
