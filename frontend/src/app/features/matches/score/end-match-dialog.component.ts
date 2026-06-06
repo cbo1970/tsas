@@ -24,22 +24,7 @@ export interface EndMatchDialogResult {
     MatButtonModule,
     MatRadioModule
   ],
-  template: `
-    <h2 mat-dialog-title>Match beenden — w.o.</h2>
-    <mat-dialog-content>
-      <p class="hint">Wähle den Spieler, der das Match durch w.o. gewinnt:</p>
-      <mat-radio-group [(ngModel)]="selectedWinner" class="radio-group">
-        <mat-radio-button value="PLAYER1">{{ data.player1Name }}</mat-radio-button>
-        <mat-radio-button value="PLAYER2">{{ data.player2Name }}</mat-radio-button>
-      </mat-radio-group>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button (click)="cancel()">Abbrechen</button>
-      <button mat-raised-button color="warn" [disabled]="!selectedWinner" (click)="confirm()">
-        Match beenden
-      </button>
-    </mat-dialog-actions>
-  `,
+  templateUrl: './end-match-dialog.component.html',
   styles: [`
     .hint { margin: 0 0 16px; color: #555; }
     .radio-group { display: flex; flex-direction: column; gap: 12px; }

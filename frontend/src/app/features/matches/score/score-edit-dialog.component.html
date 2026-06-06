@@ -1,0 +1,69 @@
+<h2 mat-dialog-title>Score korrigieren</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="edit-form">
+    <div class="row-pair">
+      <mat-form-field appearance="outline">
+        <mat-label>Punkte Spieler 1</mat-label>
+        <input matInput type="number" formControlName="pointsPlayer1" min="0" max="3" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Punkte Spieler 2</mat-label>
+        <input matInput type="number" formControlName="pointsPlayer2" min="0" max="3" />
+      </mat-form-field>
+    </div>
+
+    <div class="row-pair">
+      <mat-form-field appearance="outline">
+        <mat-label>Games Spieler 1</mat-label>
+        <input matInput type="number" formControlName="gamesPlayer1" min="0" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Games Spieler 2</mat-label>
+        <input matInput type="number" formControlName="gamesPlayer2" min="0" />
+      </mat-form-field>
+    </div>
+
+    <div class="row-pair">
+      <mat-form-field appearance="outline">
+        <mat-label>Sätze Spieler 1</mat-label>
+        <input matInput type="number" formControlName="setsPlayer1" min="0" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Sätze Spieler 2</mat-label>
+        <input matInput type="number" formControlName="setsPlayer2" min="0" />
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Aktueller Satz</mat-label>
+      <input matInput type="number" formControlName="currentSet" min="1" />
+    </mat-form-field>
+
+    <div class="checkbox-row">
+      <mat-checkbox formControlName="isDeuce">Deuce</mat-checkbox>
+      <mat-checkbox formControlName="isDone">Match beendet</mat-checkbox>
+    </div>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Advantage (leer = kein Advantage)</mat-label>
+      <mat-select formControlName="isAdvantagePlayer1">
+        <mat-option [value]="null">Kein Advantage</mat-option>
+        <mat-option [value]="true">Spieler 1</mat-option>
+        <mat-option [value]="false">Spieler 2</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Sieger (falls Match beendet)</mat-label>
+      <mat-select formControlName="winner">
+        <mat-option [value]="null">Kein Sieger</mat-option>
+        <mat-option value="PLAYER1">Spieler 1</mat-option>
+        <mat-option value="PLAYER2">Spieler 2</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Abbrechen</button>
+  <button mat-raised-button color="primary" (click)="save()">Speichern</button>
+</mat-dialog-actions>

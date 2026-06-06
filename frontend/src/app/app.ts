@@ -9,28 +9,7 @@ import { AuthService } from './core/auth/auth.service';
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive, MatToolbarModule, MatButtonModule, MatIconModule],
-  template: `
-    <mat-toolbar color="primary">
-      <mat-icon>sports_tennis</mat-icon>
-      <span class="app-title">TSaS – Tennis Score &amp; Statistic</span>
-      <span class="spacer"></span>
-      <a mat-button routerLink="/players" routerLinkActive="active-link">
-        <mat-icon>people</mat-icon> Spieler
-      </a>
-      <a mat-button routerLink="/matches/new" routerLinkActive="active-link">
-        <mat-icon>add_circle</mat-icon> Neues Match
-      </a>
-      @if (userName()) {
-        <span class="user-name">{{ userName() }}</span>
-        <button mat-button (click)="logout()">
-          <mat-icon>logout</mat-icon>
-        </button>
-      }
-    </mat-toolbar>
-    <main>
-      <router-outlet />
-    </main>
-  `,
+  templateUrl: './app.html',
   styles: [`
     :host { display: flex; flex-direction: column; min-height: 100vh; }
     .app-title { margin-left: 12px; font-size: 20px; font-weight: 500; }
