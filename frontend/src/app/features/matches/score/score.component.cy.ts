@@ -6,7 +6,7 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { MatchWithScore } from '../../../core/models/match.model';
 import { Player } from '../../../core/models/player.model';
 
-// ─── Test fixtures ─────────────────────────────────────────────────────────
+// ─── Fixtures ──────────────────────────────────────────────────────────────
 
 const PLAYER1: Player = {
   id: 'p1', firstName: 'Roger', lastName: 'Federer',
@@ -43,7 +43,7 @@ function makeMatch(overrides: Partial<MatchWithScore> = {}): MatchWithScore {
       winner: null,
       acesPlayer1: 0,
       acesPlayer2: 0,
-      servingPlayer: null,
+      servingPlayer: 1,   // default: P1 is serving
     },
     ...overrides,
   };
@@ -71,144 +71,254 @@ function mountScore(match: MatchWithScore = makeMatch()) {
   cy.wait('@getPlayer2');
 }
 
-// ─── Component mount tests ─────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────
 
-describe('ScoreComponent', () => {
+function makeUpdatedScore(pointsP1: number, pointsP2: number): MatchWithScore {
+  return makeMatch({
+    score: { ...makeMatch().score, pointsPlayer1: pointsP1, pointsPlayer2: pointsP2 }
+  });
+}
 
-  describe('initial display', () => {
-    beforeEach(() => mountScore());
+// ─── Layout tests ─────────────────────────────────────────────────────────
 
-    it('shows player names', () => {
-      cy.contains('Roger Federer').should('be.visible');
-      cy.contains('Rafael Nadal').should('be.visible');
-    });
+describe('ScoreComponent — layout', () => {
+  beforeEach(() => mountScore());
 
-    it('shows edit score button', () => {
-      cy.get('[data-testid="edit-score-btn"]').should('be.visible');
-    });
+  it('shows both player names in the header', () => {
+    cy.contains('Roger Federer').should('be.visible');
+    cy.contains('Rafael Nadal').should('be.visible');
+  });
 
-    it('shows end match button for in-progress match', () => {
-      cy.get('[data-testid="end-match-btn"]').should('be.visible');
+  it('shows two observation panels', () => {
+    cy.get('[data-testid="panel-p1"]').should('be.visible');
+    cy.get('[data-testid="panel-p2"]').should('be.visible');
+  });
+
+  it('shows edit-score and end-match buttons', () => {
+    cy.get('[data-testid="edit-score-btn"]').should('be.visible');
+    cy.get('[data-testid="end-match-btn"]').should('be.visible');
+  });
+});
+
+// ─── Quick-click score ─────────────────────────────────────────────────────
+
+describe('ScoreComponent — quick-click', () => {
+  it('sends recordPoint without pointType when clicking P1 score', () => {
+    const updated = makeUpdatedScore(1, 0);
+    cy.intercept('POST', '**/api/matches/match-1/points', updated).as('recordPoint');
+    mountScore();
+
+    cy.get('[data-testid="quick-score-p1"]').click();
+
+    cy.wait('@recordPoint').its('request.body').should(body => {
+      expect(body.winner).to.equal(1);
+      expect(body.pointType).to.be.oneOf([undefined, null]);
     });
   });
 
-  describe('"Match beenden" w.o. dialog', () => {
-    beforeEach(() => mountScore());
+  it('sends winner=2 when clicking P2 score', () => {
+    const updated = makeUpdatedScore(0, 1);
+    cy.intercept('POST', '**/api/matches/match-1/points', updated).as('recordPoint');
+    mountScore();
 
-    it('opens dialog with both player names as radio options', () => {
-      cy.get('[data-testid="end-match-btn"]').click();
-      cy.contains('Roger Federer').should('be.visible');
-      cy.contains('Rafael Nadal').should('be.visible');
+    cy.get('[data-testid="quick-score-p2"]').click();
+
+    cy.wait('@recordPoint').its('request.body').should(body => {
+      expect(body.winner).to.equal(2);
     });
+  });
+});
 
-    it('confirm button is disabled until a player is selected', () => {
-      cy.get('[data-testid="end-match-btn"]').click();
-      cy.get('mat-dialog-actions').contains('button', 'Match beenden').should('be.disabled');
-    });
+// ─── Observation buttons — point attribution ───────────────────────────────
 
-    it('enables confirm button after selecting a player', () => {
-      cy.get('[data-testid="end-match-btn"]').click();
-      cy.get('mat-dialog-container').contains('mat-radio-button', 'Roger Federer').find('input[type="radio"]').check({ force: true });
-      cy.get('mat-dialog-actions').contains('button', 'Match beenden').should('not.be.disabled');
-    });
+describe('ScoreComponent — observation buttons', () => {
 
-    it('calls walkover endpoint with PLAYER1 when player 1 selected and confirmed', () => {
-      cy.intercept('POST', '**/end/walkover', { statusCode: 200, body: { id: 'match-1', status: 'COMPLETED' } }).as('walkover');
-      cy.intercept('GET', '**/api/matches/match-1', makeMatch({ status: 'COMPLETED' })).as('reload');
+  it('Winner on P1 panel → winner=1 in request', () => {
+    const updated = makeUpdatedScore(1, 0);
+    cy.intercept('POST', '**/api/matches/match-1/points', updated).as('recordPoint');
+    mountScore();
 
-      cy.get('[data-testid="end-match-btn"]').click();
-      cy.get('mat-dialog-container').contains('mat-radio-button', 'Roger Federer').find('input[type="radio"]').check({ force: true });
-      cy.get('mat-dialog-actions').contains('button', 'Match beenden').click();
+    cy.get('[data-testid="p1-winner"]').click();
 
-      cy.wait('@walkover').its('request.body').should('deep.equal', { winner: 'PLAYER1' });
-    });
-
-    it('calls walkover endpoint with PLAYER2 when player 2 selected and confirmed', () => {
-      cy.intercept('POST', '**/end/walkover', { statusCode: 200, body: { id: 'match-1', status: 'COMPLETED' } }).as('walkover');
-      cy.intercept('GET', '**/api/matches/match-1', makeMatch({ status: 'COMPLETED' })).as('reload');
-
-      cy.get('[data-testid="end-match-btn"]').click();
-      cy.get('mat-dialog-container').contains('mat-radio-button', 'Rafael Nadal').find('input[type="radio"]').check({ force: true });
-      cy.get('mat-dialog-actions').contains('button', 'Match beenden').click();
-
-      cy.wait('@walkover').its('request.body').should('deep.equal', { winner: 'PLAYER2' });
-    });
-
-    it('does not call walkover endpoint when dialog is cancelled', () => {
-      cy.intercept('POST', '**/end/walkover').as('walkover');
-
-      cy.get('[data-testid="end-match-btn"]').click();
-      cy.contains('button', 'Abbrechen').click();
-
-      cy.get('@walkover.all').should('have.length', 0);
+    cy.wait('@recordPoint').its('request.body').should(body => {
+      expect(body.winner).to.equal(1);
+      expect(body.pointType).to.equal('WINNER');
     });
   });
 
-  describe('completed match', () => {
-    beforeEach(() => {
-      const completedMatch = makeMatch({
-        status: 'COMPLETED',
-        score: {
-          ...makeMatch().score,
-          setsPlayer1: 2,
-          setsPlayer2: 1,
-          isDone: true,
-          winner: 'PLAYER1',
-        },
-      });
-      mountScore(completedMatch);
-    });
+  it('Forced Error on P1 panel → winner=2 (point for opponent)', () => {
+    const updated = makeUpdatedScore(0, 1);
+    cy.intercept('POST', '**/api/matches/match-1/points', updated).as('recordPoint');
+    mountScore();
 
-    it('shows winner card with player name', () => {
-      cy.contains('Sieger: Roger Federer').should('be.visible');
-    });
+    cy.get('[data-testid="p1-forced"]').click();
 
-    it('hides end match button', () => {
-      cy.get('[data-testid="end-match-btn"]').should('not.exist');
+    cy.wait('@recordPoint').its('request.body').should(body => {
+      expect(body.winner).to.equal(2);
+      expect(body.pointType).to.equal('FORCED_ERROR');
     });
+  });
 
-    it('shows "Zurück zur Übersicht" button', () => {
-      cy.contains('button', 'Zurück zur Übersicht').should('be.visible');
+  it('Unforced Error on P1 panel → winner=2', () => {
+    const updated = makeUpdatedScore(0, 1);
+    cy.intercept('POST', '**/api/matches/match-1/points', updated).as('recordPoint');
+    mountScore();
+
+    cy.get('[data-testid="p1-unforced"]').click();
+
+    cy.wait('@recordPoint').its('request.body').should(body => {
+      expect(body.winner).to.equal(2);
+      expect(body.pointType).to.equal('UNFORCED_ERROR');
     });
+  });
+
+  it('Netz on P1 panel → winner=2', () => {
+    const updated = makeUpdatedScore(0, 1);
+    cy.intercept('POST', '**/api/matches/match-1/points', updated).as('recordPoint');
+    mountScore();
+
+    cy.get('[data-testid="p1-net"]').click();
+
+    cy.wait('@recordPoint').its('request.body').should(body => {
+      expect(body.winner).to.equal(2);
+      expect(body.pointType).to.equal('NET');
+    });
+  });
+
+  it('DF on P1 panel (serving) → winner=2, pointType=DOUBLE_FAULT', () => {
+    const updated = makeUpdatedScore(0, 1);
+    cy.intercept('POST', '**/api/matches/match-1/points', updated).as('recordPoint');
+    mountScore(makeMatch()); // P1 is serving by default
+
+    cy.get('[data-testid="p1-df"]').click();
+
+    cy.wait('@recordPoint').its('request.body').should(body => {
+      expect(body.winner).to.equal(2);
+      expect(body.pointType).to.equal('DOUBLE_FAULT');
+    });
+  });
+
+  it('Ass on P1 panel (serving) → winner=1, pointType=ACE', () => {
+    const updated = makeUpdatedScore(1, 0);
+    cy.intercept('POST', '**/api/matches/match-1/points', updated).as('recordPoint');
+    mountScore(makeMatch()); // P1 is serving
+
+    cy.get('[data-testid="p1-ace"]').click();
+
+    cy.wait('@recordPoint').its('request.body').should(body => {
+      expect(body.winner).to.equal(1);
+      expect(body.pointType).to.equal('ACE');
+    });
+  });
+});
+
+// ─── Ass / DF validation ───────────────────────────────────────────────────
+
+describe('ScoreComponent — Ass/DF validation', () => {
+
+  it('Ass on non-serving P2 panel → shows snackbar, no API call', () => {
+    cy.intercept('POST', '**/api/matches/match-1/points').as('recordPoint');
+    // P1 is serving (servingPlayer: 1)
+    mountScore(makeMatch());
+
+    cy.get('[data-testid="p2-ace"]').click();
+
+    cy.contains('Ass nur für den Aufschläger').should('be.visible');
+    cy.get('@recordPoint.all').should('have.length', 0);
+  });
+
+  it('DF on non-serving P2 panel → shows snackbar, no API call', () => {
+    cy.intercept('POST', '**/api/matches/match-1/points').as('recordPoint');
+    mountScore(makeMatch());
+
+    cy.get('[data-testid="p2-df"]').click();
+
+    cy.contains('Doppelfehler nur für den Aufschläger').should('be.visible');
+    cy.get('@recordPoint.all').should('have.length', 0);
+  });
+});
+
+// ─── Service context ───────────────────────────────────────────────────────
+
+describe('ScoreComponent — service context', () => {
+
+  it('selecting 1. Service on P1 panel sends serveAttempt=1 in request', () => {
+    const updated = makeUpdatedScore(1, 0);
+    cy.intercept('POST', '**/api/matches/match-1/points', updated).as('recordPoint');
+    mountScore();
+
+    cy.get('[data-testid="p1-service-1"]').click();
+    cy.get('[data-testid="p1-winner"]').click();
+
+    cy.wait('@recordPoint').its('request.body').should(body => {
+      expect(body.serveAttempt).to.equal(1);
+    });
+  });
+
+  it('context is reset after recording a point', () => {
+    const updated = makeUpdatedScore(1, 0);
+    cy.intercept('POST', '**/api/matches/match-1/points', updated).as('recordPoint');
+    mountScore();
+
+    cy.get('[data-testid="p1-service-1"]').click();
+    cy.get('[data-testid="p1-service-1"]').should('have.class', 'active');
+
+    cy.get('[data-testid="p1-winner"]').click();
+    cy.wait('@recordPoint');
+
+    // After point, service context should be cleared
+    cy.get('[data-testid="p1-service-1"]').should('not.have.class', 'active');
+  });
+});
+
+// ─── Completed match ───────────────────────────────────────────────────────
+
+describe('ScoreComponent — completed match', () => {
+  beforeEach(() => {
+    const completedMatch = makeMatch({
+      status: 'COMPLETED',
+      score: {
+        ...makeMatch().score,
+        setsPlayer1: 2,
+        setsPlayer2: 1,
+        isDone: true,
+        winner: 'PLAYER1',
+      },
+    });
+    mountScore(completedMatch);
+  });
+
+  it('shows winner overlay with player name', () => {
+    cy.contains('Sieger: Roger Federer').should('be.visible');
+  });
+
+  it('hides end match button', () => {
+    cy.get('[data-testid="end-match-btn"]').should('not.exist');
+  });
+
+  it('shows Zurück zur Übersicht button', () => {
+    cy.contains('button', 'Zurück zur Übersicht').should('be.visible');
   });
 });
 
 // ─── Pure-logic tests for formatPoints ────────────────────────────────────
 
 describe('formatPoints logic', () => {
-  // Mirror the function from ScoreComponent for isolated unit testing
-  function formatPoints(
-    score: MatchWithScore['score'],
-    forPlayer1: boolean
-  ): string {
+  function formatPoints(score: MatchWithScore['score'], forPlayer1: boolean): string {
     if (score.isDeuce) {
-      if (score.isAdvantagePlayer1 === null || score.isAdvantagePlayer1 === undefined) {
-        return '40';
-      }
+      if (score.isAdvantagePlayer1 === null || score.isAdvantagePlayer1 === undefined) return '40';
       return score.isAdvantagePlayer1 === forPlayer1 ? 'A' : '40';
     }
     const pts = forPlayer1 ? score.pointsPlayer1 : score.pointsPlayer2;
-    const map = ['0', '15', '30', '40'];
-    return map[pts] ?? pts.toString();
+    return (['0', '15', '30', '40'] as const)[pts] ?? pts.toString();
   }
 
   const base = makeMatch().score;
 
-  it('0 points → "0"', () => {
-    expect(formatPoints({ ...base, pointsPlayer1: 0 }, true)).to.equal('0');
-  });
-
-  it('1 point → "15"', () => {
-    expect(formatPoints({ ...base, pointsPlayer1: 1 }, true)).to.equal('15');
-  });
-
-  it('2 points → "30"', () => {
-    expect(formatPoints({ ...base, pointsPlayer1: 2 }, true)).to.equal('30');
-  });
-
-  it('3 points → "40"', () => {
-    expect(formatPoints({ ...base, pointsPlayer1: 3 }, true)).to.equal('40');
-  });
+  it('0 points → "0"',  () => expect(formatPoints({ ...base, pointsPlayer1: 0 }, true)).to.equal('0'));
+  it('1 point → "15"',  () => expect(formatPoints({ ...base, pointsPlayer1: 1 }, true)).to.equal('15'));
+  it('2 points → "30"', () => expect(formatPoints({ ...base, pointsPlayer1: 2 }, true)).to.equal('30'));
+  it('3 points → "40"', () => expect(formatPoints({ ...base, pointsPlayer1: 3 }, true)).to.equal('40'));
 
   it('deuce without advantage → "40" for both', () => {
     const score = { ...base, isDeuce: true, isAdvantagePlayer1: null };
