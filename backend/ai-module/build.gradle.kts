@@ -6,7 +6,6 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-validation")
-    implementation("com.fasterxml.jackson.core:jackson-databind")
     implementation(platform("org.springframework.ai:spring-ai-bom:2.0.0-M6"))
     implementation("org.springframework.ai:spring-ai-starter-model-openai")
 
