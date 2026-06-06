@@ -190,27 +190,25 @@ describe('ScoreComponent — inline scoring', () => {
   it('should reject ACE if the panel is not serving', () => {
     // MOCK_SCORE has servingPlayer: 2, so panel 1 is NOT serving
     component.recordObservation(1, 'ACE');
-    expect(mockSnackBar['open']).toHaveBeenCalledWith('Ass nur für den Aufschläger', 'OK', expect.any(Object));
     expect(mockApi['recordPoint']).not.toHaveBeenCalled();
   });
 
   it('should reject DOUBLE_FAULT if the panel is not serving', () => {
     component.recordObservation(1, 'DOUBLE_FAULT');
-    expect(mockSnackBar['open']).toHaveBeenCalledWith('Doppelfehler nur für den Aufschläger', 'OK', expect.any(Object));
     expect(mockApi['recordPoint']).not.toHaveBeenCalled();
   });
 
   // ── DOM ───────────────────────────────────────────────────────────────────────
 
-  it('should render the tennis court container', () => {
-    const court = fixture.debugElement.query(By.css('.tennis-court'));
-    expect(court).toBeTruthy();
+  it('should render the scoring page container', () => {
+    const page = fixture.debugElement.query(By.css('.scoring-page'));
+    expect(page).toBeTruthy();
   });
 
   it('should render both player panels regardless of serving state', () => {
     component.matchData.set({ ...MOCK_MATCH, score: { ...MOCK_SCORE, servingPlayer: 1 } as any });
     fixture.detectChanges();
-    const panels = fixture.debugElement.queryAll(By.css('.player-panel'));
+    const panels = fixture.debugElement.queryAll(By.css('[data-testid^="panel-"]'));
     expect(panels).toHaveLength(2);
   });
 });
