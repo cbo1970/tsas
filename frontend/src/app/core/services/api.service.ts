@@ -11,6 +11,7 @@ import {
   SetScoreRequest
 } from '../models/match.model';
 import { RecordPointRequest } from '../models/point.model';
+import { MatchStatistics } from '../models/statistics.model';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -77,5 +78,9 @@ export class ApiService {
 
   endMatchWalkover(matchId: string, winner: 'PLAYER1' | 'PLAYER2'): Observable<Match> {
     return this.http.post<Match>(`${this.base}/matches/${matchId}/end/walkover`, { winner });
+  }
+
+  getMatchStatistics(matchId: string): Observable<MatchStatistics> {
+    return this.http.get<MatchStatistics>(`${this.base}/matches/${matchId}/statistics`);
   }
 }
