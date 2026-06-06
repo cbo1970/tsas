@@ -1,15 +1,13 @@
 export type PointType =
   | 'WINNER' | 'UNFORCED_ERROR' | 'FORCED_ERROR'
-  | 'ACE' | 'DOUBLE_FAULT' | 'NET' | 'OUT_LONG' | 'OUT_SIDE';
+  | 'ACE' | 'DOUBLE_FAULT' | 'NET';
 
-export type StrokeType = 'FOREHAND' | 'BACKHAND' | 'SERVE' | 'VOLLEY' | 'SMASH';
-
-export type Direction = 'CROSS_COURT' | 'DOWN_THE_LINE' | 'MIDDLE';
+export type StrokeType = 'FOREHAND' | 'BACKHAND';
 
 export interface RecordPointRequest {
   winner: 1 | 2;
-  pointType: PointType;
-  strokeType?: StrokeType;
-  direction?: Direction;
+  pointType?: PointType | null;
+  strokeType?: StrokeType | null;
+  serveAttempt?: 1 | 2 | null;
   remark?: string;
 }
