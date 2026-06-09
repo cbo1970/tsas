@@ -1,0 +1,120 @@
+<mxfile host="app.diagrams.net" type="device">
+  <diagram id="tsas-cloud-deploy-icons" name="TSaS Cloud Deployment (EU, Icons)">
+    <mxGraphModel dx="1200" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1320" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="title" value="TSaS — Betrieb auf europäischer Infrastruktur (Hetzner Cloud, CLI-betrieben) — Icon-Variante" style="text;html=1;align=center;verticalAlign=middle;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="320" y="25" width="820" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="hz" value="Hetzner Cloud · Region Nürnberg / Falkenstein (EU / DE)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#9AA7B5;verticalAlign=top;fontStyle=1;fontSize=13;arcSize=3;" vertex="1" parent="1">
+          <mxGeometry x="320" y="70" width="820" height="1190" as="geometry" />
+        </mxCell>
+        <mxCell id="hzcloud" value="" style="sketch=0;html=1;outlineConnect=0;shape=mxgraph.networks.cloud;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1062" y="82" width="60" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="pnet" value="Privates Netzwerk 10.0.0.0/16  —  Datenbank ohne öffentliche IP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#6c8ebf;dashed=1;verticalAlign=top;fontStyle=2;fontSize=12;arcSize=2;" vertex="1" parent="1">
+          <mxGeometry x="360" y="360" width="760" height="800" as="geometry" />
+        </mxCell>
+        <mxCell id="appvm" value="App-Server VM (Docker Host · CPX31)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0F4F8;strokeColor=#7A93A8;verticalAlign=top;fontStyle=1;fontSize=12;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="390" y="410" width="700" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="dbvm" value="DB-Server VM (CPX21) · privat" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0F4F8;strokeColor=#7A93A8;verticalAlign=top;fontStyle=1;fontSize=12;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="390" y="820" width="330" height="210" as="geometry" />
+        </mxCell>
+
+        <mxCell id="hzapi" value="Hetzner API&#10;(hcloud / Terraform)" style="sketch=0;html=1;outlineConnect=0;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=#ffffff;shape=mxgraph.networks.server;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="980" y="120" width="60" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="fw" value="Cloud Firewall&#10;443/80 Welt · SSH 22 Admin-IP" style="sketch=0;html=1;outlineConnect=0;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=#ffffff;shape=mxgraph.networks.firewall;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="555" y="130" width="70" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="lb" value="Load Balancer (TLS)&#10;= Application Gateway" style="sketch=0;html=1;outlineConnect=0;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=#ffffff;shape=mxgraph.networks.load_balancer;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="558" y="260" width="64" height="64" as="geometry" />
+        </mxCell>
+
+        <mxCell id="traefik" value="Traefik — Reverse Proxy&#10;TLS · Routing /,/api,auth.*" style="sketch=0;html=1;outlineConnect=0;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=#ffffff;shape=mxgraph.networks.router;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="703" y="450" width="64" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="fe" value="frontend&#10;Nginx + Angular SPA" style="sketch=0;html=1;outlineConnect=0;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=#ffffff;shape=mxgraph.networks.server;fillColor=#ffffff;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="455" y="630" width="60" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="be" value="backend&#10;Spring Boot :8080" style="sketch=0;html=1;outlineConnect=0;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=#ffffff;shape=mxgraph.networks.server;fillColor=#ffffff;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="705" y="630" width="60" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="kc" value="keycloak :8443&#10;Realm tsas (OAuth2/OIDC)" style="sketch=0;html=1;outlineConnect=0;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=#ffffff;shape=mxgraph.networks.secure_terminal;fillColor=#ffffff;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="950" y="630" width="60" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="pg" value="PostgreSQL 16 :5432&#10;(nur privates Netz)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;verticalLabelPosition=bottom;verticalAlign=top;labelPosition=center;" vertex="1" parent="1">
+          <mxGeometry x="470" y="855" width="120" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="backup" value="Object Storage (EU)&#10;pg_dump + Snapshots" style="sketch=0;html=1;outlineConnect=0;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=#ffffff;shape=mxgraph.networks.storage;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="820" y="865" width="64" height="64" as="geometry" />
+        </mxCell>
+
+        <mxCell id="mon" value="Monitoring (optional): Prometheus + Grafana + Loki (self-hosted, EU)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="360" y="1185" width="370" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="sec" value="Secrets: SOPS + age / Docker Secrets (OPENAI_API_KEY, DB-PW, KC-Admin)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="750" y="1185" width="370" height="55" as="geometry" />
+        </mxCell>
+
+        <mxCell id="uCoach" value="Coach / Browser&#10;(HTTPS)" style="sketch=0;html=1;outlineConnect=0;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=#ffffff;shape=umlActor;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="90" y="120" width="40" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="uAdmin" value="Operator&#10;hcloud CLI / SSH" style="sketch=0;html=1;outlineConnect=0;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=#ffffff;shape=umlActor;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="90" y="260" width="40" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="dns" value="DNS (EU-Registrar)&#10;A-Record → LB-IP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="40" y="420" width="210" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cicd" value="GitHub Actions (CI/CD)&#10;build + Coverage-Gate&#10;→ EU Image-Registry → deploy (SSH/hcloud)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="40" y="510" width="230" height="110" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e1" value="HTTPS 443" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="uCoach" target="fw">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="443" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="fw" target="lb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="TLS" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="lb" target="traefik">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="/" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="traefik" target="fe">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="/api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="traefik" target="be">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" value="auth.*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="traefik" target="kc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" value="JDBC 5432 (privat)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="be" target="pg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" value="JWKS (privat)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;dashed=1;" edge="1" parent="1" source="be" target="kc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" value="pg_dump" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="pg" target="backup">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" value="hcloud / Terraform" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;dashed=1;" edge="1" parent="1" source="uAdmin" target="hzapi">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" value="SSH 22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;dashed=1;" edge="1" parent="1" source="uAdmin" target="fw">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" value="A-Record" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;dashed=1;" edge="1" parent="1" source="dns" target="lb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" value="deploy (SSH)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;dashed=1;" edge="1" parent="1" source="cicd" target="appvm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
