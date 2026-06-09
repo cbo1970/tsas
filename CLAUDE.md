@@ -77,6 +77,25 @@ JAVA_HOME=/opt/java/jdk-25.0.1 ./gradlew check
 JAVA_HOME=/opt/java/jdk-25.0.1 ./gradlew build
 ```
 
+#### Test coverage (JaCoCo)
+
+Coverage is aggregated across all modules (integration tests live in `:app` but
+exercise classes everywhere, so a per-module report would under-count). A gate is
+wired into `check` and fails the build below **85% line / 70% branch** coverage.
+The IT tests need a container runtime — point `DOCKER_HOST` at the Podman socket.
+
+```bash
+# Aggregated HTML/XML/CSV report -> backend/build/reports/jacoco/jacocoRootReport/
+JAVA_HOME=/opt/java/jdk-25.0.1 DOCKER_HOST=unix:///var/run/docker.sock \
+  TESTCONTAINERS_RYUK_DISABLED=true ./gradlew jacocoRootReport
+
+# The coverage gate on its own (also runs as part of `check`)
+JAVA_HOME=/opt/java/jdk-25.0.1 DOCKER_HOST=unix:///var/run/docker.sock \
+  TESTCONTAINERS_RYUK_DISABLED=true ./gradlew jacocoRootCoverageVerification
+```
+
+Thresholds live in `backend/build.gradle.kts` (`violationRules`).
+
 ### Frontend (Angular — not yet scaffolded)
 
 ```bash
