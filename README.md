@@ -90,12 +90,49 @@ Das `test`-Profil wird ausschliesslich von der automatisierten Test-Suite verwen
 
 ## Tests ausführen
 
+### Backend
+
 ```bash
 cd backend
 JAVA_HOME=/opt/java/jdk-25.0.1 ./gradlew test
 ```
 
-Integration Tests nutzen Testcontainers (PostgreSQL). Kein laufendes Keycloak erforderlich — JWT-Validierung wird via Spring Security Test gemockt.
+Integration Tests nutzen Testcontainers (PostgreSQL) — ein Container-Runtime (Docker/Podman) muss laufen. Kein laufendes Keycloak erforderlich; JWT-Validierung wird via Spring Security Test gemockt.
+
+#### Coverage (JaCoCo)
+
+Die Coverage wird modulübergreifend aggregiert (Integrationstests liegen im `app`-Modul, decken aber Klassen aller Module ab). Ein **Coverage-Gate** ist in `check` eingehängt und bricht den Build unter **85 % Line / 70 % Branch**:
+
+```bash
+# Aggregierter HTML/XML/CSV-Report -> backend/build/reports/jacoco/jacocoRootReport/
+JAVA_HOME=/opt/java/jdk-25.0.1 ./gradlew jacocoRootReport
+
+# Nur das Gate (läuft auch als Teil von `check`)
+JAVA_HOME=/opt/java/jdk-25.0.1 ./gradlew jacocoRootCoverageVerification
+```
+
+> Auf macOS mit rootless Podman zusätzlich voranstellen: `DOCKER_HOST=unix:///var/run/docker.sock TESTCONTAINERS_RYUK_DISABLED=true`. Die Schwellen liegen in `backend/build.gradle.kts` (`violationRules`).
+
+### Frontend
+
+```bash
+cd frontend
+npx ng test --no-watch       # Unit-Tests (Vitest)
+npx cypress run --component   # Komponententests (Cypress)
+```
+
+---
+
+## Continuous Integration
+
+GitHub Actions führt bei jedem Push und Pull Request auf `develop` und `main` zwei Workflows aus:
+
+| Workflow | Datei | Inhalt |
+|----------|-------|--------|
+| **Backend CI** | `.github/workflows/backend-ci.yml` | `./gradlew check` (Tests + JaCoCo-Coverage-Gate) auf Ubuntu / JDK 25; lädt den aggregierten Coverage-Report als Artifact hoch. |
+| **Frontend CI** | `.github/workflows/frontend-ci.yml` | `ng build` + Vitest-Unit-Tests + Cypress-Komponententests auf Node 22. |
+
+Beide Checks sind auf `develop` und `main` als **required status checks** konfiguriert (Branch Protection) — ein PR kann erst gemergt werden, wenn beide grün sind. Auf `ubuntu-latest` ist Docker nativ vorhanden, sodass Testcontainers ohne Zusatzkonfiguration läuft.
 
 ---
 

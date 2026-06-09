@@ -128,7 +128,9 @@ tsas/
 │       ├── application.yml          # Production config (PostgreSQL)
 │       └── application-local.yml    # Local dev config (H2 in-memory)
 ├── doc/
-│   └── tsas_sad.md                  # Software Architecture Document (German)
+│   └── sad/
+│       └── TSaS_SAD_arc42_1.md      # Software Architecture Document (arc42, German)
+├── .github/workflows/              # CI: backend-ci.yml, frontend-ci.yml
 └── CLAUDE.md
 ```
 
