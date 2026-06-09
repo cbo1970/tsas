@@ -72,6 +72,13 @@ export class StatisticsComponent implements OnInit {
     return Math.round(value * 100) + '%';
   }
 
+  goToAnalysis() {
+    this.router.navigate(
+      ['/matches', this.matchId, 'analysis'],
+      { queryParams: { p1: this.p1Name(), p2: this.p2Name() } }
+    );
+  }
+
   goBack() {
     this.router.navigate(['/players']);
   }

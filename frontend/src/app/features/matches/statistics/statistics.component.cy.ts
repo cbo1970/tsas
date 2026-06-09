@@ -99,4 +99,13 @@ describe('StatisticsComponent', () => {
     cy.get('[data-testid="back-btn"]').click();
     cy.get('@routerNavigate').should('have.been.calledWith', ['/players']);
   });
+
+  it('navigates to the analysis page with player names when analysis button clicked', () => {
+    const navigateSpy = cy.stub().as('routerNavigate');
+    mountStats([{ provide: Router, useValue: { navigate: navigateSpy } }]);
+    cy.get('[data-testid="analysis-btn"]').click();
+    cy.get('@routerNavigate').should('have.been.calledWith',
+      ['/matches', 'match-1', 'analysis'],
+      { queryParams: { p1: 'Müller', p2: 'Meier' } });
+  });
 });

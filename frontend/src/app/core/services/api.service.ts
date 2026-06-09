@@ -12,6 +12,7 @@ import {
 } from '../models/match.model';
 import { RecordPointRequest } from '../models/point.model';
 import { MatchStatistics } from '../models/statistics.model';
+import { MatchAnalysis } from '../models/analysis.model';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -82,5 +83,14 @@ export class ApiService {
 
   getMatchStatistics(matchId: string): Observable<MatchStatistics> {
     return this.http.get<MatchStatistics>(`${this.base}/matches/${matchId}/statistics`);
+  }
+
+  // AI match analysis
+  getMatchAnalysis(matchId: string): Observable<MatchAnalysis> {
+    return this.http.get<MatchAnalysis>(`${this.base}/matches/${matchId}/analysis`);
+  }
+
+  generateMatchAnalysis(matchId: string): Observable<MatchAnalysis> {
+    return this.http.post<MatchAnalysis>(`${this.base}/matches/${matchId}/analysis`, {});
   }
 }

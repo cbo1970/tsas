@@ -26,5 +26,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () =>
       import('./features/matches/statistics/statistics.component').then(m => m.StatisticsComponent)
+  },
+  {
+    path: 'matches/:id/analysis',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/matches/analysis/match-analysis.component').then(m => m.MatchAnalysisComponent)
   }
 ];

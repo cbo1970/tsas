@@ -1,0 +1,80 @@
+<div class="page" data-testid="analysis-page">
+
+  <div class="title">Taktische Analyse</div>
+  <div class="subtitle">{{ p1Name() }} vs {{ p2Name() }}</div>
+
+  @if (hasResult()) {
+    <div class="meta" data-testid="analysis-meta">
+      Erstellt {{ analysis()!.generatedAt | date:'dd.MM.yyyy HH:mm' }}
+      @if (analysis()!.modelUsed) { · {{ analysis()!.modelUsed }} }
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="centered" data-testid="loading-spinner">
+      <mat-spinner [diameter]="40"></mat-spinner>
+      <div class="hint">Analyse wird geladen …</div>
+    </div>
+  } @else {
+
+    @if (generating()) {
+      <div class="centered" data-testid="generating-spinner">
+        <mat-spinner [diameter]="48"></mat-spinner>
+        <div class="hint">Analyse wird generiert … Dies kann bis zu 60 Sekunden dauern.</div>
+      </div>
+    }
+
+    @if (displayError(); as msg) {
+      <div class="error-box" data-testid="error-msg">{{ msg }}</div>
+    }
+
+    @if (hasResult() && !generating()) {
+      <div data-testid="analysis-result">
+        @for (section of textSections(); track section.key) {
+          <div class="section" [attr.data-testid]="'section-' + section.key">
+            <div class="section-label">{{ section.label }}</div>
+            <div class="section-text">{{ section.value }}</div>
+          </div>
+        }
+
+        @if (recommendations().length) {
+          <div class="rec-heading">Empfehlungen</div>
+          @for (rec of recommendations(); track rec.priority) {
+            <div class="rec" data-testid="recommendation">
+              <div class="rec-prio">{{ rec.priority }}</div>
+              <div class="rec-body">
+                <div class="rec-title">{{ rec.title }}</div>
+                @if (rec.detail) { <div class="rec-detail">{{ rec.detail }}</div> }
+              </div>
+            </div>
+          }
+        }
+      </div>
+
+      <div class="actions">
+        <button mat-stroked-button data-testid="regenerate-btn" (click)="generate()">
+          Neu generieren
+        </button>
+      </div>
+    } @else if (!generating()) {
+      <div class="centered" data-testid="empty-state">
+        @if (!displayError()) {
+          <div class="hint">
+            Für dieses beendete Match kann eine KI-gestützte taktische Analyse
+            erstellt werden. Die Generierung kann bis zu 60 Sekunden dauern.
+          </div>
+        }
+        <button mat-flat-button color="primary" data-testid="generate-btn" (click)="generate()">
+          {{ analysis() ? 'Erneut versuchen' : 'Taktische Analyse generieren' }}
+        </button>
+      </div>
+    }
+  }
+
+  <div class="back-row">
+    <button mat-flat-button data-testid="back-btn" (click)="goBack()">
+      Zur Spielerübersicht
+    </button>
+  </div>
+
+</div>
