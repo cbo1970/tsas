@@ -18,6 +18,11 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * REST adapter exposing the player use cases under {@code /api/players}.
+ * Player responses are enriched with a deletable flag (derived from whether the
+ * player has any matches) and the id of an active match, if any.
+ */
 @RestController
 @RequestMapping("/api/players")
 public class PlayerController {
@@ -97,6 +102,7 @@ public class PlayerController {
         return PlayerResponse.from(player, !deletePlayerUseCase.hasMatches(id), activeMatchIds.get(id));
     }
 
+    /** Soft-deletes the player; used when a hard delete is refused due to existing matches. */
     @PatchMapping("/{id}/deactivate")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deactivatePlayer(@PathVariable UUID id) {

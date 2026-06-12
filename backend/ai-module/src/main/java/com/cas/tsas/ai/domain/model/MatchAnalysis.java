@@ -4,6 +4,11 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Result aggregate of an AI match analysis, held 1:1 against a match. A COMPLETED analysis
+ * carries the generated text and recommendations; a FAILED one carries an {@code errorMessage}
+ * describing why generation did not succeed.
+ */
 public class MatchAnalysis {
 
     private UUID id;

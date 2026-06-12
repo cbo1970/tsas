@@ -12,8 +12,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.cas.tsas.ai.infrastructure.config.PromptProperties;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -96,6 +98,7 @@ class OpenAiLlmAdapterTest {
 
     @SpringBootConfiguration
     @EnableAutoConfiguration
+    @EnableConfigurationProperties(PromptProperties.class)
     @ComponentScan(basePackages = "com.cas.tsas.ai.infrastructure.llm")
     static class TestApp {}
 }

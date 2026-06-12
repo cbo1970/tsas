@@ -4,6 +4,7 @@ import com.cas.tsas.player.domain.model.Player;
 import com.cas.tsas.player.infrastructure.persistence.entity.PlayerJpaEntity;
 import org.springframework.stereotype.Component;
 
+/** Maps between {@link Player} domain objects and {@link PlayerJpaEntity}. */
 @Component
 public class PlayerMapper {
 

@@ -17,6 +17,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * Persistence adapter backing the match output ports as well as the
+ * player-module ports that query match data ({@link HasMatchesPort},
+ * {@link FindActiveMatchPort}). Maps between {@link Match} domain objects and
+ * {@link MatchJpaEntity} via {@link MatchMapper}.
+ */
 @Component
 public class MatchPersistenceAdapter implements LoadMatchPort, SaveMatchPort, HasMatchesPort, FindActiveMatchPort {
 

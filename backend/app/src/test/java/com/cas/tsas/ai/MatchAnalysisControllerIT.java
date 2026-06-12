@@ -20,9 +20,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -62,7 +64,8 @@ class MatchAnalysisControllerIT extends AbstractIntegrationTest {
         UUID matchId = createMatch(MatchStatus.COMPLETED, 15);
 
         mockMvc.perform(post("/api/matches/{id}/analysis", matchId).with(jwt()))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", containsString("/api/matches/" + matchId + "/analysis")))
                 .andExpect(jsonPath("$.status").value("COMPLETED"))
                 .andExpect(jsonPath("$.modelUsed").value("fake-llm"))
                 .andExpect(jsonPath("$.recommendations").isArray())

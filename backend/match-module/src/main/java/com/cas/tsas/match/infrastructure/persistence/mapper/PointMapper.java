@@ -4,6 +4,7 @@ import com.cas.tsas.match.domain.model.Point;
 import com.cas.tsas.match.infrastructure.persistence.entity.PointJpaEntity;
 import org.springframework.stereotype.Component;
 
+/** Maps between {@link Point} domain objects and {@link PointJpaEntity}. */
 @Component
 public class PointMapper {
 

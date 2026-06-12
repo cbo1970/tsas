@@ -3,8 +3,16 @@ package com.cas.tsas.match.domain.model;
 import java.util.UUID;
 
 /**
- * Domain entity representing the running score of a match.
- * Pure POJO — no framework dependencies.
+ * Domain entity representing the running score of a match: current points, games and
+ * sets per player, plus deuce/advantage state, the active set, the serving player and
+ * the final winner once decided. Mutated incrementally by {@code ScoringService} as
+ * points are applied. Pure POJO — no framework dependencies.
+ *
+ * <p>Expected invariants: counters are non-negative, {@code currentSet} ≥ 1,
+ * {@code servingPlayer} ∈ {1, 2, null}, {@code winner} ∈ {"PLAYER1", "PLAYER2", null},
+ * and {@code isAdvantagePlayer1} is only meaningful while {@code isDeuce} is true. These
+ * are upheld by the scoring logic rather than enforced per setter, since the score is
+ * built up through many small mutations.
  */
 public class MatchScore {
 

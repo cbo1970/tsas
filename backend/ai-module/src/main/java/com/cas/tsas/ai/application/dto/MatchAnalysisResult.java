@@ -4,6 +4,7 @@ import com.cas.tsas.ai.domain.model.Recommendation;
 
 import java.util.List;
 
+/** Structured analysis returned by the LLM, before it is mapped onto a {@link com.cas.tsas.ai.domain.model.MatchAnalysis}. */
 public record MatchAnalysisResult(
         String keyMoments,
         String ownStrengths,

@@ -13,6 +13,11 @@ import java.util.UUID;
 
 
 
+/**
+ * Persistence adapter implementing the player output ports (load, save,
+ * delete), mapping between {@link Player} and its JPA entity via
+ * {@link PlayerMapper}.
+ */
 @Component
 public class PlayerPersistenceAdapter implements LoadPlayerPort, SavePlayerPort, DeletePlayerPort {
 

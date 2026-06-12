@@ -4,6 +4,7 @@ import com.cas.tsas.match.domain.model.Match;
 import com.cas.tsas.match.infrastructure.persistence.entity.MatchJpaEntity;
 import org.springframework.stereotype.Component;
 
+/** Maps between {@link Match} domain objects and {@link MatchJpaEntity}. */
 @Component
 public class MatchMapper {
 

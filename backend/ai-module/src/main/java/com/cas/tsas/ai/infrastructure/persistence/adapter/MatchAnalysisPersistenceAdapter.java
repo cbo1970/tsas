@@ -15,6 +15,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Persistence adapter for {@link MatchAnalysis}, mapping between the domain model and the JPA
+ * entity. The recommendation list has no own table and is stored as a JSON string column.
+ */
 @Component
 public class MatchAnalysisPersistenceAdapter implements SaveMatchAnalysisPort, LoadMatchAnalysisPort {
 
@@ -71,6 +75,7 @@ public class MatchAnalysisPersistenceAdapter implements SaveMatchAnalysisPort, L
         return a;
     }
 
+    /** Serialises the recommendations to a JSON array string (empty array for {@code null}). */
     private String writeJson(List<Recommendation> list) {
         try {
             return objectMapper.writeValueAsString(list == null ? List.of() : list);
@@ -79,6 +84,7 @@ public class MatchAnalysisPersistenceAdapter implements SaveMatchAnalysisPort, L
         }
     }
 
+    /** Deserialises the stored JSON back into recommendations; blank/null yields an empty list. */
     private List<Recommendation> readJson(String json) {
         if (json == null || json.isBlank()) return List.of();
         try {

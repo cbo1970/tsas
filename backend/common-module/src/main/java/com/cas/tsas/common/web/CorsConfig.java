@@ -9,6 +9,8 @@ import org.springframework.web.filter.CorsFilter;
 
 import java.util.List;
 
+/** Registers a {@link CorsFilter} for {@code /api/**}, allowing the configured frontend origins
+ *  with credentials. */
 @Configuration
 @EnableConfigurationProperties(CorsProperties.class)
 public class CorsConfig {

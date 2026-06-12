@@ -1,24 +1,37 @@
 package com.cas.tsas.ai.infrastructure.llm;
 
 import com.cas.tsas.ai.application.dto.MatchMetadata;
+import com.cas.tsas.ai.infrastructure.config.PromptProperties;
 import com.cas.tsas.statistics.domain.model.MatchStatistics;
 import com.cas.tsas.statistics.domain.model.PlayerStatistics;
 import org.springframework.stereotype.Component;
 
 import java.util.Locale;
 
+/**
+ * Builds the system and user prompts sent to the LLM from match statistics and metadata.
+ *
+ * <p>The fixed prompt texts (system instruction, user instruction) are externalised via
+ * {@link PromptProperties}; this class only assembles the variable, data-driven part.
+ */
 @Component
 public class PromptBuilder {
 
-    public String systemPrompt() {
-        return """
-                Du bist ein erfahrener Tennis-Coach.
-                Analysiere die übergebenen Match-Statistiken und liefere eine strukturierte taktische Auswertung.
-                Antworte ausschließlich in deutscher Sprache.
-                Halte dich strikt an das vorgegebene JSON-Schema. Liefere 3 bis 5 priorisierte Empfehlungen.
-                """;
+    private final PromptProperties prompts;
+
+    public PromptBuilder(PromptProperties prompts) {
+        this.prompts = prompts;
     }
 
+    /** Returns the externalised system prompt that frames the LLM's role. */
+    public String systemPrompt() {
+        return prompts.system();
+    }
+
+    /**
+     * Renders the user prompt: player metadata and the match format header, followed by the
+     * per-player statistics block, closed by the externalised user instruction.
+     */
     public String userPrompt(MatchStatistics s, MatchMetadata m) {
         StringBuilder sb = new StringBuilder();
         sb.append("Spieler 1: ").append(m.player1().fullName())
@@ -40,10 +53,12 @@ public class PromptBuilder {
         sb.append("\n");
         appendPlayer(sb, "Spieler 2", s.player2());
 
-        sb.append("\nLiefere als Auswertung die vier Textfelder und 3-5 priorisierte Empfehlungen.");
+        sb.append("\n").append(prompts.userInstruction());
         return sb.toString();
     }
 
+    /** Appends one player's statistics block (counts, serve percentages, distributions) under
+     *  the given label, formatting the percentages with German locale. */
     private void appendPlayer(StringBuilder sb, String label, PlayerStatistics p) {
         sb.append(label).append(":\n");
         sb.append("  Punkte gewonnen: ").append(p.pointsWon()).append("\n");

@@ -9,6 +9,7 @@ import com.cas.tsas.player.application.port.out.FindActiveMatchPort;
 import com.cas.tsas.player.application.port.out.HasMatchesPort;
 import com.cas.tsas.player.application.port.out.LoadPlayerPort;
 import com.cas.tsas.player.application.port.out.SavePlayerPort;
+import com.cas.tsas.player.domain.exception.PlayerHasMatchesException;
 import com.cas.tsas.player.domain.exception.PlayerNotFoundException;
 import com.cas.tsas.player.domain.model.Player;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * Implements the player use cases (create, search, update, delete). Deletion
+ * is guarded against players that participate in matches, in which case
+ * deactivation (soft delete) is offered instead. Match-related lookups are
+ * delegated to ports implemented by the match module.
+ */
 @Service
 @Transactional
 public class PlayerService implements CreatePlayerUseCase, SearchPlayerUseCase, UpdatePlayerUseCase, DeletePlayerUseCase {
@@ -68,6 +75,10 @@ public class PlayerService implements CreatePlayerUseCase, SearchPlayerUseCase, 
         return loadPlayerPort.loadAllPlayers();
     }
 
+    /**
+     * Returns, for each of the given players that has one, the id of their
+     * currently active match (players without an active match are omitted).
+     */
     @Override
     @Transactional(readOnly = true)
     public Map<UUID, UUID> findActiveMatchIdsByPlayerIds(Set<UUID> playerIds) {
@@ -94,15 +105,28 @@ public class PlayerService implements CreatePlayerUseCase, SearchPlayerUseCase, 
         return hasMatchesPort.existsByPlayerId(id);
     }
 
+    /**
+     * Hard-deletes a player. Refused when the player is referenced by any match
+     * (to preserve match history); use {@link #deactivatePlayer(UUID)} instead.
+     *
+     * @throws PlayerHasMatchesException if the player participates in any match
+     * @throws PlayerNotFoundException if no such player exists
+     */
     @Override
     public void deletePlayer(UUID id) {
         if (hasMatchesPort.existsByPlayerId(id)) {
-            throw new IllegalStateException("Spieler hat Matches und kann nicht gelöscht werden.");
+            throw new PlayerHasMatchesException(id);
         }
         loadPlayerPort.loadPlayer(id).orElseThrow(() -> new PlayerNotFoundException(id));
         deletePlayerPort.deletePlayer(id);
     }
 
+    /**
+     * Soft-deletes a player by setting {@code active = false}, keeping the
+     * record (and its match history) intact.
+     *
+     * @throws PlayerNotFoundException if no such player exists
+     */
     @Override
     public void deactivatePlayer(UUID id) {
         Player player = loadPlayerPort.loadPlayer(id)

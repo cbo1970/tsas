@@ -25,6 +25,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * REST adapter exposing the match use cases under {@code /api/matches}.
+ * Translates HTTP request DTOs into use-case commands and domain objects into
+ * response DTOs.
+ */
 @RestController
 @RequestMapping("/api/matches")
 public class MatchController {
@@ -77,6 +82,11 @@ public class MatchController {
         return MatchWithScoreResponse.from(match, score);
     }
 
+    /**
+     * Records a point on the match. The optional point/stroke/direction fields
+     * arrive as strings and are converted to their domain enums (null when
+     * absent) before being passed to the use case.
+     */
     @PostMapping("/{id}/points")
     @ResponseStatus(HttpStatus.CREATED)
     public MatchWithScoreResponse recordPoint(@PathVariable UUID id,
@@ -109,7 +119,7 @@ public class MatchController {
 
     @PutMapping("/{id}/score")
     public MatchScoreResponse setScore(@PathVariable UUID id,
-                                       @RequestBody SetScoreRequest request) {
+                                       @Valid @RequestBody SetScoreRequest request) {
         var command = new SetScoreUseCase.SetScoreCommand(
                 id,
                 request.pointsPlayer1(),
@@ -132,6 +142,7 @@ public class MatchController {
         return MatchResponse.from(endMatchUseCase.endMatch(id));
     }
 
+    /** Ends the match by walkover; the request body names the winning player. */
     @PostMapping("/{id}/end/walkover")
     public MatchResponse endMatchWalkover(@PathVariable UUID id,
                                           @Valid @RequestBody EndMatchWalkoverRequest request) {

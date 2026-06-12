@@ -10,6 +10,11 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Persistence adapter implementing the point output ports (save, count per
+ * game, load ordered by match), mapping between {@link Point} and its JPA
+ * entity via {@link PointMapper}.
+ */
 @Component
 public class PointPersistenceAdapter implements SavePointPort, CountPointsInGamePort, LoadPointsByMatchPort {
 
