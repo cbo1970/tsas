@@ -9,6 +9,10 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Persistence adapter implementing the match-score output ports, mapping
+ * between {@link MatchScore} and its JPA entity via {@link MatchScoreMapper}.
+ */
 @Component
 public class MatchScorePersistenceAdapter implements LoadMatchScorePort, SaveMatchScorePort {
 

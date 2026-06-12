@@ -9,12 +9,14 @@ import com.cas.tsas.ai.application.port.out.LoadMatchAnalysisPort;
 import com.cas.tsas.ai.application.port.out.SaveMatchAnalysisPort;
 import com.cas.tsas.ai.domain.exception.AnalysisGenerationException;
 import com.cas.tsas.ai.domain.exception.InsufficientMatchDataException;
+import com.cas.tsas.ai.domain.exception.MatchNotCompletedException;
 import com.cas.tsas.ai.domain.model.AnalysisStatus;
 import com.cas.tsas.ai.domain.model.MatchAnalysis;
 import com.cas.tsas.match.application.port.in.GetMatchUseCase;
 import com.cas.tsas.match.domain.model.Match;
 import com.cas.tsas.match.domain.model.MatchStatus;
 import com.cas.tsas.player.application.port.out.LoadPlayerPort;
+import com.cas.tsas.player.domain.exception.PlayerNotFoundException;
 import com.cas.tsas.player.domain.model.Player;
 import com.cas.tsas.statistics.application.port.in.ComputeMatchStatisticsUseCase;
 import com.cas.tsas.statistics.domain.model.MatchStatistics;
@@ -25,6 +27,10 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Orchestrates AI-based match analysis: loads the match, its statistics and the involved players,
+ * delegates to an {@link LlmClientPort} to produce the analysis and persists the result.
+ */
 @Service
 public class MatchAnalysisService implements GenerateMatchAnalysisUseCase, GetMatchAnalysisUseCase {
 
@@ -52,11 +58,20 @@ public class MatchAnalysisService implements GenerateMatchAnalysisUseCase, GetMa
         this.minPointsForAnalysis = minPointsForAnalysis;
     }
 
+    /**
+     * Generates and stores an analysis for the given match.
+     *
+     * <p>The match must be {@link MatchStatus#COMPLETED} and have at least the configured minimum
+     * number of points; otherwise a {@link MatchNotCompletedException} respectively
+     * {@link InsufficientMatchDataException} is thrown. On a successful LLM call the COMPLETED
+     * result is persisted and returned. If the LLM call fails, a FAILED record is persisted and an
+     * {@link AnalysisGenerationException} is thrown.
+     */
     @Override
     public MatchAnalysis generate(UUID matchId) {
         Match match = getMatchUseCase.findById(matchId);
         if (match.getStatus() != MatchStatus.COMPLETED) {
-            throw new IllegalStateException("Match " + matchId + " is not COMPLETED");
+            throw new MatchNotCompletedException(matchId);
         }
 
         MatchStatistics stats = statisticsUseCase.compute(matchId);
@@ -82,6 +97,7 @@ public class MatchAnalysisService implements GenerateMatchAnalysisUseCase, GetMa
         return loadPort.loadByMatchId(matchId);
     }
 
+    /** Maps a successful LLM result into a COMPLETED {@link MatchAnalysis}. */
     private MatchAnalysis buildSuccess(UUID matchId, MatchAnalysisResult r) {
         MatchAnalysis a = new MatchAnalysis();
         a.setMatchId(matchId);
@@ -97,6 +113,7 @@ public class MatchAnalysisService implements GenerateMatchAnalysisUseCase, GetMa
         return a;
     }
 
+    /** Builds a FAILED {@link MatchAnalysis} capturing the failure cause for later inspection. */
     private MatchAnalysis buildFailure(UUID matchId, RuntimeException ex) {
         MatchAnalysis a = new MatchAnalysis();
         a.setMatchId(matchId);
@@ -107,13 +124,12 @@ public class MatchAnalysisService implements GenerateMatchAnalysisUseCase, GetMa
         return a;
     }
 
+    /** Resolves both players and assembles the {@link MatchMetadata} passed to the LLM prompt. */
     private MatchMetadata buildMetadata(Match match) {
         Player p1 = loadPlayerPort.loadPlayer(match.getPlayer1Id())
-                .orElseThrow(() -> new IllegalStateException(
-                        "Player " + match.getPlayer1Id() + " not found"));
+                .orElseThrow(() -> new PlayerNotFoundException(match.getPlayer1Id()));
         Player p2 = loadPlayerPort.loadPlayer(match.getPlayer2Id())
-                .orElseThrow(() -> new IllegalStateException(
-                        "Player " + match.getPlayer2Id() + " not found"));
+                .orElseThrow(() -> new PlayerNotFoundException(match.getPlayer2Id()));
         return new MatchMetadata(
                 toInfo(p1), toInfo(p2),
                 match.getSetsToWin(), match.isMatchTiebreak(), match.isShortSet());

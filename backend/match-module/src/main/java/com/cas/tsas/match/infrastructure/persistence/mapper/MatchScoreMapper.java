@@ -4,6 +4,7 @@ import com.cas.tsas.match.domain.model.MatchScore;
 import com.cas.tsas.match.infrastructure.persistence.entity.MatchScoreJpaEntity;
 import org.springframework.stereotype.Component;
 
+/** Maps between {@link MatchScore} domain objects and {@link MatchScoreJpaEntity}. */
 @Component
 public class MatchScoreMapper {
 

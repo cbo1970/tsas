@@ -10,6 +10,7 @@ import com.cas.tsas.match.application.port.out.LoadMatchScorePort;
 import com.cas.tsas.match.application.port.out.SaveMatchPort;
 import com.cas.tsas.match.application.port.out.SaveMatchScorePort;
 import com.cas.tsas.match.application.port.out.SavePointPort;
+import com.cas.tsas.match.domain.exception.MatchAlreadyCompletedException;
 import com.cas.tsas.match.domain.exception.MatchNotFoundException;
 import com.cas.tsas.match.domain.model.Direction;
 import com.cas.tsas.match.domain.model.Match;
@@ -227,11 +228,11 @@ class MatchServiceTest {
         }
 
         @Test
-        void throws_IllegalStateException_when_match_already_completed() {
+        void throws_MatchAlreadyCompleted_when_match_already_completed() {
             when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(completedMatch()));
 
             assertThatThrownBy(() -> matchService.recordPoint(winnerCommand()))
-                    .isInstanceOf(IllegalStateException.class)
+                    .isInstanceOf(MatchAlreadyCompletedException.class)
                     .hasMessageContaining("already completed");
         }
 
@@ -386,13 +387,13 @@ class MatchServiceTest {
         }
 
         @Test
-        void throws_IllegalStateException_when_match_already_completed() {
+        void throws_MatchAlreadyCompleted_when_match_already_completed() {
             when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(completedMatch()));
 
             assertThatThrownBy(() ->
                 matchService.setServingPlayer(
                     new SetServingPlayerUseCase.SetServingPlayerCommand(MATCH_ID, true)))
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(MatchAlreadyCompletedException.class);
         }
 
         @Test

@@ -36,6 +36,11 @@ spring:
 tsas:
   ai:
     min-points-for-analysis: ${TSAS_AI_MIN_POINTS:10}
+    # LLM-Prompts sind externalisiert (siehe PromptProperties). Defaults liegen im Code und
+    # lassen sich hier oder per Umgebungsvariable überschreiben, z. B.:
+    # prompt:
+    #   system: ${TSAS_AI_PROMPT_SYSTEM:...}
+    #   user-instruction: ${TSAS_AI_PROMPT_USER_INSTRUCTION:...}
 
   cors:
     allowed-origins:

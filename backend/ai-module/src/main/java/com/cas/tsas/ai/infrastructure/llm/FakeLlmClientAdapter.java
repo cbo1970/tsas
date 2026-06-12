@@ -8,6 +8,10 @@ import com.cas.tsas.statistics.domain.model.MatchStatistics;
 
 import java.util.List;
 
+/**
+ * Deterministic {@link LlmClientPort} fallback that returns canned analysis text without calling
+ * any external LLM. Used as the default when no other {@link LlmClientPort} bean is present.
+ */
 public class FakeLlmClientAdapter implements LlmClientPort {
 
     public static final String MODEL_NAME = "fake-llm";

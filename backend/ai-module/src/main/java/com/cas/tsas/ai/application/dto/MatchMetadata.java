@@ -1,5 +1,6 @@
 package com.cas.tsas.ai.application.dto;
 
+/** Contextual match data (players and format) supplied to the LLM alongside the statistics. */
 public record MatchMetadata(
         PlayerInfo player1,
         PlayerInfo player2,

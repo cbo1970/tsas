@@ -13,6 +13,12 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+/**
+ * OAuth2 resource-server security for all non-test profiles.
+ *
+ * <p>Validates Keycloak-issued JWTs (issuer + JWK set), requires authentication for every request
+ * except the Actuator health and info endpoints, and disables CSRF for the stateless API.
+ */
 @Configuration
 @EnableWebSecurity
 @Profile("!test")

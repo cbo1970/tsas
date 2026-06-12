@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
+/** REST endpoint serving the computed statistics for a single match. */
 @RestController
 @RequestMapping("/api/matches/{id}/statistics")
 public class MatchStatisticsController {

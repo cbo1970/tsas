@@ -19,6 +19,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Computes match statistics on the fly from the recorded points; nothing is persisted.
+ *
+ * <p>Each point is attributed to a player via {@link PointAttribution} and the raw counts are
+ * accumulated per player, then derived into the {@link MatchStatistics} aggregate.
+ */
 @Service
 public class MatchStatisticsService implements ComputeMatchStatisticsUseCase {
 
@@ -28,6 +34,15 @@ public class MatchStatisticsService implements ComputeMatchStatisticsUseCase {
         this.loadPointsByMatchPort = loadPointsByMatchPort;
     }
 
+    /**
+     * Loads all points of the match and accumulates per-player statistics in a single pass.
+     *
+     * <p>For each point the attributed player gets its winner/error/ace/double-fault count
+     * bumped and its stroke/direction distribution updated. Serve attempts feed the 1st/2nd
+     * serve percentages (a 2nd serve counts as "in" unless it was a double fault). Break points
+     * are credited to the returner when the server lost the point. Points with no point type
+     * (untyped score entries) only contribute to {@code pointsWon}.
+     */
     @Override
     public MatchStatistics compute(UUID matchId) {
         List<Point> points = loadPointsByMatchPort.loadPointsByMatch(matchId);
@@ -87,6 +102,7 @@ public class MatchStatisticsService implements ComputeMatchStatisticsUseCase {
                 points.size(), breakPointsTotal, Instant.now());
     }
 
+    /** Mutable per-player tally of raw counters collected while iterating the points. */
     private static final class Accumulator {
         final int playerNumber;
         int pointsWon, winners, unforcedErrors, forcedErrors, aces, doubleFaults;
@@ -99,6 +115,8 @@ public class MatchStatisticsService implements ComputeMatchStatisticsUseCase {
             this.playerNumber = n;
         }
 
+        /** Increments the counter matching the point type; NET/OUT outcomes are only reflected
+         *  in the stroke/direction distribution, not in a dedicated counter. */
         void countAttributed(Point p) {
             switch (p.getPointType()) {
                 case WINNER -> winners++;
@@ -110,6 +128,8 @@ public class MatchStatisticsService implements ComputeMatchStatisticsUseCase {
             }
         }
 
+        /** Derives the serve percentages from the raw counters and builds the immutable
+         *  {@link PlayerStatistics}; percentages default to 0 when no serves were attempted. */
         PlayerStatistics toStats() {
             double firstPct = serveAttemptsTotal == 0 ? 0.0 : (double) firstServesIn / serveAttemptsTotal;
             double secondPct = secondServesPlayed == 0 ? 0.0 : (double) secondServesIn / secondServesPlayed;

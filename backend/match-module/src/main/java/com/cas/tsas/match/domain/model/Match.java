@@ -3,8 +3,11 @@ package com.cas.tsas.match.domain.model;
 import java.util.UUID;
 
 /**
- * Domain entity representing a tennis match (Begegnung).
- * Pure POJO — no framework dependencies.
+ * Domain entity representing a tennis match (Begegnung) between two players. Holds the
+ * match configuration: {@code setsToWin} (sets required to win — 2 for best-of-3, 3 for
+ * best-of-5), whether a match tie-break replaces the final set, whether short sets are
+ * played, and the current {@link MatchStatus}. The live score is kept separately in
+ * {@link MatchScore}. Pure POJO — no framework dependencies.
  */
 public class Match {
 

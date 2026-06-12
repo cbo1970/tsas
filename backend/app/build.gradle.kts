@@ -6,6 +6,13 @@ tasks.named<org.springframework.boot.gradle.tasks.run.BootRun>("bootRun") {
     workingDir = rootProject.projectDir.parentFile
 }
 
+// Expose the backend root so ArchitectureTest can import each module's compiled classes
+// directly (Gradle's test classpath is delivered via a pathing jar that ArchUnit's
+// classpath scanner cannot read).
+tasks.named<Test>("test") {
+    systemProperty("tsas.rootDir", rootProject.projectDir.absolutePath)
+}
+
 dependencies {
     implementation(project(":common-module"))
     implementation(project(":player-module"))

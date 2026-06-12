@@ -7,6 +7,7 @@ import com.cas.tsas.player.application.port.out.FindActiveMatchPort;
 import com.cas.tsas.player.application.port.out.HasMatchesPort;
 import com.cas.tsas.player.application.port.out.LoadPlayerPort;
 import com.cas.tsas.player.application.port.out.SavePlayerPort;
+import com.cas.tsas.player.domain.exception.PlayerHasMatchesException;
 import com.cas.tsas.player.domain.exception.PlayerNotFoundException;
 import com.cas.tsas.player.domain.model.BackhandType;
 import com.cas.tsas.player.domain.model.Gender;
@@ -194,11 +195,11 @@ class PlayerServiceTest {
         }
 
         @Test
-        void throws_IllegalStateException_when_player_has_matches() {
+        void throws_PlayerHasMatches_when_player_has_matches() {
             when(hasMatchesPort.existsByPlayerId(PLAYER_ID)).thenReturn(true);
 
             assertThatThrownBy(() -> playerService.deletePlayer(PLAYER_ID))
-                    .isInstanceOf(IllegalStateException.class);
+                    .isInstanceOf(PlayerHasMatchesException.class);
             verify(deletePlayerPort, never()).deletePlayer(any());
         }
 

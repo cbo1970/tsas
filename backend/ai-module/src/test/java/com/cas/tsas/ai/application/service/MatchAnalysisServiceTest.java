@@ -5,6 +5,7 @@ import com.cas.tsas.ai.application.port.out.LoadMatchAnalysisPort;
 import com.cas.tsas.ai.application.port.out.SaveMatchAnalysisPort;
 import com.cas.tsas.ai.domain.exception.AnalysisGenerationException;
 import com.cas.tsas.ai.domain.exception.InsufficientMatchDataException;
+import com.cas.tsas.ai.domain.exception.MatchNotCompletedException;
 import com.cas.tsas.ai.domain.model.AnalysisStatus;
 import com.cas.tsas.ai.domain.model.MatchAnalysis;
 import com.cas.tsas.ai.infrastructure.llm.FakeLlmClientAdapter;
@@ -106,7 +107,7 @@ class MatchAnalysisServiceTest {
         when(getMatchUseCase.findById(matchId)).thenReturn(inProgress);
 
         assertThatThrownBy(() -> service.generate(matchId))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(MatchNotCompletedException.class)
                 .hasMessageContaining("not COMPLETED");
 
         Mockito.verifyNoInteractions(savePort);

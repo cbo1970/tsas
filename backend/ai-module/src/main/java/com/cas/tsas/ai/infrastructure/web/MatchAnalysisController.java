@@ -4,15 +4,19 @@ import com.cas.tsas.ai.application.port.in.GenerateMatchAnalysisUseCase;
 import com.cas.tsas.ai.application.port.in.GetMatchAnalysisUseCase;
 import com.cas.tsas.ai.infrastructure.web.dto.MatchAnalysisResponse;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.util.UUID;
 
+/** REST endpoints to trigger generation of and retrieve the AI analysis for a match. */
 @RestController
 @RequestMapping("/api/matches/{matchId}/analysis")
 public class MatchAnalysisController {
@@ -27,8 +31,12 @@ public class MatchAnalysisController {
     }
 
     @PostMapping
-    public MatchAnalysisResponse generate(@PathVariable UUID matchId) {
-        return MatchAnalysisResponse.from(generateUseCase.generate(matchId));
+    public ResponseEntity<MatchAnalysisResponse> generate(@PathVariable UUID matchId,
+                                                           UriComponentsBuilder uriBuilder) {
+        MatchAnalysisResponse body = MatchAnalysisResponse.from(generateUseCase.generate(matchId));
+        URI location = uriBuilder.path("/api/matches/{matchId}/analysis")
+                .buildAndExpand(matchId).toUri();
+        return ResponseEntity.created(location).body(body);
     }
 
     @GetMapping

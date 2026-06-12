@@ -3,10 +3,12 @@ package com.cas.tsas.ai.infrastructure.config;
 import com.cas.tsas.ai.application.port.out.LlmClientPort;
 import com.cas.tsas.ai.infrastructure.llm.FakeLlmClientAdapter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@EnableConfigurationProperties(PromptProperties.class)
 public class AiModuleConfig {
 
     /**

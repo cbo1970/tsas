@@ -9,6 +9,10 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 
+/**
+ * Permissive security used only under the {@code test} profile: CSRF disabled and all requests
+ * permitted, so integration tests run without JWT validation against Keycloak.
+ */
 @Configuration
 @EnableWebSecurity
 @Profile("test")
