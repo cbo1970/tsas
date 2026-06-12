@@ -391,6 +391,48 @@ Zwei GitHub-Actions-Workflows laufen bei jedem Push und Pull Request auf `develo
 
 Beide Checks sind auf `develop` und `main` als **required status checks** via Branch Protection gesetzt: Ein PR kann erst gemergt werden, wenn beide grün sind. Damit pfadgefilterte Workflows die required Checks nicht blockieren (ein nicht ausgelöster Check bliebe „pending" und würde den Merge verhindern), laufen beide Workflows ohne Pfadfilter bei jedem Push/PR auf die geschützten Branches. `enforce_admins` ist deaktiviert, sodass Repo-Admins im Notfall überstimmen können.
 
+### 8.7 Testergebnisse
+
+Snapshot vom **2026-06-12** (Branch `develop`, Stand nach PR #4). Reproduzierbar mit:
+
+```bash
+cd backend
+JAVA_HOME=/opt/java/jdk-25.0.1 DOCKER_HOST=unix:///var/run/docker.sock \
+  TESTCONTAINERS_RYUK_DISABLED=true ./gradlew clean test jacocoRootReport
+```
+
+Der aggregierte Coverage-Report liegt danach unter `backend/build/reports/jacoco/jacocoRootReport/` (HTML/XML/CSV); in der CI wird er zusätzlich als Build-Artifact des Workflows **Backend CI** hochgeladen (zuletzt grün auf PR #4, GitHub-Actions-Run `27427534981`).
+
+**Backend — Testanzahl (alle grün, 0 Failures / 0 Errors / 0 Skipped):**
+
+| Modul | Tests | Schwerpunkt |
+|-------|------:|-------------|
+| `app` | 74 | Integrations-/API-Tests (Testcontainers + MockMvc) über alle Module; `ArchitectureTest` (Schichten/Modulgrenzen) |
+| `match-module` | 60 | Scoring-Regeln (`ScoringService`), Match-Lebenszyklus, Break-Point-Logik |
+| `statistics-module` | 19 | Punkt-Attribution und Kennzahlen-Berechnung |
+| `player-module` | 16 | Spieler-Use-Cases inkl. Lösch-/Deaktivierungsregeln |
+| `ai-module` | 7 | `MatchAnalysisService` (inkl. Fehlerpfade) + `OpenAiLlmAdapter` (WireMock) |
+| **Gesamt** | **176** | Laufzeit ~15 s (ohne Container-Start) |
+
+**Backend — Coverage (JaCoCo, modulübergreifend aggregiert):**
+
+| Bereich | Line | Branch |
+|---------|-----:|-------:|
+| **Gesamt** | **94,3 %** (1207/1280) | **76,2 %** (211/277) |
+| `match` | 91,9 % | 74,2 % |
+| `statistics` | 98,9 % | 85,5 % |
+| `player` | 99,0 % | 70,0 % |
+| `ai` | 94,8 % | 72,2 % |
+| `common` | 100 % | 75,0 % |
+
+Das Gate (`jacocoRootCoverageVerification`, in `check` eingehängt) verlangt **85 % Line / 70 % Branch** und ist erfüllt.
+
+**Interpretation:**
+
+- **Abgedeckt ist die fachliche Kernlogik**: die Tennis-Zählregeln (Punkte/Spiele/Sätze, Tie-Break, Short Set, Break-Points) im `match-module`, die Punkt-Attribution und Statistik-Berechnung im `statistics-module`, die Spieler-Geschäftsregeln sowie die KI-Analyse inklusive Fehlerpfaden (LLM-Ausfall → HTTP 502, zu wenige Punkte → 422, Match nicht beendet → 409). Die Integrationstests fahren gegen eine **echte PostgreSQL** (Testcontainers) inklusive Flyway-Migrationen und Spring-Security-JWT, decken also den realen Persistenz- und Web-Stack ab. Der `ArchitectureTest` sichert zusätzlich die Schichten-/Modulgrenzen ab.
+- **Die Branch-Coverage (76 %) liegt erwartungsgemäß unter der Line-Coverage.** Die nicht abgedeckten Zweige sind überwiegend **defensive Pfade**: Guard-Klauseln (z. B. `Point`-Winner-Validierung, Null-Prüfungen in Mappern), Serialisierungs-Fehlerzweige im Persistenz-Adapter und selten erreichte Verzweigungen der Scoring-Logik. Diese werden bewusst nicht alle einzeln getestet — ein Gate von 70 % Branch verankert die Untergrenze, ohne Tests für triviale/defensive Zweige zu erzwingen.
+- **Bewusste Lücken:** Der OpenAI-*Happy-Path* gegen die echte API ist nicht im automatisierten Lauf enthalten (über `FakeLlmClientAdapter`/WireMock abgebildet; manuelle Verifikation siehe TEN-25/TEN-26). `TsasBackendApplication.main` und reine Konfigurationsklassen tragen kaum testbare Logik und drücken die Bereichswerte von `app`/`auth` optisch, sind aber fachlich irrelevant.
+
 ---
 
 ## 9. Architekturentscheidungen
