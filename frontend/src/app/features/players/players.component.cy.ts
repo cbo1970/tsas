@@ -2,6 +2,7 @@ import { PlayersComponent } from './players.component';
 import { provideHttpClient } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { Player } from '../../core/models/player.model';
+import { Router, provideRouter } from '@angular/router';
 
 const PLAYERS: Player[] = [
   {
@@ -21,10 +22,10 @@ const PLAYERS: Player[] = [
   },
 ];
 
-function mountPlayers(players: Player[] = PLAYERS) {
+function mountPlayers(players: Player[] = PLAYERS, extraProviders: any[] = []) {
   cy.intercept('GET', '**/api/players', players).as('getPlayers');
   cy.mount(PlayersComponent, {
-    providers: [provideHttpClient(), provideAnimationsAsync()],
+    providers: [provideRouter([]), provideHttpClient(), provideAnimationsAsync(), ...extraProviders],
   });
   cy.wait('@getPlayers');
 }
@@ -95,6 +96,28 @@ describe('PlayersComponent', () => {
     it('shows "Noch keine Spieler angelegt." when list is empty', () => {
       mountPlayers([]);
       cy.contains('Noch keine Spieler angelegt.').should('be.visible');
+    });
+  });
+
+  describe('head-to-head entry points', () => {
+    it('shows the Head-to-Head toolbar button', () => {
+      mountPlayers();
+      cy.get('[data-testid="h2h-btn"]').should('be.visible');
+    });
+
+    it('navigates to the head-to-head route from the toolbar button', () => {
+      const navigateSpy = cy.stub().as('navigate');
+      mountPlayers(PLAYERS, [{ provide: Router, useValue: { navigate: navigateSpy } }]);
+      cy.get('[data-testid="h2h-btn"]').click();
+      cy.get('@navigate').should('have.been.calledWith', ['/statistics/head-to-head']);
+    });
+
+    it('navigates with a preselected player1 from the row action', () => {
+      const navigateSpy = cy.stub().as('navigate');
+      mountPlayers(PLAYERS, [{ provide: Router, useValue: { navigate: navigateSpy } }]);
+      cy.get('[data-testid="compare-btn"]').first().click();
+      cy.get('@navigate').should('have.been.calledWith',
+        ['/statistics/head-to-head'], { queryParams: { player1: '1' } });
     });
   });
 });

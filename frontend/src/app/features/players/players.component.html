@@ -10,6 +10,10 @@
         </button>
       }
     </mat-form-field>
+    <button mat-stroked-button data-testid="h2h-btn" (click)="goToHeadToHead()">
+      <mat-icon>compare_arrows</mat-icon>
+      Head-to-Head
+    </button>
     <button mat-raised-button color="primary" (click)="openCreateDialog()">
       <mat-icon>add</mat-icon>
       Neuer Spieler
@@ -50,6 +54,10 @@
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef></th>
           <td mat-cell *matCellDef="let player" class="actions-cell">
+            <button mat-icon-button data-testid="compare-btn" title="Head-to-Head vergleichen"
+                    (click)="comparePlayer(player); $event.stopPropagation()">
+              <mat-icon>compare_arrows</mat-icon>
+            </button>
             @if (player.deletable !== false) {
               <button mat-icon-button color="warn" title="Spieler löschen"
                       (click)="deletePlayer(player); $event.stopPropagation()">
