@@ -62,8 +62,7 @@ Kennzahlen je Spieler (Roh-Zähler, daraus Prozentwerte):
 - **Return:** Return Points Won% auf 1. Aufschlag (Komplement: Returner gewinnt Punkt auf
   gegnerischem `serveAttempt==1`), Return Points Won% auf 2. Aufschlag, Break Points Won%
   (`isBreakPoint` als Returner: gewonnen/gespielt), Return Games Won%.
-- **Rallye:** Winners% (`winners / totalPoints`), Unforced Error% (`unforcedErrors / totalPoints`),
-  **Net Points Won% → in V1 ausgelassen** (`null`, siehe unten).
+- **Rallye:** Winners% (`winners / totalPoints`), Unforced Error% (`unforcedErrors / totalPoints`).
 - **Match-Bilanz (nur abgeschlossene Matches, `MatchScore.winner != null`):** Siege/Niederlagen,
   Satzbilanz (`setsPlayer1/2`).
 
@@ -75,11 +74,6 @@ gewonnen, wenn der Game-Gewinner X ist. Aggregiert zu `returnGamesWon / returnGa
 **Einschluss-Regel:** Punkt-Kennzahlen aggregieren über **alle** gemeinsamen Matches mit
 erfassten Points (inkl. laufender). **Match-/Satzbilanz zählt nur abgeschlossene Matches.**
 
-**Net Points Won% — Auslassung (V1):** Das `Point`-Modell hat keine explizite „Netzangriff"-Markierung.
-Das einzige Netz-Signal (`StrokeType.VOLLEY/SMASH`) ist als Heuristik nicht belastbar. FA-08-Kennzahl
-wird in V1 als `null` zurückgegeben; SAD vermerkt, dass dafür ein explizites Net-Approach-Flag auf
-`Point` nötig ist.
-
 ## 3. API-Vertrag
 
 Neuer `HeadToHeadController` in `statistics-module` (`infrastructure/web`):
@@ -90,8 +84,7 @@ GET /api/statistics/head-to-head?player1={id}&player2={id}
 
 - **200** → `HeadToHeadStatisticsDto { player1Id, player2Id, matchesPlayed, player1, player2 }`,
   wobei `player1`/`player2` vom Typ `H2HPlayerStatsDto` sind und **sowohl Roh-Zähler als auch
-  abgeleitete Prozentwerte** tragen (UI kann „23 (45 %)" zeigen). `netPointsWonPercentage` wird als
-  `null` serialisiert.
+  abgeleitete Prozentwerte** tragen (UI kann „23 (45 %)" zeigen).
 - **404** wenn ein Spieler nicht existiert (`PlayerNotFoundException` über bestehenden
   `GlobalExceptionHandler`, RFC-7807 ProblemDetail).
 - **400** wenn `player1 == player2`.
@@ -107,7 +100,7 @@ GET /api/statistics/head-to-head?player1={id}&player2={id}
   gewählt, wird abgerufen und gerendert.
 - **Darstellung:** Wiederverwendung des bestehenden dunklen, gespiegelten Vergleichsbalken-Stils aus
   `statistics.component` (**kein ngx-charts** — nicht installiert). Abschnitte: Match-Bilanz,
-  Aufschlag, Return, Rallye. Net-Points-Zeile bleibt ausgeblendet, solange ausgelassen.
+  Aufschlag, Return, Rallye.
 - **Models/Service:** neues `HeadToHeadStatistics`-Interface in `statistics.model.ts`; neue Methode
   `api.getHeadToHead(player1, player2)` → `GET /api/statistics/head-to-head?player1=&player2=`.
 
@@ -133,7 +126,7 @@ GET /api/statistics/head-to-head?player1={id}&player2={id}
 ## 6. SAD-Aktualisierung
 
 - FA-08-Zeile (§10.1) als implementiert markieren.
-- **Net Points Won%-Auslassung** dokumentieren (braucht explizites Net-Approach-Flag auf `Point`).
+- **Net Points Won%** ersatzlos aus der FA-08-Beschreibung entfernen (ohne Vermerk).
 - **Einschluss-Regel** dokumentieren (Bilanz = nur abgeschlossene Matches; Punkt-Kennzahlen inkl.
   laufender Matches).
 - **Return-Games-Ableitung** kurz festhalten.
@@ -141,7 +134,7 @@ GET /api/statistics/head-to-head?player1={id}&player2={id}
 
 ## Offene/akzeptierte Annahmen
 
-- Net Points Won% ist in V1 bewusst `null` (kein belastbares Datensignal).
+- Net Points Won% entfällt vollständig (Kennzahl, DTO-Feld, UI-Zeile, FA-08-Text).
 - Bilanz nur über abgeschlossene Matches; Punkt-Kennzahlen über alle Matches mit Points.
 - `player1 == player2` → 400.
 - Performance: pro Paar wenige Matches → N+1-Laden von Points/Score je Match ist unkritisch und
