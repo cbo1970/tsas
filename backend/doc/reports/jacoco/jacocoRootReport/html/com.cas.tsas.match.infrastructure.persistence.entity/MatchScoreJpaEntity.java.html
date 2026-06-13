@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MatchScoreJpaEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tsas-backend</a> &gt; <a href="index.source.html" class="el_package">com.cas.tsas.match.infrastructure.persistence.entity</a> &gt; <span class="el_source">MatchScoreJpaEntity.java</span></div><h1>MatchScoreJpaEntity.java</h1><pre class="source lang-java linenums">package com.cas.tsas.match.infrastructure.persistence.entity;
+
+import jakarta.persistence.*;
+
+import java.util.UUID;
+
+@Entity
+@Table(name = &quot;match_scores&quot;)
+public class MatchScoreJpaEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @Column(name = &quot;match_id&quot;, nullable = false, unique = true)
+    private UUID matchId;
+
+    @Column(name = &quot;points_player1&quot;)
+    private int pointsPlayer1;
+
+    @Column(name = &quot;points_player2&quot;)
+    private int pointsPlayer2;
+
+    @Column(name = &quot;games_player1&quot;)
+    private int gamesPlayer1;
+
+    @Column(name = &quot;games_player2&quot;)
+    private int gamesPlayer2;
+
+    @Column(name = &quot;sets_player1&quot;)
+    private int setsPlayer1;
+
+    @Column(name = &quot;sets_player2&quot;)
+    private int setsPlayer2;
+
+    @Column(name = &quot;is_deuce&quot;)
+    private boolean isDeuce;
+
+    @Column(name = &quot;is_advantage_player1&quot;)
+    private Boolean isAdvantagePlayer1;
+
+    @Column(name = &quot;current_set&quot;)
+    private int currentSet;
+
+    @Column(name = &quot;is_done&quot;)
+    private boolean isDone;
+
+    @Column(name = &quot;winner&quot;)
+    private String winner;
+
+    @Column(name = &quot;aces_player1&quot;)
+    private int acesPlayer1;
+
+    @Column(name = &quot;aces_player2&quot;)
+    private int acesPlayer2;
+
+    @Column(name = &quot;serving_player&quot;)
+    private Integer servingPlayer;
+
+<span class="fc" id="L60">    public MatchScoreJpaEntity() {}</span>
+
+<span class="fc" id="L62">    public UUID getId() { return id; }</span>
+<span class="fc" id="L63">    public void setId(UUID id) { this.id = id; }</span>
+
+<span class="fc" id="L65">    public UUID getMatchId() { return matchId; }</span>
+<span class="fc" id="L66">    public void setMatchId(UUID matchId) { this.matchId = matchId; }</span>
+
+<span class="fc" id="L68">    public int getPointsPlayer1() { return pointsPlayer1; }</span>
+<span class="fc" id="L69">    public void setPointsPlayer1(int pointsPlayer1) { this.pointsPlayer1 = pointsPlayer1; }</span>
+
+<span class="fc" id="L71">    public int getPointsPlayer2() { return pointsPlayer2; }</span>
+<span class="fc" id="L72">    public void setPointsPlayer2(int pointsPlayer2) { this.pointsPlayer2 = pointsPlayer2; }</span>
+
+<span class="fc" id="L74">    public int getGamesPlayer1() { return gamesPlayer1; }</span>
+<span class="fc" id="L75">    public void setGamesPlayer1(int gamesPlayer1) { this.gamesPlayer1 = gamesPlayer1; }</span>
+
+<span class="fc" id="L77">    public int getGamesPlayer2() { return gamesPlayer2; }</span>
+<span class="fc" id="L78">    public void setGamesPlayer2(int gamesPlayer2) { this.gamesPlayer2 = gamesPlayer2; }</span>
+
+<span class="fc" id="L80">    public int getSetsPlayer1() { return setsPlayer1; }</span>
+<span class="fc" id="L81">    public void setSetsPlayer1(int setsPlayer1) { this.setsPlayer1 = setsPlayer1; }</span>
+
+<span class="fc" id="L83">    public int getSetsPlayer2() { return setsPlayer2; }</span>
+<span class="fc" id="L84">    public void setSetsPlayer2(int setsPlayer2) { this.setsPlayer2 = setsPlayer2; }</span>
+
+<span class="fc" id="L86">    public boolean isDeuce() { return isDeuce; }</span>
+<span class="fc" id="L87">    public void setDeuce(boolean deuce) { isDeuce = deuce; }</span>
+
+<span class="fc" id="L89">    public Boolean getIsAdvantagePlayer1() { return isAdvantagePlayer1; }</span>
+<span class="fc" id="L90">    public void setIsAdvantagePlayer1(Boolean isAdvantagePlayer1) { this.isAdvantagePlayer1 = isAdvantagePlayer1; }</span>
+
+<span class="fc" id="L92">    public int getCurrentSet() { return currentSet; }</span>
+<span class="fc" id="L93">    public void setCurrentSet(int currentSet) { this.currentSet = currentSet; }</span>
+
+<span class="fc" id="L95">    public boolean isDone() { return isDone; }</span>
+<span class="fc" id="L96">    public void setDone(boolean done) { isDone = done; }</span>
+
+<span class="fc" id="L98">    public String getWinner() { return winner; }</span>
+<span class="fc" id="L99">    public void setWinner(String winner) { this.winner = winner; }</span>
+
+<span class="fc" id="L101">    public int getAcesPlayer1() { return acesPlayer1; }</span>
+<span class="fc" id="L102">    public void setAcesPlayer1(int acesPlayer1) { this.acesPlayer1 = acesPlayer1; }</span>
+
+<span class="fc" id="L104">    public int getAcesPlayer2() { return acesPlayer2; }</span>
+<span class="fc" id="L105">    public void setAcesPlayer2(int acesPlayer2) { this.acesPlayer2 = acesPlayer2; }</span>
+
+<span class="fc" id="L107">    public Integer getServingPlayer() { return servingPlayer; }</span>
+<span class="fc" id="L108">    public void setServingPlayer(Integer servingPlayer) { this.servingPlayer = servingPlayer; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

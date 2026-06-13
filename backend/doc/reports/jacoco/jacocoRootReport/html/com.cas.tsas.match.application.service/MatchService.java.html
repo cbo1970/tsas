@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MatchService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tsas-backend</a> &gt; <a href="index.source.html" class="el_package">com.cas.tsas.match.application.service</a> &gt; <span class="el_source">MatchService.java</span></div><h1>MatchService.java</h1><pre class="source lang-java linenums">package com.cas.tsas.match.application.service;
+
+import com.cas.tsas.match.application.port.in.CreateMatchUseCase;
+import com.cas.tsas.match.application.port.in.EndMatchUseCase;
+import com.cas.tsas.match.application.port.in.GetMatchUseCase;
+import com.cas.tsas.match.application.port.in.RecordPointUseCase;
+import com.cas.tsas.match.application.port.in.SetScoreUseCase;
+import com.cas.tsas.match.application.port.in.SetServingPlayerUseCase;
+import com.cas.tsas.match.application.port.out.CountPointsInGamePort;
+import com.cas.tsas.match.application.port.out.LoadMatchPort;
+import com.cas.tsas.match.application.port.out.LoadMatchScorePort;
+import com.cas.tsas.match.application.port.out.SaveMatchPort;
+import com.cas.tsas.match.application.port.out.SaveMatchScorePort;
+import com.cas.tsas.match.application.port.out.SavePointPort;
+import com.cas.tsas.match.domain.exception.ActiveMatchExistsException;
+import com.cas.tsas.match.domain.exception.MatchAlreadyCompletedException;
+import com.cas.tsas.match.domain.exception.MatchNotFoundException;
+import com.cas.tsas.match.domain.model.Match;
+import com.cas.tsas.match.domain.model.MatchScore;
+import com.cas.tsas.match.domain.model.MatchStatus;
+import com.cas.tsas.match.domain.model.Point;
+import com.cas.tsas.match.domain.model.PointType;
+import com.cas.tsas.player.application.port.out.LoadPlayerPort;
+import com.cas.tsas.player.domain.exception.PlayerNotFoundException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * Orchestrates the match lifecycle (creation, point recording, manual score
+ * correction and completion). The tennis counting rules themselves are not
+ * implemented here but delegated to {@link ScoringService}; this service is
+ * responsible for loading/persisting the match and its score, deriving point
+ * metadata (set/game/point number, break-point flag), maintaining ace counters
+ * and flipping the match status to completed once the score is decided.
+ */
+@Service
+@Transactional
+public class MatchService implements CreateMatchUseCase, GetMatchUseCase, RecordPointUseCase,
+        SetScoreUseCase, EndMatchUseCase, SetServingPlayerUseCase {
+
+    private final LoadMatchPort loadMatchPort;
+    private final SaveMatchPort saveMatchPort;
+    private final LoadPlayerPort loadPlayerPort;
+    private final LoadMatchScorePort loadMatchScorePort;
+    private final SaveMatchScorePort saveMatchScorePort;
+    private final ScoringService scoringService;
+    private final SavePointPort savePointPort;
+    private final CountPointsInGamePort countPointsInGamePort;
+
+    public MatchService(LoadMatchPort loadMatchPort, SaveMatchPort saveMatchPort,
+                        LoadPlayerPort loadPlayerPort,
+                        LoadMatchScorePort loadMatchScorePort,
+                        SaveMatchScorePort saveMatchScorePort,
+                        ScoringService scoringService,
+                        SavePointPort savePointPort,
+<span class="fc" id="L59">                        CountPointsInGamePort countPointsInGamePort) {</span>
+<span class="fc" id="L60">        this.loadMatchPort = loadMatchPort;</span>
+<span class="fc" id="L61">        this.saveMatchPort = saveMatchPort;</span>
+<span class="fc" id="L62">        this.loadPlayerPort = loadPlayerPort;</span>
+<span class="fc" id="L63">        this.loadMatchScorePort = loadMatchScorePort;</span>
+<span class="fc" id="L64">        this.saveMatchScorePort = saveMatchScorePort;</span>
+<span class="fc" id="L65">        this.scoringService = scoringService;</span>
+<span class="fc" id="L66">        this.savePointPort = savePointPort;</span>
+<span class="fc" id="L67">        this.countPointsInGamePort = countPointsInGamePort;</span>
+<span class="fc" id="L68">    }</span>
+
+    /**
+     * Creates a new match after validating that both players exist and that
+     * neither is already engaged in an active (in-progress) match. Persists the
+     * match together with a fresh, zeroed initial score.
+     *
+     * @throws com.cas.tsas.player.domain.exception.PlayerNotFoundException if either player is unknown
+     * @throws ActiveMatchExistsException if a player already has a match in progress
+     */
+    @Override
+    public Match createMatch(CreateMatchCommand command) {
+<span class="fc" id="L80">        loadPlayerPort.loadPlayer(command.player1Id())</span>
+<span class="fc" id="L81">                .orElseThrow(() -&gt; new PlayerNotFoundException(command.player1Id()));</span>
+<span class="fc" id="L82">        loadPlayerPort.loadPlayer(command.player2Id())</span>
+<span class="fc" id="L83">                .orElseThrow(() -&gt; new PlayerNotFoundException(command.player2Id()));</span>
+
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (loadMatchPort.existsActiveMatchForPlayer(command.player1Id())) {</span>
+<span class="fc" id="L86">            throw new ActiveMatchExistsException(command.player1Id());</span>
+        }
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        if (loadMatchPort.existsActiveMatchForPlayer(command.player2Id())) {</span>
+<span class="fc" id="L89">            throw new ActiveMatchExistsException(command.player2Id());</span>
+        }
+
+<span class="fc" id="L92">        Match match = new Match(null, command.player1Id(), command.player2Id(),</span>
+<span class="fc" id="L93">                command.setsToWin(), command.matchTiebreak(), command.shortSet(),</span>
+                MatchStatus.IN_PROGRESS);
+<span class="fc" id="L95">        Match saved = saveMatchPort.saveMatch(match);</span>
+
+<span class="fc" id="L97">        MatchScore score = new MatchScore(null, saved.getId(),</span>
+                0, 0, 0, 0, 0, 0, false, null, 1, false, null, 0, 0, null);
+<span class="fc" id="L99">        saveMatchScorePort.saveMatchScore(score);</span>
+
+<span class="fc" id="L101">        return saved;</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Match findById(UUID id) {
+<span class="fc" id="L107">        return loadMatchPort.loadMatch(id).orElseThrow(() -&gt; new MatchNotFoundException(id));</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List&lt;Match&gt; findAll() {
+<span class="fc" id="L113">        return loadMatchPort.loadAllMatches();</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MatchScore getScore(UUID matchId) {
+<span class="fc" id="L119">        loadMatchPort.loadMatch(matchId).orElseThrow(() -&gt; new MatchNotFoundException(matchId));</span>
+<span class="fc" id="L120">        return loadMatchScorePort.loadMatchScore(matchId)</span>
+<span class="pc" id="L121">                .orElseThrow(() -&gt; new MatchNotFoundException(matchId));</span>
+    }
+
+    /**
+     * Records a single point in an in-progress match. Derives the current set,
+     * game and point number from the score, computes whether the point is a
+     * break point, persists the {@link Point}, increments the ace counter when
+     * the point is an ace, then delegates the score update to
+     * {@link ScoringService}. When the resulting score is decided, the match is
+     * marked {@link MatchStatus#COMPLETED}.
+     *
+     * @return the updated, persisted score
+     * @throws MatchNotFoundException if the match or its score does not exist
+     * @throws MatchAlreadyCompletedException if the match is already completed
+     */
+    @Override
+    public MatchScore recordPoint(RecordPointCommand command) {
+<span class="fc" id="L138">        Match match = loadMatchPort.loadMatch(command.matchId())</span>
+<span class="fc" id="L139">                .orElseThrow(() -&gt; new MatchNotFoundException(command.matchId()));</span>
+
+<span class="fc bfc" id="L141" title="All 2 branches covered.">        if (match.getStatus() == MatchStatus.COMPLETED) {</span>
+<span class="fc" id="L142">            throw new MatchAlreadyCompletedException(command.matchId());</span>
+        }
+
+<span class="fc" id="L145">        MatchScore score = loadMatchScorePort.loadMatchScore(command.matchId())</span>
+<span class="pc" id="L146">                .orElseThrow(() -&gt; new MatchNotFoundException(command.matchId()));</span>
+
+<span class="fc bfc" id="L148" title="All 2 branches covered.">        boolean player1Scored = command.winner() == 1;</span>
+<span class="fc" id="L149">        int setNumber = score.getCurrentSet();</span>
+<span class="fc" id="L150">        int gameNumber = score.getGamesPlayer1() + score.getGamesPlayer2() + 1;</span>
+<span class="fc" id="L151">        int pointNumber = countPointsInGamePort.countPointsInGame(</span>
+<span class="fc" id="L152">                command.matchId(), setNumber, gameNumber) + 1;</span>
+<span class="fc" id="L153">        boolean isBreakPoint = calculateIsBreakPoint(score);</span>
+
+<span class="fc" id="L155">        savePointPort.savePoint(new Point(null, command.matchId(),</span>
+                setNumber, gameNumber, pointNumber,
+<span class="fc" id="L157">                command.winner(), command.pointType(), command.strokeType(), command.direction(),</span>
+<span class="fc" id="L158">                score.getServingPlayer(), isBreakPoint, command.remark(), command.serveAttempt()));</span>
+
+<span class="fc bfc" id="L160" title="All 2 branches covered.">        if (command.pointType() == PointType.ACE) {</span>
+<span class="pc bpc" id="L161" title="1 of 2 branches missed.">            if (player1Scored) {</span>
+<span class="fc" id="L162">                score.setAcesPlayer1(score.getAcesPlayer1() + 1);</span>
+            } else {
+<span class="nc" id="L164">                score.setAcesPlayer2(score.getAcesPlayer2() + 1);</span>
+            }
+        }
+
+<span class="fc" id="L168">        scoringService.applyPoint(match, score, player1Scored);</span>
+<span class="fc" id="L169">        MatchScore saved = saveMatchScorePort.saveMatchScore(score);</span>
+
+<span class="fc bfc" id="L171" title="All 2 branches covered.">        if (saved.isDone()) {</span>
+<span class="fc" id="L172">            match.setStatus(MatchStatus.COMPLETED);</span>
+<span class="fc" id="L173">            saveMatchPort.saveMatch(match);</span>
+        }
+
+<span class="fc" id="L176">        return saved;</span>
+    }
+
+    /**
+     * Determines whether the upcoming point is a break point, i.e. a point on
+     * which the receiver can win the server's game. This is the case when the
+     * receiver is at 40 while the server has fewer than 40 points, or, in a
+     * deuce game, when the receiver currently holds the advantage. Returns
+     * {@code false} when no serving player is set.
+     */
+    private boolean calculateIsBreakPoint(MatchScore score) {
+<span class="fc" id="L187">        Integer serving = score.getServingPlayer();</span>
+<span class="fc bfc" id="L188" title="All 2 branches covered.">        if (serving == null) return false;</span>
+
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">        boolean receiverIsP1 = serving == 2;</span>
+<span class="pc bpc" id="L191" title="1 of 2 branches missed.">        int receiverPts = receiverIsP1 ? score.getPointsPlayer1() : score.getPointsPlayer2();</span>
+<span class="pc bpc" id="L192" title="1 of 2 branches missed.">        int serverPts   = receiverIsP1 ? score.getPointsPlayer2() : score.getPointsPlayer1();</span>
+
+<span class="pc bpc" id="L194" title="3 of 4 branches missed.">        if (receiverPts == 3 &amp;&amp; serverPts &lt; 3) return true;</span>
+
+<span class="pc bpc" id="L196" title="3 of 4 branches missed.">        if (score.isDeuce() &amp;&amp; score.getIsAdvantagePlayer1() != null) {</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">            return receiverIsP1 == score.getIsAdvantagePlayer1();</span>
+        }
+
+<span class="fc" id="L200">        return false;</span>
+    }
+
+    /**
+     * Overwrites the score with manually supplied values (for corrections) and
+     * synchronises the match status with the {@code isDone} flag, reopening a
+     * previously completed match if the new score is no longer decided.
+     */
+    @Override
+    public MatchScore setScore(SetScoreCommand command) {
+<span class="fc" id="L210">        Match match = loadMatchPort.loadMatch(command.matchId())</span>
+<span class="pc" id="L211">                .orElseThrow(() -&gt; new MatchNotFoundException(command.matchId()));</span>
+
+<span class="fc" id="L213">        MatchScore score = loadMatchScorePort.loadMatchScore(command.matchId())</span>
+<span class="pc" id="L214">                .orElseThrow(() -&gt; new MatchNotFoundException(command.matchId()));</span>
+
+<span class="fc" id="L216">        score.setPointsPlayer1(command.pointsPlayer1());</span>
+<span class="fc" id="L217">        score.setPointsPlayer2(command.pointsPlayer2());</span>
+<span class="fc" id="L218">        score.setGamesPlayer1(command.gamesPlayer1());</span>
+<span class="fc" id="L219">        score.setGamesPlayer2(command.gamesPlayer2());</span>
+<span class="fc" id="L220">        score.setSetsPlayer1(command.setsPlayer1());</span>
+<span class="fc" id="L221">        score.setSetsPlayer2(command.setsPlayer2());</span>
+<span class="fc" id="L222">        score.setDeuce(command.isDeuce());</span>
+<span class="fc" id="L223">        score.setIsAdvantagePlayer1(command.isAdvantagePlayer1());</span>
+<span class="fc" id="L224">        score.setCurrentSet(command.currentSet());</span>
+<span class="fc" id="L225">        score.setDone(command.isDone());</span>
+<span class="fc" id="L226">        score.setWinner(command.winner());</span>
+
+<span class="fc" id="L228">        MatchScore saved = saveMatchScorePort.saveMatchScore(score);</span>
+
+<span class="pc bpc" id="L230" title="1 of 4 branches missed.">        if (saved.isDone() &amp;&amp; match.getStatus() != MatchStatus.COMPLETED) {</span>
+<span class="fc" id="L231">            match.setStatus(MatchStatus.COMPLETED);</span>
+<span class="fc" id="L232">            saveMatchPort.saveMatch(match);</span>
+<span class="pc bpc" id="L233" title="1 of 4 branches missed.">        } else if (!saved.isDone() &amp;&amp; match.getStatus() == MatchStatus.COMPLETED) {</span>
+<span class="fc" id="L234">            match.setStatus(MatchStatus.IN_PROGRESS);</span>
+<span class="fc" id="L235">            saveMatchPort.saveMatch(match);</span>
+        }
+
+<span class="fc" id="L238">        return saved;</span>
+    }
+
+    /** Sets which player is currently serving on an in-progress match. */
+    @Override
+    public MatchScore setServingPlayer(SetServingPlayerCommand command) {
+<span class="fc" id="L244">        Match match = loadMatchPort.loadMatch(command.matchId())</span>
+<span class="fc" id="L245">                .orElseThrow(() -&gt; new MatchNotFoundException(command.matchId()));</span>
+
+<span class="fc bfc" id="L247" title="All 2 branches covered.">        if (match.getStatus() == MatchStatus.COMPLETED) {</span>
+<span class="fc" id="L248">            throw new MatchAlreadyCompletedException(command.matchId());</span>
+        }
+
+<span class="fc" id="L251">        MatchScore score = loadMatchScorePort.loadMatchScore(command.matchId())</span>
+<span class="fc" id="L252">                .orElseThrow(() -&gt; new MatchNotFoundException(command.matchId()));</span>
+
+<span class="fc bfc" id="L254" title="All 2 branches covered.">        score.setServingPlayer(command.forPlayer1() ? 1 : 2);</span>
+<span class="fc" id="L255">        return saveMatchScorePort.saveMatchScore(score);</span>
+    }
+
+    /**
+     * Ends a match prematurely, marking it completed. If the score was not yet
+     * decided, it is finalised and the winner is inferred from the sets won.
+     */
+    @Override
+    public Match endMatch(UUID matchId) {
+<span class="fc" id="L264">        Match match = loadMatchPort.loadMatch(matchId)</span>
+<span class="pc" id="L265">                .orElseThrow(() -&gt; new MatchNotFoundException(matchId));</span>
+
+<span class="fc" id="L267">        match.setStatus(MatchStatus.COMPLETED);</span>
+<span class="fc" id="L268">        Match saved = saveMatchPort.saveMatch(match);</span>
+
+<span class="fc" id="L270">        loadMatchScorePort.loadMatchScore(matchId).ifPresent(score -&gt; {</span>
+<span class="fc bfc" id="L271" title="All 2 branches covered.">            if (!score.isDone()) {</span>
+<span class="fc" id="L272">                score.setDone(true);</span>
+<span class="fc bfc" id="L273" title="All 2 branches covered.">                if (score.getSetsPlayer1() &gt; score.getSetsPlayer2()) {</span>
+<span class="fc" id="L274">                    score.setWinner(&quot;PLAYER1&quot;);</span>
+<span class="pc bpc" id="L275" title="1 of 2 branches missed.">                } else if (score.getSetsPlayer2() &gt; score.getSetsPlayer1()) {</span>
+<span class="nc" id="L276">                    score.setWinner(&quot;PLAYER2&quot;);</span>
+                }
+<span class="fc" id="L278">                saveMatchScorePort.saveMatchScore(score);</span>
+            }
+<span class="fc" id="L280">        });</span>
+
+<span class="fc" id="L282">        return saved;</span>
+    }
+
+    /**
+     * Ends a match by walkover, completing it and assigning the win to the
+     * given player regardless of the points played so far.
+     *
+     * @throws MatchAlreadyCompletedException if the match is already completed
+     */
+    @Override
+    public Match endMatchWalkover(UUID matchId, boolean player1Wins) {
+<span class="fc" id="L293">        Match match = loadMatchPort.loadMatch(matchId)</span>
+<span class="fc" id="L294">                .orElseThrow(() -&gt; new MatchNotFoundException(matchId));</span>
+
+<span class="fc bfc" id="L296" title="All 2 branches covered.">        if (match.getStatus() == MatchStatus.COMPLETED) {</span>
+<span class="fc" id="L297">            throw new MatchAlreadyCompletedException(matchId);</span>
+        }
+
+<span class="fc" id="L300">        match.setStatus(MatchStatus.COMPLETED);</span>
+<span class="fc" id="L301">        Match saved = saveMatchPort.saveMatch(match);</span>
+
+<span class="fc" id="L303">        loadMatchScorePort.loadMatchScore(matchId).ifPresent(score -&gt; {</span>
+<span class="fc" id="L304">            score.setDone(true);</span>
+<span class="fc bfc" id="L305" title="All 2 branches covered.">            score.setWinner(player1Wins ? &quot;PLAYER1&quot; : &quot;PLAYER2&quot;);</span>
+<span class="fc" id="L306">            saveMatchScorePort.saveMatchScore(score);</span>
+<span class="fc" id="L307">        });</span>
+
+<span class="fc" id="L309">        return saved;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

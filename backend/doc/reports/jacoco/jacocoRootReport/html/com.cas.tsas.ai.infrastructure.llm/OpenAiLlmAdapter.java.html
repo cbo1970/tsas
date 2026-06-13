@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OpenAiLlmAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tsas-backend</a> &gt; <a href="index.source.html" class="el_package">com.cas.tsas.ai.infrastructure.llm</a> &gt; <span class="el_source">OpenAiLlmAdapter.java</span></div><h1>OpenAiLlmAdapter.java</h1><pre class="source lang-java linenums">package com.cas.tsas.ai.infrastructure.llm;
+
+import com.cas.tsas.ai.application.dto.MatchAnalysisResult;
+import com.cas.tsas.ai.application.dto.MatchMetadata;
+import com.cas.tsas.ai.application.port.out.LlmClientPort;
+import com.cas.tsas.statistics.domain.model.MatchStatistics;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.stereotype.Component;
+
+/**
+ * {@link LlmClientPort} implementation backed by Spring AI's {@link ChatClient} against OpenAI.
+ *
+ * &lt;p&gt;Only registered when an OpenAI API key is configured (see {@code @ConditionalOnExpression});
+ * otherwise the {@link FakeLlmClientAdapter} acts as fallback.
+ */
+@Component
+@ConditionalOnExpression(&quot;!'${spring.ai.openai.api-key:}'.isEmpty()&quot;)
+public class OpenAiLlmAdapter implements LlmClientPort {
+
+    private final ChatClient chatClient;
+    private final PromptBuilder promptBuilder;
+    private final String modelName;
+
+    public OpenAiLlmAdapter(ChatClient.Builder chatClientBuilder,
+                            PromptBuilder promptBuilder,
+<span class="fc" id="L28">                            @Value(&quot;${spring.ai.openai.chat.options.model:gpt-4o-mini}&quot;) String modelName) {</span>
+<span class="fc" id="L29">        this.chatClient = chatClientBuilder.build();</span>
+<span class="fc" id="L30">        this.promptBuilder = promptBuilder;</span>
+<span class="fc" id="L31">        this.modelName = modelName;</span>
+<span class="fc" id="L32">    }</span>
+
+    @Override
+    public MatchAnalysisResult generateAnalysis(MatchStatistics stats, MatchMetadata meta) {
+<span class="fc" id="L36">        return chatClient.prompt()</span>
+<span class="fc" id="L37">                .system(promptBuilder.systemPrompt())</span>
+<span class="fc" id="L38">                .user(promptBuilder.userPrompt(stats, meta))</span>
+<span class="fc" id="L39">                .call()</span>
+<span class="fc" id="L40">                .entity(MatchAnalysisResult.class);</span>
+    }
+
+    @Override
+    public String modelName() {
+<span class="fc" id="L45">        return modelName;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

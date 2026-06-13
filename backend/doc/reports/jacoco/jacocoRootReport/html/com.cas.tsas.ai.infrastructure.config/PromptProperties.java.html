@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PromptProperties.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tsas-backend</a> &gt; <a href="index.source.html" class="el_package">com.cas.tsas.ai.infrastructure.config</a> &gt; <span class="el_source">PromptProperties.java</span></div><h1>PromptProperties.java</h1><pre class="source lang-java linenums">package com.cas.tsas.ai.infrastructure.config;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.bind.DefaultValue;
+
+/**
+ * Externalisierte LLM-Prompt-Bausteine. Bindet {@code tsas.ai.prompt.*} aus der
+ * Konfiguration; die {@link DefaultValue}-Texte dienen als sicherer Fallback und können per
+ * {@code application.yml} oder Umgebungsvariable (z. B. {@code TSAS_AI_PROMPT_SYSTEM})
+ * überschrieben werden — etwa zur Sprach- oder Tonalitätsanpassung ohne Neu-Build.
+ *
+ * @param system          Rollen-/Aufgabenbeschreibung für die System-Message.
+ * @param userInstruction Abschliessende Anweisung am Ende der User-Message.
+ */
+@ConfigurationProperties(prefix = &quot;tsas.ai.prompt&quot;)
+<span class="fc" id="L16">public record PromptProperties(</span>
+
+        @DefaultValue(&quot;&quot;&quot;
+                Du bist ein erfahrener Tennis-Coach.
+                Analysiere die übergebenen Match-Statistiken und liefere eine strukturierte taktische Auswertung.
+                Antworte ausschließlich in deutscher Sprache.
+                Halte dich strikt an das vorgegebene JSON-Schema. Liefere 3 bis 5 priorisierte Empfehlungen.
+                &quot;&quot;&quot;)
+        String system,
+
+        @DefaultValue(&quot;Liefere als Auswertung die vier Textfelder und 3-5 priorisierte Empfehlungen.&quot;)
+        String userInstruction
+) {
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

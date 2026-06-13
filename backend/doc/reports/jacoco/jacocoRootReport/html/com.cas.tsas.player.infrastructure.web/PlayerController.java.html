@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PlayerController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tsas-backend</a> &gt; <a href="index.source.html" class="el_package">com.cas.tsas.player.infrastructure.web</a> &gt; <span class="el_source">PlayerController.java</span></div><h1>PlayerController.java</h1><pre class="source lang-java linenums">package com.cas.tsas.player.infrastructure.web;
+
+import com.cas.tsas.player.application.port.in.CreatePlayerUseCase;
+import com.cas.tsas.player.application.port.in.DeletePlayerUseCase;
+import com.cas.tsas.player.application.port.in.SearchPlayerUseCase;
+import com.cas.tsas.player.application.port.in.UpdatePlayerUseCase;
+import com.cas.tsas.player.domain.model.Player;
+import com.cas.tsas.player.infrastructure.web.dto.request.CreatePlayerRequest;
+import com.cas.tsas.player.infrastructure.web.dto.request.UpdatePlayerRequest;
+import com.cas.tsas.player.infrastructure.web.dto.response.PlayerResponse;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+/**
+ * REST adapter exposing the player use cases under {@code /api/players}.
+ * Player responses are enriched with a deletable flag (derived from whether the
+ * player has any matches) and the id of an active match, if any.
+ */
+@RestController
+@RequestMapping(&quot;/api/players&quot;)
+public class PlayerController {
+
+    private final CreatePlayerUseCase createPlayerUseCase;
+    private final SearchPlayerUseCase searchPlayerUseCase;
+    private final UpdatePlayerUseCase updatePlayerUseCase;
+    private final DeletePlayerUseCase deletePlayerUseCase;
+
+    public PlayerController(CreatePlayerUseCase createPlayerUseCase,
+                            SearchPlayerUseCase searchPlayerUseCase,
+                            UpdatePlayerUseCase updatePlayerUseCase,
+<span class="fc" id="L38">                            DeletePlayerUseCase deletePlayerUseCase) {</span>
+<span class="fc" id="L39">        this.createPlayerUseCase = createPlayerUseCase;</span>
+<span class="fc" id="L40">        this.searchPlayerUseCase = searchPlayerUseCase;</span>
+<span class="fc" id="L41">        this.updatePlayerUseCase = updatePlayerUseCase;</span>
+<span class="fc" id="L42">        this.deletePlayerUseCase = deletePlayerUseCase;</span>
+<span class="fc" id="L43">    }</span>
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public PlayerResponse createPlayer(@Valid @RequestBody CreatePlayerRequest request) {
+<span class="fc" id="L48">        var command = new CreatePlayerUseCase.CreatePlayerCommand(</span>
+<span class="fc" id="L49">                request.firstName(),</span>
+<span class="fc" id="L50">                request.lastName(),</span>
+<span class="fc" id="L51">                request.gender(),</span>
+<span class="fc" id="L52">                request.handedness(),</span>
+<span class="fc" id="L53">                request.backhandType(),</span>
+<span class="fc" id="L54">                request.ranking(),</span>
+<span class="fc" id="L55">                request.nationality(),</span>
+<span class="fc" id="L56">                request.birthDate()</span>
+        );
+<span class="fc" id="L58">        var player = createPlayerUseCase.createPlayer(command);</span>
+<span class="fc" id="L59">        return PlayerResponse.from(player, true, null);</span>
+    }
+
+    @GetMapping(&quot;/{id}&quot;)
+    public PlayerResponse getPlayer(@PathVariable UUID id) {
+<span class="fc" id="L64">        Player player = searchPlayerUseCase.findById(id);</span>
+<span class="fc" id="L65">        Map&lt;UUID, UUID&gt; activeMatchIds = searchPlayerUseCase.findActiveMatchIdsByPlayerIds(Set.of(id));</span>
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">        return PlayerResponse.from(player, !deletePlayerUseCase.hasMatches(id), activeMatchIds.get(id));</span>
+    }
+
+    @GetMapping
+    public List&lt;PlayerResponse&gt; listPlayers() {
+<span class="fc" id="L71">        List&lt;Player&gt; players = searchPlayerUseCase.findAll();</span>
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">        if (players.isEmpty()) return List.of();</span>
+<span class="fc" id="L73">        Set&lt;UUID&gt; ids = players.stream().map(Player::getId).collect(Collectors.toSet());</span>
+<span class="fc" id="L74">        Map&lt;UUID, UUID&gt; activeMatchIds = searchPlayerUseCase.findActiveMatchIdsByPlayerIds(ids);</span>
+<span class="fc" id="L75">        return players.stream()</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">                .map(p -&gt; PlayerResponse.from(p, !deletePlayerUseCase.hasMatches(p.getId()), activeMatchIds.get(p.getId())))</span>
+<span class="fc" id="L77">                .toList();</span>
+    }
+
+    @DeleteMapping(&quot;/{id}&quot;)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deletePlayer(@PathVariable UUID id) {
+<span class="fc" id="L83">        deletePlayerUseCase.deletePlayer(id);</span>
+<span class="fc" id="L84">    }</span>
+
+    @PutMapping(&quot;/{id}&quot;)
+    public PlayerResponse updatePlayer(@PathVariable UUID id,
+                                       @Valid @RequestBody UpdatePlayerRequest request) {
+<span class="fc" id="L89">        var command = new UpdatePlayerUseCase.UpdatePlayerCommand(</span>
+                id,
+<span class="fc" id="L91">                request.firstName(),</span>
+<span class="fc" id="L92">                request.lastName(),</span>
+<span class="fc" id="L93">                request.gender(),</span>
+<span class="fc" id="L94">                request.handedness(),</span>
+<span class="fc" id="L95">                request.backhandType(),</span>
+<span class="fc" id="L96">                request.ranking(),</span>
+<span class="fc" id="L97">                request.nationality(),</span>
+<span class="fc" id="L98">                request.birthDate()</span>
+        );
+<span class="fc" id="L100">        var player = updatePlayerUseCase.updatePlayer(command);</span>
+<span class="fc" id="L101">        Map&lt;UUID, UUID&gt; activeMatchIds = searchPlayerUseCase.findActiveMatchIdsByPlayerIds(Set.of(id));</span>
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">        return PlayerResponse.from(player, !deletePlayerUseCase.hasMatches(id), activeMatchIds.get(id));</span>
+    }
+
+    /** Soft-deletes the player; used when a hard delete is refused due to existing matches. */
+    @PatchMapping(&quot;/{id}/deactivate&quot;)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deactivatePlayer(@PathVariable UUID id) {
+<span class="fc" id="L109">        deletePlayerUseCase.deactivatePlayer(id);</span>
+<span class="fc" id="L110">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

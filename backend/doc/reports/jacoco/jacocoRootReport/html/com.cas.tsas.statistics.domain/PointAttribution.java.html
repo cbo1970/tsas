@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PointAttribution.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tsas-backend</a> &gt; <a href="index.source.html" class="el_package">com.cas.tsas.statistics.domain</a> &gt; <span class="el_source">PointAttribution.java</span></div><h1>PointAttribution.java</h1><pre class="source lang-java linenums">package com.cas.tsas.statistics.domain;
+
+import com.cas.tsas.match.domain.model.Point;
+
+/**
+ * Determines which of the two players a point's outcome is statistically attributed to.
+ *
+ * &lt;p&gt;Attribution is not the same as winning the point: positive actions are credited to
+ * their author, while errors are charged to the player who committed them (the opponent of
+ * the point winner).
+ */
+public final class PointAttribution {
+
+    private PointAttribution() {}
+
+    /**
+     * Returns the player number (1 or 2) the point is attributed to:
+     * &lt;ul&gt;
+     *   &lt;li&gt;{@code WINNER} → the point winner (the player who hit the winning shot)&lt;/li&gt;
+     *   &lt;li&gt;{@code ACE}, {@code DOUBLE_FAULT} → the serving player; requires
+     *       {@code servingPlayer} to be set, otherwise an {@link IllegalStateException} is thrown&lt;/li&gt;
+     *   &lt;li&gt;{@code UNFORCED_ERROR}, {@code FORCED_ERROR}, {@code NET}, {@code OUT_LONG},
+     *       {@code OUT_SIDE} → the opponent of the point winner (the player who caused the error)&lt;/li&gt;
+     * &lt;/ul&gt;
+     *
+     * @throws IllegalStateException if an ACE or DOUBLE_FAULT point has no serving player set
+     */
+    public static int attributingPlayer(Point p) {
+<span class="fc bfc" id="L29" title="All 3 branches covered.">        return switch (p.getPointType()) {</span>
+<span class="fc" id="L30">            case WINNER -&gt; p.getWinner();</span>
+            case ACE, DOUBLE_FAULT -&gt; {
+<span class="fc bfc" id="L32" title="All 2 branches covered.">                if (p.getServingPlayer() == null) {</span>
+<span class="fc" id="L33">                    throw new IllegalStateException(</span>
+<span class="fc" id="L34">                            &quot;Point &quot; + p.getId() + &quot; of type &quot; + p.getPointType() +</span>
+                            &quot; has no servingPlayer set&quot;);
+                }
+<span class="fc" id="L37">                yield p.getServingPlayer();</span>
+            }
+            case UNFORCED_ERROR, FORCED_ERROR, NET, OUT_LONG, OUT_SIDE -&gt;
+<span class="fc bfc" id="L40" title="All 2 branches covered.">                    p.getWinner() == 1 ? 2 : 1;</span>
+        };
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

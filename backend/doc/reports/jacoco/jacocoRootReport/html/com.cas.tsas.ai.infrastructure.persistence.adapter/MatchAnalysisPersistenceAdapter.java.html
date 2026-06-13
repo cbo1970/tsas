@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MatchAnalysisPersistenceAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tsas-backend</a> &gt; <a href="index.source.html" class="el_package">com.cas.tsas.ai.infrastructure.persistence.adapter</a> &gt; <span class="el_source">MatchAnalysisPersistenceAdapter.java</span></div><h1>MatchAnalysisPersistenceAdapter.java</h1><pre class="source lang-java linenums">package com.cas.tsas.ai.infrastructure.persistence.adapter;
+
+import com.cas.tsas.ai.application.port.out.LoadMatchAnalysisPort;
+import com.cas.tsas.ai.application.port.out.SaveMatchAnalysisPort;
+import com.cas.tsas.ai.domain.model.MatchAnalysis;
+import com.cas.tsas.ai.domain.model.Recommendation;
+import com.cas.tsas.ai.infrastructure.persistence.entity.MatchAnalysisJpaEntity;
+import com.cas.tsas.ai.infrastructure.persistence.repository.MatchAnalysisJpaRepository;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+/**
+ * Persistence adapter for {@link MatchAnalysis}, mapping between the domain model and the JPA
+ * entity. The recommendation list has no own table and is stored as a JSON string column.
+ */
+@Component
+public class MatchAnalysisPersistenceAdapter implements SaveMatchAnalysisPort, LoadMatchAnalysisPort {
+
+<span class="fc" id="L25">    private static final TypeReference&lt;List&lt;Recommendation&gt;&gt; RECOMMENDATION_LIST =</span>
+<span class="fc" id="L26">            new TypeReference&lt;&gt;() {};</span>
+
+    private final MatchAnalysisJpaRepository repo;
+    private final ObjectMapper objectMapper;
+
+<span class="fc" id="L31">    public MatchAnalysisPersistenceAdapter(MatchAnalysisJpaRepository repo, ObjectMapper objectMapper) {</span>
+<span class="fc" id="L32">        this.repo = repo;</span>
+<span class="fc" id="L33">        this.objectMapper = objectMapper;</span>
+<span class="fc" id="L34">    }</span>
+
+    @Override
+    public MatchAnalysis save(MatchAnalysis a) {
+<span class="fc" id="L38">        MatchAnalysisJpaEntity e = repo.findByMatchId(a.getMatchId())</span>
+<span class="fc" id="L39">                .orElseGet(MatchAnalysisJpaEntity::new);</span>
+<span class="fc" id="L40">        e.setMatchId(a.getMatchId());</span>
+<span class="fc" id="L41">        e.setStatus(a.getStatus());</span>
+<span class="fc" id="L42">        e.setKeyMoments(a.getKeyMoments());</span>
+<span class="fc" id="L43">        e.setOwnStrengths(a.getOwnStrengths());</span>
+<span class="fc" id="L44">        e.setOwnWeaknesses(a.getOwnWeaknesses());</span>
+<span class="fc" id="L45">        e.setOpponentStrengths(a.getOpponentStrengths());</span>
+<span class="fc" id="L46">        e.setOpponentWeaknesses(a.getOpponentWeaknesses());</span>
+<span class="fc" id="L47">        e.setRecommendationsJson(writeJson(a.getRecommendations()));</span>
+<span class="fc" id="L48">        e.setModelUsed(a.getModelUsed());</span>
+<span class="fc" id="L49">        e.setErrorMessage(a.getErrorMessage());</span>
+<span class="fc" id="L50">        e.setGeneratedAt(a.getGeneratedAt());</span>
+<span class="fc" id="L51">        MatchAnalysisJpaEntity saved = repo.save(e);</span>
+<span class="fc" id="L52">        a.setId(saved.getId());</span>
+<span class="fc" id="L53">        return a;</span>
+    }
+
+    @Override
+    public Optional&lt;MatchAnalysis&gt; loadByMatchId(UUID matchId) {
+<span class="fc" id="L58">        return repo.findByMatchId(matchId).map(this::toDomain);</span>
+    }
+
+    private MatchAnalysis toDomain(MatchAnalysisJpaEntity e) {
+<span class="fc" id="L62">        MatchAnalysis a = new MatchAnalysis();</span>
+<span class="fc" id="L63">        a.setId(e.getId());</span>
+<span class="fc" id="L64">        a.setMatchId(e.getMatchId());</span>
+<span class="fc" id="L65">        a.setStatus(e.getStatus());</span>
+<span class="fc" id="L66">        a.setKeyMoments(e.getKeyMoments());</span>
+<span class="fc" id="L67">        a.setOwnStrengths(e.getOwnStrengths());</span>
+<span class="fc" id="L68">        a.setOwnWeaknesses(e.getOwnWeaknesses());</span>
+<span class="fc" id="L69">        a.setOpponentStrengths(e.getOpponentStrengths());</span>
+<span class="fc" id="L70">        a.setOpponentWeaknesses(e.getOpponentWeaknesses());</span>
+<span class="fc" id="L71">        a.setRecommendations(readJson(e.getRecommendationsJson()));</span>
+<span class="fc" id="L72">        a.setModelUsed(e.getModelUsed());</span>
+<span class="fc" id="L73">        a.setErrorMessage(e.getErrorMessage());</span>
+<span class="fc" id="L74">        a.setGeneratedAt(e.getGeneratedAt());</span>
+<span class="fc" id="L75">        return a;</span>
+    }
+
+    /** Serialises the recommendations to a JSON array string (empty array for {@code null}). */
+    private String writeJson(List&lt;Recommendation&gt; list) {
+        try {
+<span class="fc bfc" id="L81" title="All 2 branches covered.">            return objectMapper.writeValueAsString(list == null ? List.of() : list);</span>
+<span class="nc" id="L82">        } catch (JacksonException ex) {</span>
+<span class="nc" id="L83">            throw new IllegalStateException(&quot;Cannot serialize recommendations&quot;, ex);</span>
+        }
+    }
+
+    /** Deserialises the stored JSON back into recommendations; blank/null yields an empty list. */
+    private List&lt;Recommendation&gt; readJson(String json) {
+<span class="pc bpc" id="L89" title="2 of 4 branches missed.">        if (json == null || json.isBlank()) return List.of();</span>
+        try {
+<span class="fc" id="L91">            return objectMapper.readValue(json, RECOMMENDATION_LIST);</span>
+<span class="nc" id="L92">        } catch (JacksonException ex) {</span>
+<span class="nc" id="L93">            throw new IllegalStateException(&quot;Cannot deserialize recommendations: &quot; + json, ex);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>
