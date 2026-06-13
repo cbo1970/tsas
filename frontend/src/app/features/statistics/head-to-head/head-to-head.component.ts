@@ -3,7 +3,6 @@ import { ActivatedRoute } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
-import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../core/services/api.service';
 import { Player } from '../../../core/models/player.model';
@@ -12,7 +11,7 @@ import { HeadToHeadStatistics } from '../../../core/models/statistics.model';
 @Component({
   selector: 'app-head-to-head',
   standalone: true,
-  imports: [MatButtonModule, MatFormFieldModule, MatSelectModule, NgClass, FormsModule],
+  imports: [MatButtonModule, MatFormFieldModule, MatSelectModule, FormsModule],
   templateUrl: './head-to-head.component.html',
   styles: [`
     :host { display: block; min-height: 100dvh; background: #0f172a; color: #eee; font-family: sans-serif; }
