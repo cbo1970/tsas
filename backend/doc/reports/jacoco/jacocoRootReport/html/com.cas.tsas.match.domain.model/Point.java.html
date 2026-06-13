@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Point.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tsas-backend</a> &gt; <a href="index.source.html" class="el_package">com.cas.tsas.match.domain.model</a> &gt; <span class="el_source">Point.java</span></div><h1>Point.java</h1><pre class="source lang-java linenums">package com.cas.tsas.match.domain.model;
+
+import java.util.UUID;
+
+/**
+ * Domain entity representing a single point within a match. Carries its position
+ * (set/game/point number), who won it ({@code winner}: 1 or 2), the fixed point
+ * attribute ({@link PointType}) plus optional stroke, direction, serve attempt and
+ * free-text remark. Pure POJO — no framework dependencies.
+ *
+ * &lt;p&gt;Invariant: {@code winner} is always either 1 (player 1) or 2 (player 2); this
+ * is enforced by the all-args constructor and {@link #setWinner(int)} because the
+ * statistics attribution ({@code PointAttribution}) relies on it.
+ */
+public class Point {
+
+    private UUID id;
+    private UUID matchId;
+    private int setNumber;
+    private int gameNumber;
+    private int pointNumber;
+    private int winner;
+    private PointType pointType;
+    private StrokeType strokeType;
+    private Direction direction;
+    private Integer servingPlayer;
+    private boolean isBreakPoint;
+    private String remark;
+    private Integer serveAttempt;
+
+<span class="nc" id="L31">    public Point() {}</span>
+
+    public Point(UUID id, UUID matchId, int setNumber, int gameNumber, int pointNumber,
+                 int winner, PointType pointType, StrokeType strokeType, Direction direction,
+<span class="fc" id="L35">                 Integer servingPlayer, boolean isBreakPoint, String remark, Integer serveAttempt) {</span>
+<span class="fc" id="L36">        this.id = id;</span>
+<span class="fc" id="L37">        this.matchId = matchId;</span>
+<span class="fc" id="L38">        this.setNumber = setNumber;</span>
+<span class="fc" id="L39">        this.gameNumber = gameNumber;</span>
+<span class="fc" id="L40">        this.pointNumber = pointNumber;</span>
+<span class="fc" id="L41">        this.winner = requireValidWinner(winner);</span>
+<span class="fc" id="L42">        this.pointType = pointType;</span>
+<span class="fc" id="L43">        this.strokeType = strokeType;</span>
+<span class="fc" id="L44">        this.direction = direction;</span>
+<span class="fc" id="L45">        this.servingPlayer = servingPlayer;</span>
+<span class="fc" id="L46">        this.isBreakPoint = isBreakPoint;</span>
+<span class="fc" id="L47">        this.remark = remark;</span>
+<span class="fc" id="L48">        this.serveAttempt = serveAttempt;</span>
+<span class="fc" id="L49">    }</span>
+
+<span class="fc" id="L51">    public UUID getId() { return id; }</span>
+<span class="nc" id="L52">    public void setId(UUID id) { this.id = id; }</span>
+<span class="fc" id="L53">    public UUID getMatchId() { return matchId; }</span>
+<span class="nc" id="L54">    public void setMatchId(UUID matchId) { this.matchId = matchId; }</span>
+<span class="fc" id="L55">    public int getSetNumber() { return setNumber; }</span>
+<span class="nc" id="L56">    public void setSetNumber(int setNumber) { this.setNumber = setNumber; }</span>
+<span class="fc" id="L57">    public int getGameNumber() { return gameNumber; }</span>
+<span class="nc" id="L58">    public void setGameNumber(int gameNumber) { this.gameNumber = gameNumber; }</span>
+<span class="fc" id="L59">    public int getPointNumber() { return pointNumber; }</span>
+<span class="nc" id="L60">    public void setPointNumber(int pointNumber) { this.pointNumber = pointNumber; }</span>
+<span class="fc" id="L61">    public int getWinner() { return winner; }</span>
+<span class="nc" id="L62">    public void setWinner(int winner) { this.winner = requireValidWinner(winner); }</span>
+<span class="fc" id="L63">    public PointType getPointType() { return pointType; }</span>
+<span class="nc" id="L64">    public void setPointType(PointType pointType) { this.pointType = pointType; }</span>
+<span class="fc" id="L65">    public StrokeType getStrokeType() { return strokeType; }</span>
+<span class="nc" id="L66">    public void setStrokeType(StrokeType strokeType) { this.strokeType = strokeType; }</span>
+<span class="fc" id="L67">    public Direction getDirection() { return direction; }</span>
+<span class="nc" id="L68">    public void setDirection(Direction direction) { this.direction = direction; }</span>
+<span class="fc" id="L69">    public Integer getServingPlayer() { return servingPlayer; }</span>
+<span class="nc" id="L70">    public void setServingPlayer(Integer servingPlayer) { this.servingPlayer = servingPlayer; }</span>
+<span class="fc" id="L71">    public boolean isBreakPoint() { return isBreakPoint; }</span>
+<span class="nc" id="L72">    public void setBreakPoint(boolean breakPoint) { isBreakPoint = breakPoint; }</span>
+<span class="fc" id="L73">    public String getRemark() { return remark; }</span>
+<span class="nc" id="L74">    public void setRemark(String remark) { this.remark = remark; }</span>
+<span class="fc" id="L75">    public Integer getServeAttempt() { return serveAttempt; }</span>
+<span class="nc" id="L76">    public void setServeAttempt(Integer serveAttempt) { this.serveAttempt = serveAttempt; }</span>
+
+    private static int requireValidWinner(int winner) {
+<span class="pc bpc" id="L79" title="1 of 4 branches missed.">        if (winner != 1 &amp;&amp; winner != 2) {</span>
+<span class="nc" id="L80">            throw new IllegalArgumentException(&quot;Point winner must be 1 or 2, but was: &quot; + winner);</span>
+        }
+<span class="fc" id="L82">        return winner;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

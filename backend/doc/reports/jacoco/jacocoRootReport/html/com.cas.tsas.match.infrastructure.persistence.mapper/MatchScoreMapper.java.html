@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MatchScoreMapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tsas-backend</a> &gt; <a href="index.source.html" class="el_package">com.cas.tsas.match.infrastructure.persistence.mapper</a> &gt; <span class="el_source">MatchScoreMapper.java</span></div><h1>MatchScoreMapper.java</h1><pre class="source lang-java linenums">package com.cas.tsas.match.infrastructure.persistence.mapper;
+
+import com.cas.tsas.match.domain.model.MatchScore;
+import com.cas.tsas.match.infrastructure.persistence.entity.MatchScoreJpaEntity;
+import org.springframework.stereotype.Component;
+
+/** Maps between {@link MatchScore} domain objects and {@link MatchScoreJpaEntity}. */
+@Component
+<span class="fc" id="L9">public class MatchScoreMapper {</span>
+
+    public MatchScore toDomain(MatchScoreJpaEntity entity) {
+<span class="fc" id="L12">        return new MatchScore(</span>
+<span class="fc" id="L13">                entity.getId(),</span>
+<span class="fc" id="L14">                entity.getMatchId(),</span>
+<span class="fc" id="L15">                entity.getPointsPlayer1(),</span>
+<span class="fc" id="L16">                entity.getPointsPlayer2(),</span>
+<span class="fc" id="L17">                entity.getGamesPlayer1(),</span>
+<span class="fc" id="L18">                entity.getGamesPlayer2(),</span>
+<span class="fc" id="L19">                entity.getSetsPlayer1(),</span>
+<span class="fc" id="L20">                entity.getSetsPlayer2(),</span>
+<span class="fc" id="L21">                entity.isDeuce(),</span>
+<span class="fc" id="L22">                entity.getIsAdvantagePlayer1(),</span>
+<span class="fc" id="L23">                entity.getCurrentSet(),</span>
+<span class="fc" id="L24">                entity.isDone(),</span>
+<span class="fc" id="L25">                entity.getWinner(),</span>
+<span class="fc" id="L26">                entity.getAcesPlayer1(),</span>
+<span class="fc" id="L27">                entity.getAcesPlayer2(),</span>
+<span class="fc" id="L28">                entity.getServingPlayer()</span>
+        );
+    }
+
+    public MatchScoreJpaEntity toEntity(MatchScore score) {
+<span class="fc" id="L33">        MatchScoreJpaEntity entity = new MatchScoreJpaEntity();</span>
+<span class="fc" id="L34">        entity.setId(score.getId());</span>
+<span class="fc" id="L35">        entity.setMatchId(score.getMatchId());</span>
+<span class="fc" id="L36">        entity.setPointsPlayer1(score.getPointsPlayer1());</span>
+<span class="fc" id="L37">        entity.setPointsPlayer2(score.getPointsPlayer2());</span>
+<span class="fc" id="L38">        entity.setGamesPlayer1(score.getGamesPlayer1());</span>
+<span class="fc" id="L39">        entity.setGamesPlayer2(score.getGamesPlayer2());</span>
+<span class="fc" id="L40">        entity.setSetsPlayer1(score.getSetsPlayer1());</span>
+<span class="fc" id="L41">        entity.setSetsPlayer2(score.getSetsPlayer2());</span>
+<span class="fc" id="L42">        entity.setDeuce(score.isDeuce());</span>
+<span class="fc" id="L43">        entity.setIsAdvantagePlayer1(score.getIsAdvantagePlayer1());</span>
+<span class="fc" id="L44">        entity.setCurrentSet(score.getCurrentSet());</span>
+<span class="fc" id="L45">        entity.setDone(score.isDone());</span>
+<span class="fc" id="L46">        entity.setWinner(score.getWinner());</span>
+<span class="fc" id="L47">        entity.setAcesPlayer1(score.getAcesPlayer1());</span>
+<span class="fc" id="L48">        entity.setAcesPlayer2(score.getAcesPlayer2());</span>
+<span class="fc" id="L49">        entity.setServingPlayer(score.getServingPlayer());</span>
+<span class="fc" id="L50">        return entity;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

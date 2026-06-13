@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MatchController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tsas-backend</a> &gt; <a href="index.source.html" class="el_package">com.cas.tsas.match.infrastructure.web</a> &gt; <span class="el_source">MatchController.java</span></div><h1>MatchController.java</h1><pre class="source lang-java linenums">package com.cas.tsas.match.infrastructure.web;
+
+import com.cas.tsas.match.application.port.in.CreateMatchUseCase;
+import com.cas.tsas.match.application.port.in.EndMatchUseCase;
+import com.cas.tsas.match.application.port.in.GetMatchUseCase;
+import com.cas.tsas.match.application.port.in.RecordPointUseCase;
+import com.cas.tsas.match.application.port.in.SetScoreUseCase;
+import com.cas.tsas.match.application.port.in.SetServingPlayerUseCase;
+import com.cas.tsas.match.domain.model.Direction;
+import com.cas.tsas.match.domain.model.Match;
+import com.cas.tsas.match.domain.model.MatchScore;
+import com.cas.tsas.match.domain.model.PointType;
+import com.cas.tsas.match.domain.model.StrokeType;
+import com.cas.tsas.match.infrastructure.web.dto.request.CreateMatchRequest;
+import com.cas.tsas.match.infrastructure.web.dto.request.EndMatchWalkoverRequest;
+import com.cas.tsas.match.infrastructure.web.dto.request.RecordPointRequest;
+import com.cas.tsas.match.infrastructure.web.dto.request.SetScoreRequest;
+import com.cas.tsas.match.infrastructure.web.dto.response.MatchResponse;
+import com.cas.tsas.match.infrastructure.web.dto.response.MatchScoreResponse;
+import com.cas.tsas.match.infrastructure.web.dto.response.MatchWithScoreResponse;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * REST adapter exposing the match use cases under {@code /api/matches}.
+ * Translates HTTP request DTOs into use-case commands and domain objects into
+ * response DTOs.
+ */
+@RestController
+@RequestMapping(&quot;/api/matches&quot;)
+public class MatchController {
+
+    private final CreateMatchUseCase createMatchUseCase;
+    private final GetMatchUseCase getMatchUseCase;
+    private final RecordPointUseCase recordPointUseCase;
+    private final SetScoreUseCase setScoreUseCase;
+    private final EndMatchUseCase endMatchUseCase;
+    private final SetServingPlayerUseCase setServingPlayerUseCase;
+
+    public MatchController(CreateMatchUseCase createMatchUseCase,
+                           GetMatchUseCase getMatchUseCase,
+                           RecordPointUseCase recordPointUseCase,
+                           SetScoreUseCase setScoreUseCase,
+                           EndMatchUseCase endMatchUseCase,
+<span class="fc" id="L49">                           SetServingPlayerUseCase setServingPlayerUseCase) {</span>
+<span class="fc" id="L50">        this.createMatchUseCase = createMatchUseCase;</span>
+<span class="fc" id="L51">        this.getMatchUseCase = getMatchUseCase;</span>
+<span class="fc" id="L52">        this.recordPointUseCase = recordPointUseCase;</span>
+<span class="fc" id="L53">        this.setScoreUseCase = setScoreUseCase;</span>
+<span class="fc" id="L54">        this.endMatchUseCase = endMatchUseCase;</span>
+<span class="fc" id="L55">        this.setServingPlayerUseCase = setServingPlayerUseCase;</span>
+<span class="fc" id="L56">    }</span>
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public MatchResponse createMatch(@Valid @RequestBody CreateMatchRequest request) {
+<span class="fc" id="L61">        var command = new CreateMatchUseCase.CreateMatchCommand(</span>
+<span class="fc" id="L62">                request.player1Id(),</span>
+<span class="fc" id="L63">                request.player2Id(),</span>
+<span class="fc" id="L64">                request.setsToWin(),</span>
+<span class="fc" id="L65">                request.matchTiebreak(),</span>
+<span class="fc" id="L66">                request.shortSet()</span>
+        );
+<span class="fc" id="L68">        return MatchResponse.from(createMatchUseCase.createMatch(command));</span>
+    }
+
+    @GetMapping
+    public List&lt;MatchResponse&gt; listMatches() {
+<span class="fc" id="L73">        return getMatchUseCase.findAll().stream()</span>
+<span class="fc" id="L74">                .map(MatchResponse::from)</span>
+<span class="fc" id="L75">                .toList();</span>
+    }
+
+    @GetMapping(&quot;/{id}&quot;)
+    public MatchWithScoreResponse getMatch(@PathVariable UUID id) {
+<span class="fc" id="L80">        var match = getMatchUseCase.findById(id);</span>
+<span class="fc" id="L81">        var score = getMatchUseCase.getScore(id);</span>
+<span class="fc" id="L82">        return MatchWithScoreResponse.from(match, score);</span>
+    }
+
+    /**
+     * Records a point on the match. The optional point/stroke/direction fields
+     * arrive as strings and are converted to their domain enums (null when
+     * absent) before being passed to the use case.
+     */
+    @PostMapping(&quot;/{id}/points&quot;)
+    @ResponseStatus(HttpStatus.CREATED)
+    public MatchWithScoreResponse recordPoint(@PathVariable UUID id,
+                                              @Valid @RequestBody RecordPointRequest request) {
+<span class="fc" id="L94">        var command = new RecordPointUseCase.RecordPointCommand(</span>
+                id,
+<span class="fc" id="L96">                request.winner(),</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">                request.pointType() != null ? PointType.valueOf(request.pointType()) : null,</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">                request.strokeType() != null ? StrokeType.valueOf(request.strokeType()) : null,</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">                request.direction() != null ? Direction.valueOf(request.direction()) : null,</span>
+<span class="fc" id="L100">                request.remark(),</span>
+<span class="fc" id="L101">                request.serveAttempt()</span>
+        );
+<span class="fc" id="L103">        MatchScore score = recordPointUseCase.recordPoint(command);</span>
+<span class="fc" id="L104">        Match match = getMatchUseCase.findById(id);</span>
+<span class="fc" id="L105">        return MatchWithScoreResponse.from(match, score);</span>
+    }
+
+    @PostMapping(&quot;/{id}/serve/player1&quot;)
+    public MatchScoreResponse servePlayer1(@PathVariable UUID id) {
+<span class="fc" id="L110">        var command = new SetServingPlayerUseCase.SetServingPlayerCommand(id, true);</span>
+<span class="fc" id="L111">        return MatchScoreResponse.from(setServingPlayerUseCase.setServingPlayer(command));</span>
+    }
+
+    @PostMapping(&quot;/{id}/serve/player2&quot;)
+    public MatchScoreResponse servePlayer2(@PathVariable UUID id) {
+<span class="fc" id="L116">        var command = new SetServingPlayerUseCase.SetServingPlayerCommand(id, false);</span>
+<span class="fc" id="L117">        return MatchScoreResponse.from(setServingPlayerUseCase.setServingPlayer(command));</span>
+    }
+
+    @PutMapping(&quot;/{id}/score&quot;)
+    public MatchScoreResponse setScore(@PathVariable UUID id,
+                                       @Valid @RequestBody SetScoreRequest request) {
+<span class="nc" id="L123">        var command = new SetScoreUseCase.SetScoreCommand(</span>
+                id,
+<span class="nc" id="L125">                request.pointsPlayer1(),</span>
+<span class="nc" id="L126">                request.pointsPlayer2(),</span>
+<span class="nc" id="L127">                request.gamesPlayer1(),</span>
+<span class="nc" id="L128">                request.gamesPlayer2(),</span>
+<span class="nc" id="L129">                request.setsPlayer1(),</span>
+<span class="nc" id="L130">                request.setsPlayer2(),</span>
+<span class="nc" id="L131">                request.isDeuce(),</span>
+<span class="nc" id="L132">                request.isAdvantagePlayer1(),</span>
+<span class="nc" id="L133">                request.currentSet(),</span>
+<span class="nc" id="L134">                request.isDone(),</span>
+<span class="nc" id="L135">                request.winner()</span>
+        );
+<span class="nc" id="L137">        return MatchScoreResponse.from(setScoreUseCase.setScore(command));</span>
+    }
+
+    @PostMapping(&quot;/{id}/end&quot;)
+    public MatchResponse endMatch(@PathVariable UUID id) {
+<span class="fc" id="L142">        return MatchResponse.from(endMatchUseCase.endMatch(id));</span>
+    }
+
+    /** Ends the match by walkover; the request body names the winning player. */
+    @PostMapping(&quot;/{id}/end/walkover&quot;)
+    public MatchResponse endMatchWalkover(@PathVariable UUID id,
+                                          @Valid @RequestBody EndMatchWalkoverRequest request) {
+<span class="fc" id="L149">        return MatchResponse.from(endMatchUseCase.endMatchWalkover(id, &quot;PLAYER1&quot;.equals(request.winner())));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

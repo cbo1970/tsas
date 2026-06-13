@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HeadToHeadStatisticsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tsas-backend</a> &gt; <a href="index.source.html" class="el_package">com.cas.tsas.statistics.application.service</a> &gt; <span class="el_source">HeadToHeadStatisticsService.java</span></div><h1>HeadToHeadStatisticsService.java</h1><pre class="source lang-java linenums">package com.cas.tsas.statistics.application.service;
+
+import com.cas.tsas.match.application.port.out.LoadMatchScorePort;
+import com.cas.tsas.match.application.port.out.LoadMatchesByPlayersPort;
+import com.cas.tsas.match.application.port.out.LoadPointsByMatchPort;
+import com.cas.tsas.match.domain.model.Match;
+import com.cas.tsas.match.domain.model.MatchScore;
+import com.cas.tsas.match.domain.model.Point;
+import com.cas.tsas.match.domain.model.PointType;
+import com.cas.tsas.player.application.port.out.LoadPlayerPort;
+import com.cas.tsas.player.domain.exception.PlayerNotFoundException;
+import com.cas.tsas.statistics.application.port.in.ComputeHeadToHeadStatisticsUseCase;
+import com.cas.tsas.statistics.domain.model.HeadToHeadPlayerStats;
+import com.cas.tsas.statistics.domain.model.HeadToHeadStatistics;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+/**
+ * Computes head-to-head statistics (FA-08) on the fly from the recorded points of all matches
+ * two players have played against each other. Raw counters are accumulated per real player UUID
+ * (each match's positional player 1/2 is mapped to the actual player), then derived into
+ * percentages. Match/set balance is taken from the persisted {@link MatchScore} of completed
+ * matches only.
+ */
+@Service
+public class HeadToHeadStatisticsService implements ComputeHeadToHeadStatisticsUseCase {
+
+    private final LoadPlayerPort loadPlayerPort;
+    private final LoadMatchesByPlayersPort loadMatchesByPlayersPort;
+    private final LoadPointsByMatchPort loadPointsByMatchPort;
+    private final LoadMatchScorePort loadMatchScorePort;
+
+    public HeadToHeadStatisticsService(LoadPlayerPort loadPlayerPort,
+                                       LoadMatchesByPlayersPort loadMatchesByPlayersPort,
+                                       LoadPointsByMatchPort loadPointsByMatchPort,
+<span class="fc" id="L39">                                       LoadMatchScorePort loadMatchScorePort) {</span>
+<span class="fc" id="L40">        this.loadPlayerPort = loadPlayerPort;</span>
+<span class="fc" id="L41">        this.loadMatchesByPlayersPort = loadMatchesByPlayersPort;</span>
+<span class="fc" id="L42">        this.loadPointsByMatchPort = loadPointsByMatchPort;</span>
+<span class="fc" id="L43">        this.loadMatchScorePort = loadMatchScorePort;</span>
+<span class="fc" id="L44">    }</span>
+
+    @Override
+    public HeadToHeadStatistics compute(UUID player1Id, UUID player2Id) {
+<span class="fc bfc" id="L48" title="All 2 branches covered.">        if (player1Id.equals(player2Id)) {</span>
+<span class="fc" id="L49">            throw new IllegalArgumentException(&quot;player1 and player2 must be different&quot;);</span>
+        }
+<span class="fc" id="L51">        loadPlayerPort.loadPlayer(player1Id).orElseThrow(() -&gt; new PlayerNotFoundException(player1Id));</span>
+<span class="fc" id="L52">        loadPlayerPort.loadPlayer(player2Id).orElseThrow(() -&gt; new PlayerNotFoundException(player2Id));</span>
+
+<span class="fc" id="L54">        Accumulator acc1 = new Accumulator();</span>
+<span class="fc" id="L55">        Accumulator acc2 = new Accumulator();</span>
+<span class="fc" id="L56">        int totalPoints = 0;</span>
+<span class="fc" id="L57">        int matchesPlayed = 0;</span>
+
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        for (Match match : loadMatchesByPlayersPort.loadMatchesBetween(player1Id, player2Id)) {</span>
+<span class="fc" id="L60">            boolean p1IsPosition1 = match.getPlayer1Id().equals(player1Id);</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">            Accumulator pos1 = p1IsPosition1 ? acc1 : acc2;</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">            Accumulator pos2 = p1IsPosition1 ? acc2 : acc1;</span>
+
+<span class="fc" id="L64">            List&lt;Point&gt; points = loadPointsByMatchPort.loadPointsByMatch(match.getId());</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">            for (Point p : points) {</span>
+<span class="fc" id="L66">                totalPoints++;</span>
+<span class="fc" id="L67">                accumulatePoint(p, pos1, pos2);</span>
+<span class="fc" id="L68">            }</span>
+<span class="fc" id="L69">            accumulateReturnGames(points, pos1, pos2);</span>
+
+<span class="fc" id="L71">            Optional&lt;MatchScore&gt; score = loadMatchScorePort.loadMatchScore(match.getId());</span>
+<span class="fc bfc" id="L72" title="All 4 branches covered.">            if (score.isPresent() &amp;&amp; score.get().getWinner() != null) {</span>
+<span class="fc" id="L73">                matchesPlayed++;</span>
+<span class="fc" id="L74">                accumulateBalance(score.get(), pos1, pos2);</span>
+            }
+<span class="fc" id="L76">        }</span>
+
+<span class="fc" id="L78">        return new HeadToHeadStatistics(player1Id, player2Id, matchesPlayed,</span>
+<span class="fc" id="L79">                acc1.toStats(player1Id, totalPoints), acc2.toStats(player2Id, totalPoints));</span>
+    }
+
+    private void accumulatePoint(Point p, Accumulator pos1, Accumulator pos2) {
+<span class="fc bfc" id="L83" title="All 2 branches covered.">        Accumulator winnerAcc = p.getWinner() == 1 ? pos1 : pos2;</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        Accumulator loserAcc = p.getWinner() == 1 ? pos2 : pos1;</span>
+
+<span class="fc bfc" id="L86" title="All 2 branches covered.">        if (p.getPointType() == PointType.WINNER) {</span>
+<span class="fc" id="L87">            winnerAcc.winners++;</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        } else if (p.getPointType() == PointType.UNFORCED_ERROR) {</span>
+<span class="fc" id="L89">            loserAcc.unforcedErrors++;</span>
+        }
+
+<span class="fc" id="L92">        Integer server = p.getServingPlayer();</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        if (server != null) {</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">            Accumulator serverAcc = server == 1 ? pos1 : pos2;</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">            Accumulator returnerAcc = server == 1 ? pos2 : pos1;</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">            if (p.getPointType() == PointType.ACE) serverAcc.aces++;</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">            if (p.getPointType() == PointType.DOUBLE_FAULT) serverAcc.doubleFaults++;</span>
+
+<span class="fc" id="L99">            Integer attempt = p.getServeAttempt();</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">            if (attempt != null) {</span>
+<span class="fc" id="L101">                serverAcc.serveAttemptsTotal++;</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">                boolean serverWon = p.getWinner() == server;</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">                if (attempt == 1) {</span>
+<span class="fc" id="L104">                    serverAcc.firstServesIn++;</span>
+<span class="fc" id="L105">                    serverAcc.firstServePlayed++;</span>
+<span class="fc" id="L106">                    returnerAcc.returnFirstPlayed++;</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">                    if (serverWon) serverAcc.firstServeWon++;</span>
+<span class="fc" id="L108">                    else returnerAcc.returnFirstWon++;</span>
+<span class="pc bpc" id="L109" title="1 of 2 branches missed.">                } else if (attempt == 2) {</span>
+<span class="fc" id="L110">                    serverAcc.secondServePlayed++;</span>
+<span class="fc" id="L111">                    returnerAcc.returnSecondPlayed++;</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">                    if (serverWon) serverAcc.secondServeWon++;</span>
+<span class="fc" id="L113">                    else returnerAcc.returnSecondWon++;</span>
+                }
+            }
+
+<span class="fc bfc" id="L117" title="All 2 branches covered.">            if (p.isBreakPoint()) {</span>
+<span class="fc" id="L118">                returnerAcc.breakPointsPlayed++;</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">                if (p.getWinner() != server) returnerAcc.breakPointsWon++;</span>
+            }
+        }
+<span class="fc" id="L122">    }</span>
+
+    /**
+     * Credits return games: a game is grouped by (set, game); its server is the first non-null
+     * servingPlayer seen, its winner is the winner of the highest-numbered point. The player who
+     * did not serve the game played a return game there, and won it if they won the last point.
+     */
+    private void accumulateReturnGames(List&lt;Point&gt; points, Accumulator pos1, Accumulator pos2) {
+<span class="fc" id="L130">        int i = 0;</span>
+<span class="fc bfc" id="L131" title="All 2 branches covered.">        while (i &lt; points.size()) {</span>
+<span class="fc" id="L132">            Point first = points.get(i);</span>
+<span class="fc" id="L133">            int set = first.getSetNumber();</span>
+<span class="fc" id="L134">            int game = first.getGameNumber();</span>
+<span class="fc" id="L135">            Integer server = null;</span>
+<span class="fc" id="L136">            int lastWinner = first.getWinner();</span>
+<span class="fc" id="L137">            int j = i;</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">            while (j &lt; points.size()</span>
+<span class="pc bpc" id="L139" title="1 of 2 branches missed.">                    &amp;&amp; points.get(j).getSetNumber() == set</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">                    &amp;&amp; points.get(j).getGameNumber() == game) {</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">                if (server == null) server = points.get(j).getServingPlayer();</span>
+<span class="fc" id="L142">                lastWinner = points.get(j).getWinner();</span>
+<span class="fc" id="L143">                j++;</span>
+            }
+<span class="fc bfc" id="L145" title="All 2 branches covered.">            if (server != null) {</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">                Accumulator returnerAcc = server == 1 ? pos2 : pos1;</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">                int returnerPosition = server == 1 ? 2 : 1;</span>
+<span class="fc" id="L148">                returnerAcc.returnGamesPlayed++;</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">                if (lastWinner == returnerPosition) returnerAcc.returnGamesWon++;</span>
+            }
+<span class="fc" id="L151">            i = j;</span>
+<span class="fc" id="L152">        }</span>
+<span class="fc" id="L153">    }</span>
+
+    private void accumulateBalance(MatchScore score, Accumulator pos1, Accumulator pos2) {
+<span class="fc" id="L156">        pos1.setsWon += score.getSetsPlayer1();</span>
+<span class="fc" id="L157">        pos1.setsLost += score.getSetsPlayer2();</span>
+<span class="fc" id="L158">        pos2.setsWon += score.getSetsPlayer2();</span>
+<span class="fc" id="L159">        pos2.setsLost += score.getSetsPlayer1();</span>
+<span class="pc bpc" id="L160" title="1 of 2 branches missed.">        if (&quot;PLAYER1&quot;.equals(score.getWinner())) {</span>
+<span class="fc" id="L161">            pos1.matchesWon++;</span>
+<span class="fc" id="L162">            pos2.matchesLost++;</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">        } else if (&quot;PLAYER2&quot;.equals(score.getWinner())) {</span>
+<span class="nc" id="L164">            pos2.matchesWon++;</span>
+<span class="nc" id="L165">            pos1.matchesLost++;</span>
+        }
+<span class="fc" id="L167">    }</span>
+
+    /** Mutable per-player tally; derived into the immutable {@link HeadToHeadPlayerStats}. */
+    private static final class Accumulator {
+        int winners, unforcedErrors, aces, doubleFaults;
+        int firstServesIn, serveAttemptsTotal;
+        int firstServeWon, firstServePlayed;
+        int secondServeWon, secondServePlayed;
+        int returnFirstWon, returnFirstPlayed;
+        int returnSecondWon, returnSecondPlayed;
+        int breakPointsWon, breakPointsPlayed;
+        int returnGamesWon, returnGamesPlayed;
+        int matchesWon, matchesLost, setsWon, setsLost;
+
+        HeadToHeadPlayerStats toStats(UUID playerId, int totalPoints) {
+<span class="fc" id="L182">            return new HeadToHeadPlayerStats(</span>
+                    playerId,
+<span class="fc" id="L184">                    ratio(firstServesIn, serveAttemptsTotal),</span>
+<span class="fc" id="L185">                    ratio(firstServeWon, firstServePlayed),</span>
+<span class="fc" id="L186">                    ratio(secondServeWon, secondServePlayed),</span>
+                    aces,
+                    doubleFaults,
+<span class="fc" id="L189">                    ratio(returnFirstWon, returnFirstPlayed),</span>
+<span class="fc" id="L190">                    ratio(returnSecondWon, returnSecondPlayed),</span>
+                    breakPointsWon,
+                    breakPointsPlayed,
+<span class="fc" id="L193">                    ratio(breakPointsWon, breakPointsPlayed),</span>
+<span class="fc" id="L194">                    ratio(returnGamesWon, returnGamesPlayed),</span>
+                    winners,
+                    unforcedErrors,
+<span class="fc" id="L197">                    ratio(winners, totalPoints),</span>
+<span class="fc" id="L198">                    ratio(unforcedErrors, totalPoints),</span>
+                    matchesWon,
+                    matchesLost,
+                    setsWon,
+                    setsLost);
+        }
+
+        private static double ratio(int num, int den) {
+<span class="fc bfc" id="L206" title="All 2 branches covered.">            return den == 0 ? 0.0 : (double) num / den;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

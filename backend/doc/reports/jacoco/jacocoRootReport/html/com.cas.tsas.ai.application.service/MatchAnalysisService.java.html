@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MatchAnalysisService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tsas-backend</a> &gt; <a href="index.source.html" class="el_package">com.cas.tsas.ai.application.service</a> &gt; <span class="el_source">MatchAnalysisService.java</span></div><h1>MatchAnalysisService.java</h1><pre class="source lang-java linenums">package com.cas.tsas.ai.application.service;
+
+import com.cas.tsas.ai.application.dto.MatchAnalysisResult;
+import com.cas.tsas.ai.application.dto.MatchMetadata;
+import com.cas.tsas.ai.application.port.in.GenerateMatchAnalysisUseCase;
+import com.cas.tsas.ai.application.port.in.GetMatchAnalysisUseCase;
+import com.cas.tsas.ai.application.port.out.LlmClientPort;
+import com.cas.tsas.ai.application.port.out.LoadMatchAnalysisPort;
+import com.cas.tsas.ai.application.port.out.SaveMatchAnalysisPort;
+import com.cas.tsas.ai.domain.exception.AnalysisGenerationException;
+import com.cas.tsas.ai.domain.exception.InsufficientMatchDataException;
+import com.cas.tsas.ai.domain.exception.MatchNotCompletedException;
+import com.cas.tsas.ai.domain.model.AnalysisStatus;
+import com.cas.tsas.ai.domain.model.MatchAnalysis;
+import com.cas.tsas.match.application.port.in.GetMatchUseCase;
+import com.cas.tsas.match.domain.model.Match;
+import com.cas.tsas.match.domain.model.MatchStatus;
+import com.cas.tsas.player.application.port.out.LoadPlayerPort;
+import com.cas.tsas.player.domain.exception.PlayerNotFoundException;
+import com.cas.tsas.player.domain.model.Player;
+import com.cas.tsas.statistics.application.port.in.ComputeMatchStatisticsUseCase;
+import com.cas.tsas.statistics.domain.model.MatchStatistics;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.util.Optional;
+import java.util.UUID;
+
+/**
+ * Orchestrates AI-based match analysis: loads the match, its statistics and the involved players,
+ * delegates to an {@link LlmClientPort} to produce the analysis and persists the result.
+ */
+@Service
+public class MatchAnalysisService implements GenerateMatchAnalysisUseCase, GetMatchAnalysisUseCase {
+
+    private final GetMatchUseCase getMatchUseCase;
+    private final LoadPlayerPort loadPlayerPort;
+    private final ComputeMatchStatisticsUseCase statisticsUseCase;
+    private final LlmClientPort llmClient;
+    private final SaveMatchAnalysisPort savePort;
+    private final LoadMatchAnalysisPort loadPort;
+    private final int minPointsForAnalysis;
+
+    public MatchAnalysisService(GetMatchUseCase getMatchUseCase,
+                                LoadPlayerPort loadPlayerPort,
+                                ComputeMatchStatisticsUseCase statisticsUseCase,
+                                LlmClientPort llmClient,
+                                SaveMatchAnalysisPort savePort,
+                                LoadMatchAnalysisPort loadPort,
+<span class="fc" id="L51">                                @Value(&quot;${tsas.ai.min-points-for-analysis:10}&quot;) int minPointsForAnalysis) {</span>
+<span class="fc" id="L52">        this.getMatchUseCase = getMatchUseCase;</span>
+<span class="fc" id="L53">        this.loadPlayerPort = loadPlayerPort;</span>
+<span class="fc" id="L54">        this.statisticsUseCase = statisticsUseCase;</span>
+<span class="fc" id="L55">        this.llmClient = llmClient;</span>
+<span class="fc" id="L56">        this.savePort = savePort;</span>
+<span class="fc" id="L57">        this.loadPort = loadPort;</span>
+<span class="fc" id="L58">        this.minPointsForAnalysis = minPointsForAnalysis;</span>
+<span class="fc" id="L59">    }</span>
+
+    /**
+     * Generates and stores an analysis for the given match.
+     *
+     * &lt;p&gt;The match must be {@link MatchStatus#COMPLETED} and have at least the configured minimum
+     * number of points; otherwise a {@link MatchNotCompletedException} respectively
+     * {@link InsufficientMatchDataException} is thrown. On a successful LLM call the COMPLETED
+     * result is persisted and returned. If the LLM call fails, a FAILED record is persisted and an
+     * {@link AnalysisGenerationException} is thrown.
+     */
+    @Override
+    public MatchAnalysis generate(UUID matchId) {
+<span class="fc" id="L72">        Match match = getMatchUseCase.findById(matchId);</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">        if (match.getStatus() != MatchStatus.COMPLETED) {</span>
+<span class="fc" id="L74">            throw new MatchNotCompletedException(matchId);</span>
+        }
+
+<span class="fc" id="L77">        MatchStatistics stats = statisticsUseCase.compute(matchId);</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        if (stats.totalPoints() &lt; minPointsForAnalysis) {</span>
+<span class="fc" id="L79">            throw new InsufficientMatchDataException(</span>
+                    &quot;Match must have at least &quot; + minPointsForAnalysis + &quot; points (found &quot; +
+<span class="fc" id="L81">                            stats.totalPoints() + &quot;)&quot;);</span>
+        }
+
+<span class="fc" id="L84">        MatchMetadata meta = buildMetadata(match);</span>
+
+        try {
+<span class="fc" id="L87">            MatchAnalysisResult result = llmClient.generateAnalysis(stats, meta);</span>
+<span class="fc" id="L88">            return savePort.save(buildSuccess(matchId, result));</span>
+<span class="fc" id="L89">        } catch (RuntimeException ex) {</span>
+<span class="fc" id="L90">            savePort.save(buildFailure(matchId, ex));</span>
+<span class="fc" id="L91">            throw new AnalysisGenerationException(&quot;LLM call failed for match &quot; + matchId, ex);</span>
+        }
+    }
+
+    @Override
+    public Optional&lt;MatchAnalysis&gt; findByMatchId(UUID matchId) {
+<span class="fc" id="L97">        return loadPort.loadByMatchId(matchId);</span>
+    }
+
+    /** Maps a successful LLM result into a COMPLETED {@link MatchAnalysis}. */
+    private MatchAnalysis buildSuccess(UUID matchId, MatchAnalysisResult r) {
+<span class="fc" id="L102">        MatchAnalysis a = new MatchAnalysis();</span>
+<span class="fc" id="L103">        a.setMatchId(matchId);</span>
+<span class="fc" id="L104">        a.setStatus(AnalysisStatus.COMPLETED);</span>
+<span class="fc" id="L105">        a.setKeyMoments(r.keyMoments());</span>
+<span class="fc" id="L106">        a.setOwnStrengths(r.ownStrengths());</span>
+<span class="fc" id="L107">        a.setOwnWeaknesses(r.ownWeaknesses());</span>
+<span class="fc" id="L108">        a.setOpponentStrengths(r.opponentStrengths());</span>
+<span class="fc" id="L109">        a.setOpponentWeaknesses(r.opponentWeaknesses());</span>
+<span class="fc" id="L110">        a.setRecommendations(r.recommendations());</span>
+<span class="fc" id="L111">        a.setModelUsed(llmClient.modelName());</span>
+<span class="fc" id="L112">        a.setGeneratedAt(Instant.now());</span>
+<span class="fc" id="L113">        return a;</span>
+    }
+
+    /** Builds a FAILED {@link MatchAnalysis} capturing the failure cause for later inspection. */
+    private MatchAnalysis buildFailure(UUID matchId, RuntimeException ex) {
+<span class="fc" id="L118">        MatchAnalysis a = new MatchAnalysis();</span>
+<span class="fc" id="L119">        a.setMatchId(matchId);</span>
+<span class="fc" id="L120">        a.setStatus(AnalysisStatus.FAILED);</span>
+<span class="fc" id="L121">        a.setModelUsed(llmClient.modelName());</span>
+<span class="fc" id="L122">        a.setGeneratedAt(Instant.now());</span>
+<span class="fc" id="L123">        a.setErrorMessage(ex.getClass().getSimpleName() + &quot;: &quot; + ex.getMessage());</span>
+<span class="fc" id="L124">        return a;</span>
+    }
+
+    /** Resolves both players and assembles the {@link MatchMetadata} passed to the LLM prompt. */
+    private MatchMetadata buildMetadata(Match match) {
+<span class="fc" id="L129">        Player p1 = loadPlayerPort.loadPlayer(match.getPlayer1Id())</span>
+<span class="pc" id="L130">                .orElseThrow(() -&gt; new PlayerNotFoundException(match.getPlayer1Id()));</span>
+<span class="fc" id="L131">        Player p2 = loadPlayerPort.loadPlayer(match.getPlayer2Id())</span>
+<span class="pc" id="L132">                .orElseThrow(() -&gt; new PlayerNotFoundException(match.getPlayer2Id()));</span>
+<span class="fc" id="L133">        return new MatchMetadata(</span>
+<span class="fc" id="L134">                toInfo(p1), toInfo(p2),</span>
+<span class="fc" id="L135">                match.getSetsToWin(), match.isMatchTiebreak(), match.isShortSet());</span>
+    }
+
+    private MatchMetadata.PlayerInfo toInfo(Player p) {
+<span class="fc" id="L139">        return new MatchMetadata.PlayerInfo(</span>
+<span class="fc" id="L140">                p.getFirstName() + &quot; &quot; + p.getLastName(),</span>
+<span class="fc" id="L141">                p.getRanking(),</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">                p.getHandedness() == null ? null : p.getHandedness().name(),</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">                p.getBackhandType() == null ? null : p.getBackhandType().name());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

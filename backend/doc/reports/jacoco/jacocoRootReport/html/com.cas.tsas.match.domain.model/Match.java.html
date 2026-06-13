@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Match.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tsas-backend</a> &gt; <a href="index.source.html" class="el_package">com.cas.tsas.match.domain.model</a> &gt; <span class="el_source">Match.java</span></div><h1>Match.java</h1><pre class="source lang-java linenums">package com.cas.tsas.match.domain.model;
+
+import java.util.UUID;
+
+/**
+ * Domain entity representing a tennis match (Begegnung) between two players. Holds the
+ * match configuration: {@code setsToWin} (sets required to win — 2 for best-of-3, 3 for
+ * best-of-5), whether a match tie-break replaces the final set, whether short sets are
+ * played, and the current {@link MatchStatus}. The live score is kept separately in
+ * {@link MatchScore}. Pure POJO — no framework dependencies.
+ */
+public class Match {
+
+    private UUID id;
+    private UUID player1Id;
+    private UUID player2Id;
+    private int setsToWin;
+    private boolean matchTiebreak;
+    private boolean shortSet;
+    private MatchStatus status;
+
+<span class="nc" id="L22">    public Match() {}</span>
+
+    public Match(UUID id, UUID player1Id, UUID player2Id, int setsToWin,
+<span class="fc" id="L25">                 boolean matchTiebreak, boolean shortSet, MatchStatus status) {</span>
+<span class="fc" id="L26">        this.id = id;</span>
+<span class="fc" id="L27">        this.player1Id = player1Id;</span>
+<span class="fc" id="L28">        this.player2Id = player2Id;</span>
+<span class="fc" id="L29">        this.setsToWin = setsToWin;</span>
+<span class="fc" id="L30">        this.matchTiebreak = matchTiebreak;</span>
+<span class="fc" id="L31">        this.shortSet = shortSet;</span>
+<span class="fc" id="L32">        this.status = status;</span>
+<span class="fc" id="L33">    }</span>
+
+<span class="fc" id="L35">    public UUID getId() { return id; }</span>
+<span class="nc" id="L36">    public void setId(UUID id) { this.id = id; }</span>
+
+<span class="fc" id="L38">    public UUID getPlayer1Id() { return player1Id; }</span>
+<span class="nc" id="L39">    public void setPlayer1Id(UUID player1Id) { this.player1Id = player1Id; }</span>
+
+<span class="fc" id="L41">    public UUID getPlayer2Id() { return player2Id; }</span>
+<span class="nc" id="L42">    public void setPlayer2Id(UUID player2Id) { this.player2Id = player2Id; }</span>
+
+<span class="fc" id="L44">    public int getSetsToWin() { return setsToWin; }</span>
+<span class="nc" id="L45">    public void setSetsToWin(int setsToWin) { this.setsToWin = setsToWin; }</span>
+
+<span class="fc" id="L47">    public boolean isMatchTiebreak() { return matchTiebreak; }</span>
+<span class="nc" id="L48">    public void setMatchTiebreak(boolean matchTiebreak) { this.matchTiebreak = matchTiebreak; }</span>
+
+<span class="fc" id="L50">    public boolean isShortSet() { return shortSet; }</span>
+<span class="nc" id="L51">    public void setShortSet(boolean shortSet) { this.shortSet = shortSet; }</span>
+
+<span class="fc" id="L53">    public MatchStatus getStatus() { return status; }</span>
+<span class="fc" id="L54">    public void setStatus(MatchStatus status) { this.status = status; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

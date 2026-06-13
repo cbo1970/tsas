@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PointJpaEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tsas-backend</a> &gt; <a href="index.source.html" class="el_package">com.cas.tsas.match.infrastructure.persistence.entity</a> &gt; <span class="el_source">PointJpaEntity.java</span></div><h1>PointJpaEntity.java</h1><pre class="source lang-java linenums">package com.cas.tsas.match.infrastructure.persistence.entity;
+
+import com.cas.tsas.match.domain.model.Direction;
+import com.cas.tsas.match.domain.model.PointType;
+import com.cas.tsas.match.domain.model.StrokeType;
+import jakarta.persistence.*;
+
+import java.time.Instant;
+import java.util.UUID;
+
+@Entity
+@Table(name = &quot;points&quot;)
+public class PointJpaEntity {
+
+<span class="fc" id="L15">    public PointJpaEntity() {}</span>
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @Column(name = &quot;match_id&quot;, nullable = false)
+    private UUID matchId;
+
+    @Column(name = &quot;set_number&quot;, nullable = false)
+    private int setNumber;
+
+    @Column(name = &quot;game_number&quot;, nullable = false)
+    private int gameNumber;
+
+    @Column(name = &quot;point_number&quot;, nullable = false)
+    private int pointNumber;
+
+    @Column(name = &quot;winner&quot;, nullable = false)
+    private int winner;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = &quot;point_type&quot;, nullable = true, length = 50)
+    private PointType pointType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = &quot;stroke_type&quot;, length = 50)
+    private StrokeType strokeType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = &quot;direction&quot;, length = 50)
+    private Direction direction;
+
+    @Column(name = &quot;serving_player&quot;)
+    private Integer servingPlayer;
+
+    @Column(name = &quot;is_break_point&quot;, nullable = false)
+    private boolean isBreakPoint;
+
+    @Column(name = &quot;remark&quot;, length = 500)
+    private String remark;
+
+    @Column(name = &quot;serve_attempt&quot;)
+    private Integer serveAttempt;
+
+    @Column(name = &quot;recorded_at&quot;, nullable = false, updatable = false)
+    private Instant recordedAt;
+
+    @PrePersist
+    void prePersist() {
+<span class="fc" id="L65">        recordedAt = Instant.now();</span>
+<span class="fc" id="L66">    }</span>
+
+<span class="fc" id="L68">    public UUID getId() { return id; }</span>
+<span class="fc" id="L69">    public void setId(UUID id) { this.id = id; }</span>
+<span class="fc" id="L70">    public UUID getMatchId() { return matchId; }</span>
+<span class="fc" id="L71">    public void setMatchId(UUID matchId) { this.matchId = matchId; }</span>
+<span class="fc" id="L72">    public int getSetNumber() { return setNumber; }</span>
+<span class="fc" id="L73">    public void setSetNumber(int setNumber) { this.setNumber = setNumber; }</span>
+<span class="fc" id="L74">    public int getGameNumber() { return gameNumber; }</span>
+<span class="fc" id="L75">    public void setGameNumber(int gameNumber) { this.gameNumber = gameNumber; }</span>
+<span class="fc" id="L76">    public int getPointNumber() { return pointNumber; }</span>
+<span class="fc" id="L77">    public void setPointNumber(int pointNumber) { this.pointNumber = pointNumber; }</span>
+<span class="fc" id="L78">    public int getWinner() { return winner; }</span>
+<span class="fc" id="L79">    public void setWinner(int winner) { this.winner = winner; }</span>
+<span class="fc" id="L80">    public PointType getPointType() { return pointType; }</span>
+<span class="fc" id="L81">    public void setPointType(PointType pointType) { this.pointType = pointType; }</span>
+<span class="fc" id="L82">    public StrokeType getStrokeType() { return strokeType; }</span>
+<span class="fc" id="L83">    public void setStrokeType(StrokeType strokeType) { this.strokeType = strokeType; }</span>
+<span class="fc" id="L84">    public Direction getDirection() { return direction; }</span>
+<span class="fc" id="L85">    public void setDirection(Direction direction) { this.direction = direction; }</span>
+<span class="fc" id="L86">    public Integer getServingPlayer() { return servingPlayer; }</span>
+<span class="fc" id="L87">    public void setServingPlayer(Integer servingPlayer) { this.servingPlayer = servingPlayer; }</span>
+<span class="fc" id="L88">    public boolean isBreakPoint() { return isBreakPoint; }</span>
+<span class="fc" id="L89">    public void setBreakPoint(boolean breakPoint) { isBreakPoint = breakPoint; }</span>
+<span class="fc" id="L90">    public String getRemark() { return remark; }</span>
+<span class="fc" id="L91">    public void setRemark(String remark) { this.remark = remark; }</span>
+<span class="fc" id="L92">    public Integer getServeAttempt() { return serveAttempt; }</span>
+<span class="fc" id="L93">    public void setServeAttempt(Integer serveAttempt) { this.serveAttempt = serveAttempt; }</span>
+<span class="nc" id="L94">    public Instant getRecordedAt() { return recordedAt; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>
