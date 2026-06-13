@@ -19,4 +19,8 @@ public interface MatchJpaRepository extends JpaRepository<MatchJpaEntity, UUID> 
 
     @Query("SELECT COUNT(m) > 0 FROM MatchJpaEntity m WHERE m.status = :status AND (m.player1Id = :playerId OR m.player2Id = :playerId)")
     boolean existsByStatusAndPlayerId(@Param("status") MatchStatus status, @Param("playerId") UUID playerId);
+
+    @Query("SELECT m FROM MatchJpaEntity m WHERE (m.player1Id = :playerA AND m.player2Id = :playerB) "
+            + "OR (m.player1Id = :playerB AND m.player2Id = :playerA)")
+    List<MatchJpaEntity> findMatchesBetween(@Param("playerA") UUID playerA, @Param("playerB") UUID playerB);
 }
