@@ -11,7 +11,7 @@ import {
   SetScoreRequest
 } from '../models/match.model';
 import { RecordPointRequest } from '../models/point.model';
-import { MatchStatistics } from '../models/statistics.model';
+import { MatchStatistics, HeadToHeadStatistics } from '../models/statistics.model';
 import { MatchAnalysis } from '../models/analysis.model';
 
 @Injectable({ providedIn: 'root' })
@@ -83,6 +83,13 @@ export class ApiService {
 
   getMatchStatistics(matchId: string): Observable<MatchStatistics> {
     return this.http.get<MatchStatistics>(`${this.base}/matches/${matchId}/statistics`);
+  }
+
+  getHeadToHead(player1Id: string, player2Id: string): Observable<HeadToHeadStatistics> {
+    return this.http.get<HeadToHeadStatistics>(
+      `${this.base}/statistics/head-to-head`,
+      { params: { player1: player1Id, player2: player2Id } }
+    );
   }
 
   // AI match analysis

@@ -10,6 +10,12 @@ export const routes: Routes = [
       import('./features/players/players.component').then(m => m.PlayersComponent)
   },
   {
+    path: 'statistics/head-to-head',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/statistics/head-to-head/head-to-head.component').then(m => m.HeadToHeadComponent)
+  },
+  {
     path: 'matches/new',
     canActivate: [authGuard],
     loadComponent: () =>

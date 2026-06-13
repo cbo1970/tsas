@@ -1,6 +1,7 @@
 package com.cas.tsas.match.infrastructure.persistence.repository;
 
 import com.cas.tsas.match.application.port.out.LoadMatchPort;
+import com.cas.tsas.match.application.port.out.LoadMatchesByPlayersPort;
 import com.cas.tsas.match.application.port.out.SaveMatchPort;
 import com.cas.tsas.match.domain.model.Match;
 import com.cas.tsas.match.domain.model.MatchStatus;
@@ -24,7 +25,7 @@ import java.util.UUID;
  * {@link MatchJpaEntity} via {@link MatchMapper}.
  */
 @Component
-public class MatchPersistenceAdapter implements LoadMatchPort, SaveMatchPort, HasMatchesPort, FindActiveMatchPort {
+public class MatchPersistenceAdapter implements LoadMatchPort, LoadMatchesByPlayersPort, SaveMatchPort, HasMatchesPort, FindActiveMatchPort {
 
     private final MatchJpaRepository repository;
     private final MatchMapper mapper;
@@ -67,6 +68,13 @@ public class MatchPersistenceAdapter implements LoadMatchPort, SaveMatchPort, Ha
     @Override
     public boolean existsActiveMatchForPlayer(UUID playerId) {
         return repository.existsByStatusAndPlayerId(MatchStatus.IN_PROGRESS, playerId);
+    }
+
+    @Override
+    public List<Match> loadMatchesBetween(UUID playerA, UUID playerB) {
+        return repository.findMatchesBetween(playerA, playerB).stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 
     @Override

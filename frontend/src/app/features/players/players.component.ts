@@ -39,7 +39,8 @@ import { PlayerDialogComponent } from './player-dialog.component';
     .page-container { padding: 24px; max-width: 900px; margin: 0 auto; }
     .page-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
     .page-header h1 { margin: 0; font-size: 28px; }
-    .search-field { flex: 1; margin-bottom: -1.25em; }
+    .search-field { flex: 1; min-width: 150px; margin-bottom: -1.25em; }
+    .page-header button { flex-shrink: 0; }
     .full-width { width: 100%; }
     .empty-state { text-align: center; padding: 48px; color: #666; }
     table { border-radius: 8px; overflow: hidden; }
@@ -103,6 +104,14 @@ export class PlayersComponent implements OnInit {
 
   goToMatch(matchId: string) {
     this.router.navigate(['/matches', matchId, 'score']);
+  }
+
+  goToHeadToHead() {
+    this.router.navigate(['/statistics/head-to-head']);
+  }
+
+  comparePlayer(player: Player) {
+    this.router.navigate(['/statistics/head-to-head'], { queryParams: { player1: player.id } });
   }
 
   openCreateDialog() {
