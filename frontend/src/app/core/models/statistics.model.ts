@@ -18,3 +18,34 @@ export interface MatchStatistics {
   player2: PlayerStatistics;
   totalPoints: number;
 }
+
+export interface HeadToHeadPlayerStats {
+  playerId: string;
+  firstServePercentage: number;
+  firstServeWonPercentage: number;
+  secondServeWonPercentage: number;
+  aces: number;
+  doubleFaults: number;
+  returnPointsWonFirstPercentage: number;
+  returnPointsWonSecondPercentage: number;
+  breakPointsWon: number;
+  breakPointsPlayed: number;
+  breakPointsWonPercentage: number;
+  returnGamesWonPercentage: number;
+  winners: number;
+  unforcedErrors: number;
+  winnersPercentage: number;
+  unforcedErrorPercentage: number;
+  matchesWon: number;
+  matchesLost: number;
+  setsWon: number;
+  setsLost: number;
+}
+
+export interface HeadToHeadStatistics {
+  player1Id: string;
+  player2Id: string;
+  matchesPlayed: number;
+  player1: HeadToHeadPlayerStats;
+  player2: HeadToHeadPlayerStats;
+}
