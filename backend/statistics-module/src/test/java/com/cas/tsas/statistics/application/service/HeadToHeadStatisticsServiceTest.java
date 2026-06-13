@@ -187,6 +187,24 @@ class HeadToHeadStatisticsServiceTest {
     }
 
     @Test
+    void credits_aces_to_the_serving_player_across_positions() {
+        UUID m = UUID.randomUUID();
+        when(loadMatchesByPlayersPort.loadMatchesBetween(alice, bob))
+                .thenReturn(List.of(match(m, alice, bob)));
+        when(loadMatchScorePort.loadMatchScore(m)).thenReturn(Optional.empty());
+        // alice (pos 1) serves an ace; bob (pos 2) serves an ace
+        when(loadPointsByMatchPort.loadPointsByMatch(m)).thenReturn(List.of(
+                p(1, 1, 1, 1, PointType.ACE, 1, 1, false),
+                p(1, 1, 2, 2, PointType.ACE, 2, 1, false)
+        ));
+
+        HeadToHeadStatistics r = service.compute(alice, bob);
+
+        assertThat(r.player1().aces()).isEqualTo(1);
+        assertThat(r.player2().aces()).isEqualTo(1);
+    }
+
+    @Test
     void computes_break_points_won_for_returner() {
         UUID m = UUID.randomUUID();
         when(loadMatchesByPlayersPort.loadMatchesBetween(alice, bob))
