@@ -8,3 +8,6 @@ volume/
 .worktrees/
 .idea/
 .superpowers/
+
+# TEN-26 runbook result artifacts (generated, contain live OpenAI output)
+docs/runbooks/ten-26-results/
