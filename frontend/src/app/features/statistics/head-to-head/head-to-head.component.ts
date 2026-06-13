@@ -1,6 +1,5 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { FormsModule } from '@angular/forms';
@@ -11,7 +10,7 @@ import { HeadToHeadStatistics } from '../../../core/models/statistics.model';
 @Component({
   selector: 'app-head-to-head',
   standalone: true,
-  imports: [MatButtonModule, MatFormFieldModule, MatSelectModule, FormsModule],
+  imports: [MatFormFieldModule, MatSelectModule, FormsModule],
   templateUrl: './head-to-head.component.html',
   styles: [`
     :host { display: block; min-height: 100dvh; background: #0f172a; color: #eee; font-family: sans-serif; }
@@ -39,8 +38,6 @@ export class HeadToHeadComponent implements OnInit {
   player1Id = signal<string | null>(null);
   player2Id = signal<string | null>(null);
   stats = signal<HeadToHeadStatistics | null>(null);
-
-  bothSelected = computed(() => !!this.player1Id() && !!this.player2Id() && this.player1Id() !== this.player2Id());
 
   ngOnInit() {
     this.player1Id.set(this.route.snapshot.queryParamMap.get('player1'));

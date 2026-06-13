@@ -74,5 +74,6 @@ describe('HeadToHeadComponent', () => {
   it('does not fetch until both players are chosen', () => {
     mount('a', null);
     cy.get('[data-testid="empty-hint"]').should('be.visible');
+    cy.get('@getH2H').should('not.exist');
   });
 });
