@@ -22,7 +22,8 @@ public record HeadToHeadPlayerStats(
         int breakPointsPlayed,
         double breakPointsWonPercentage,
         double returnGamesWonPercentage,
-        // rally
+        // rally — winnersPercentage / unforcedErrorPercentage are fractions of ALL recorded
+        // points across the shared matches (not of the player's own points)
         int winners,
         int unforcedErrors,
         double winnersPercentage,

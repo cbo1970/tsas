@@ -167,6 +167,26 @@ class HeadToHeadStatisticsServiceTest {
     }
 
     @Test
+    void first_serve_percentage_uses_all_service_points_as_denominator() {
+        // 4 service points by alice: 3 decided on the first serve, 1 on the second.
+        // 1st-serve% must be 3/4 (first serves in / all service points), not 3/3.
+        UUID m = UUID.randomUUID();
+        when(loadMatchesByPlayersPort.loadMatchesBetween(alice, bob))
+                .thenReturn(List.of(match(m, alice, bob)));
+        when(loadMatchScorePort.loadMatchScore(m)).thenReturn(Optional.empty());
+        when(loadPointsByMatchPort.loadPointsByMatch(m)).thenReturn(List.of(
+                p(1, 1, 1, 1, PointType.WINNER, 1, 1, false),
+                p(1, 1, 2, 1, PointType.WINNER, 1, 1, false),
+                p(1, 1, 3, 1, PointType.WINNER, 1, 1, false),
+                p(1, 1, 4, 1, PointType.WINNER, 1, 2, false)
+        ));
+
+        HeadToHeadStatistics r = service.compute(alice, bob);
+
+        assertThat(r.player1().firstServePercentage()).isEqualTo(0.75, within(1e-9));
+    }
+
+    @Test
     void computes_break_points_won_for_returner() {
         UUID m = UUID.randomUUID();
         when(loadMatchesByPlayersPort.loadMatchesBetween(alice, bob))
