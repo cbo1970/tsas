@@ -1,30 +1,44 @@
-# Diagramme – Konvertierung zu SVG
+# Diagramme – draw.io Quellen & SVG-Export
 
-## Voraussetzungen
+Die Architekturdiagramme des SAD werden als **draw.io** (`.drawio`) gepflegt
+und als **SVG** in die finale `.docx` eingebettet. (Die früheren PlantUML-`.puml`-
+Quellen wurden ersetzt.)
 
-PlantUML benötigt Java. Entweder die JAR direkt verwenden oder via Homebrew:
+## Bearbeiten
+
+`.drawio` ist die Quelle. Bearbeiten mit der draw.io-Desktop-App oder online auf
+<https://app.diagrams.net>. Nach Änderungen die SVGs neu exportieren.
+
+## SVG (neu) exportieren
+
+Mit der draw.io-Desktop-App (macOS):
 
 ```bash
-brew install plantuml
-```
+DRAWIO="/Applications/draw.io.app/Contents/MacOS/draw.io"
 
-## SVG generieren
-
-```bash
 # Einzelnes Diagramm
-plantuml -tsvg backend_module.puml
-plantuml -tsvg backend_clean_architecture.puml
+"$DRAWIO" --export --format svg --border 12 \
+  --output TSaS_System_Context.svg TSaS_System_Context.drawio
 
-# Alle .puml Dateien im Verzeichnis auf einmal
-plantuml -tsvg *.puml
+# Alle Diagramme
+for f in TSaS_System_Context TSaS_Backend_Module TSaS_Backend_CleanArchitecture; do
+  "$DRAWIO" --export --format svg --border 12 --output "$f.svg" "$f.drawio"
+done
 ```
-
-Die SVG-Dateien werden im selben Verzeichnis erzeugt.
 
 ## Dateien
 
 | Datei | Inhalt |
 |-------|--------|
-| `system_context.puml` | Systemübersicht – Services, Protokolle und Ports (Frontend, Backend, Keycloak, PostgreSQL) |
-| `backend_module.puml` | Backend – Fachliche Module (Übersicht) → Kapitel 5.2 |
-| `backend_clean_architecture.puml` | Backend – Clean Architecture Klassen-Detail → Kapitel 5.3 |
+| `TSaS_Fachlicher_Kontext.drawio` | Fachlicher Kontext – Akteure, System-Grenze, externe Systeme (Keycloak, Google, OpenAI LLM, Swisstennis, Kamera) → Kapitel 3.1 |
+| `TSaS_System_Context.drawio` | Produktive Systemarchitektur – Services, Protokolle, Ports (Edge, DMZ, Private/DB-Subnet, externe Dienste inkl. OpenAI LLM) |
+| `TSaS_Deployment.drawio` | Verteilungssicht – Docker-Compose-Container (frontend, backend, db, keycloak) + externer LLM-Dienst → Kapitel 7.1 |
+| `TSaS_Backend_Module.drawio` | Backend – Fachliche Module (Übersicht) → Kapitel 5.2 |
+| `TSaS_Backend_CleanArchitecture.drawio` | Backend – Clean Architecture Klassen-Detail (Infrastructure → Application → Domain) → Kapitel 5.3 |
+
+Beim SVG-Export oben die Dateinamen entsprechend ergänzen (`TSaS_Fachlicher_Kontext`, `TSaS_Deployment`).
+
+> Inhaltlich abgeglichen mit dem aktuellen Code: Scoring ist im `match-module`
+> konsolidiert (kein eigenes `scoring-module`), das `ai-module` (KI-Match-Analyse
+> über `LlmClientPort` mit `OpenAiLlmAdapter`/`FakeLlmClientAdapter`) ist enthalten,
+> Controller/Use-Cases/Ports/Adapter entsprechen den realen Klassen.
