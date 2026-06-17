@@ -88,43 +88,9 @@ TSaS soll eine webbasierte Applikation bereitstellen, mit der der aktuelle Spiel
 
 TSaS interagiert mit folgenden externen Akteuren und Systemen:
 
-```mermaid
-graph TB
-    subgraph Akteure
-        Trainer["👤 Trainer / Eltern<br/>(Browser)"]
-    end
+![TSaS – Fachlicher Kontext](diagrams/TSaS_Fachlicher_Kontext.svg)
 
-    subgraph TSaS System
-        FE["Angular Frontend<br/>(Node.js)"]
-        BE["Spring Boot API<br/>(Modularer Monolith)"]
-        DB[("PostgreSQL")]
-    end
-
-    subgraph Externe Systeme
-        KC["Keycloak<br/>(IDP)"]
-        Google["Google IDP<br/>(ab V2)"]
-        Swiss["Swisstennis API<br/>(ab V4)"]
-        Cam["Kamera-System<br/>(ab V5)"]
-    end
-
-    Trainer -- "HTTPS" --> FE
-    FE -- "REST/JSON" --> BE
-    BE -- "JDBC" --> DB
-    BE -- "OAuth2/OIDC" --> KC
-    KC -. "Federation" .-> Google
-    BE -. "REST" .-> Swiss
-    BE -. "Video-Feed" .-> Cam
-
-    style FE fill:#C8E6C9,stroke:#2E7D32
-    style BE fill:#C8E6C9,stroke:#2E7D32
-    style DB fill:#C8E6C9,stroke:#2E7D32
-    style KC fill:#BBDEFB,stroke:#1565C0
-    style Google fill:#FFF9C4,stroke:#F9A825
-    style Swiss fill:#FFF9C4,stroke:#F9A825
-    style Cam fill:#FFF9C4,stroke:#F9A825
-```
-
-*Durchgezogene Linien = V1, gestrichelte Linien = zukünftige Versionen*
+*Durchgezogene Linien = implementiert (V1 / V1.x), gestrichelte Linien = geplante Versionen. Quelle: [`diagrams/TSaS_Fachlicher_Kontext.drawio`](diagrams/TSaS_Fachlicher_Kontext.drawio)*
 
 | Akteur / System | Beschreibung |
 |------------------|-------------|
@@ -206,6 +172,24 @@ Das Spring Boot Backend ist intern in fachliche Module aufgeteilt. Jedes Modul k
 | `ai-module` | KI-gestützte Match-Analyse. Konsumiert `statistics-module` (aggregierte Stats) und `player-module` (Spielerdaten als Kontext), ruft via `LlmClientPort` ein LLM (Default OpenAI) und persistiert das Ergebnis als `MatchAnalysis` (1:1 zum Match, überschreibbar). REST: `POST/GET /api/matches/{id}/analysis`. |
 | `common-module` | Shared Kernel mit gemeinsamen DTOs, Exceptions, Konfigurationen und Utilities. |
 
+![TSaS Backend – Fachliche Module](diagrams/TSaS_Backend_Module.svg)
+
+*Quelle: [`diagrams/TSaS_Backend_Module.drawio`](diagrams/TSaS_Backend_Module.drawio)*
+
+### 5.3 Backend – Clean Architecture (Schichten & Ports)
+
+Jedes fachliche Modul ist intern nach Clean Architecture / Ports & Adapters aufgebaut. Die Abhängigkeiten zeigen stets von aussen nach innen: **Infrastructure → Application → Domain**. Die Domain bleibt frei von Framework-Abhängigkeiten.
+
+- **Domain** – Modelle und Geschäftsregeln (z. B. `Player`, `Match`, `Point`, `MatchScore`, `MatchStatistics`, `MatchAnalysis`), ohne Spring-/JPA-Abhängigkeiten.
+- **Application** – Use-Case-Interfaces (`port/in`, z. B. `CreatePlayerUseCase`, `RecordPointUseCase`, `ComputeHeadToHeadStatisticsUseCase`, `GenerateMatchAnalysisUseCase`), deren `@Service`-Implementierungen (`PlayerService`, `MatchService`, `ScoringService`, `MatchStatisticsService`, `HeadToHeadStatisticsService`, `MatchAnalysisService`) sowie die Output-Ports (`port/out`, z. B. `LoadPlayerPort`, `SaveMatchScorePort`, `LoadPointsByMatchPort`, `LlmClientPort`).
+- **Infrastructure** – Adapter: REST-Controller (`web`), JPA-Persistenz-Adapter (`persistence`), LLM-Adapter (`OpenAiLlmAdapter` / `FakeLlmClientAdapter`) sowie Security/Config.
+
+Die Austauschbarkeit über Ports zeigt sich exemplarisch am `LlmClientPort`: Der produktive `OpenAiLlmAdapter` (Spring AI) und der deterministische `FakeLlmClientAdapter` (für Tests und Entwicklung ohne API-Key) implementieren denselben Port — der Use Case bleibt unverändert.
+
+![TSaS Backend – Clean Architecture (Klassen-Detail)](diagrams/TSaS_Backend_CleanArchitecture.svg)
+
+*Quelle: [`diagrams/TSaS_Backend_CleanArchitecture.drawio`](diagrams/TSaS_Backend_CleanArchitecture.drawio)*
+
 ---
 
 ## 6. Laufzeitsicht
@@ -255,44 +239,9 @@ Der Login-Flow folgt dem Standard OAuth2 Authorization Code Flow mit PKCE:
 
 Die Applikation wird mittels Docker Compose deployed. Das folgende Deployment-Diagramm zeigt die Container-Struktur:
 
-```mermaid
-graph TB
-    subgraph Host["🖥️ Docker Host"]
-        subgraph compose["docker-compose"]
+![TSaS – Verteilungssicht (Docker Compose)](diagrams/TSaS_Deployment.svg)
 
-            subgraph fe["📦 frontend Container"]
-                NGX["Nginx<br/>(Angular SPA)<br/>:80"]
-            end
-
-            subgraph be["📦 backend Container"]
-                BE["Spring Boot API<br/>(Java 25)<br/>:8080"]
-            end
-
-            subgraph db["📦 db Container"]
-                PG[("PostgreSQL 16<br/>:5432")]
-                VOL[("Volume:<br/>postgres-data")]
-            end
-
-            subgraph kc["📦 keycloak Container"]
-                KEY["Keycloak 26<br/>:8443 (HTTPS)<br/>:18080 (HTTP intern)"]
-            end
-        end
-    end
-
-    Browser["👤 Browser"] -- "HTTPS :443" --> NGX
-    NGX -- "HTTP-Proxy /api/ → :8080" --> BE
-    BE -- "JDBC :5432" --> PG
-    BE -- "JWKS HTTP :18080" --> KEY
-    Browser -- "OAuth2 PKCE HTTPS :8443" --> KEY
-    PG --- VOL
-
-    style fe fill:#C8E6C9,stroke:#2E7D32
-    style be fill:#BBDEFB,stroke:#1565C0
-    style db fill:#FFF9C4,stroke:#F9A825
-    style kc fill:#FFE0B2,stroke:#E65100
-    style compose fill:#f8f9fa,stroke:#666
-    style Host fill:#fff,stroke:#333
-```
+*Quelle: [`diagrams/TSaS_Deployment.drawio`](diagrams/TSaS_Deployment.drawio). Der externe OpenAI-LLM-Dienst (Spring AI, ab V1.x) wird vom Backend über HTTPS angesprochen.*
 
 | Container | Inhalt | Ports | Bemerkung |
 |-----------|--------|-------|-----------|
