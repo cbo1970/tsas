@@ -445,19 +445,21 @@ Siehe Kapitel 1.2 Qualitätsziele für die übergreifenden SMART-Qualitätsziele
 
 Das relationale Datenmodell bildet die Kernentitäten der Tennismatch-Dokumentation ab. Die folgende Abbildung zeigt das vollständige Datenbankmodell:
 
-*(Abbildung: Tennis Match Datenbankmodell – wird im finalen .docx als Bild eingebettet)*
+![TSaS – Datenmodell](diagrams/TSaS_Datenmodell.svg)
+
+*Quelle: [`diagrams/TSaS_Datenmodell.drawio`](diagrams/TSaS_Datenmodell.drawio). Authoritatives Schema: Flyway-Migrationen V1–V5.*
 
 ### 11.1 Entitätenübersicht
 
-| Entität | Beschreibung |
+| Tabelle | Beschreibung |
 |---------|-------------|
-| `PLAYER` | Spielerprofile mit persönlichen Daten, Spielhand und Ranking. Ein `active`-Flag erlaubt das Deaktivieren (Soft-Delete) von Spielern, die an Matches beteiligt sind, ohne die Match-Historie zu verlieren (FA-13). |
-| `MATCH` | Begegnungen zwischen zwei Spielern mit Turnier-, Belag- und Formatangaben. |
-| `MATCH_SET` | Einzelne Sätze eines Matches mit Games und optionalem Tiebreak. |
-| `CURRENT_SCORE` | Aktueller Live-Spielstand eines laufenden Matches (1:1 zu MATCH): Punkte/Games/Sätze beider Spieler, Einstand-/Vorteil-Flags, laufender Satz, Aufschläger (`servingPlayer`, FA-16), Ace-Zähler sowie der `done`-Status mit Sieger. |
-| `MATCH_STATS` | Aggregierte Statistiken pro Spieler und Match (1:2 zu MATCH). |
-| `POINT` | Einzelne Punkte mit Typ, Schlagart, Richtung, Rally-Länge und Aufschlag-Versuch (1./2. Aufschlag). |
-| `MATCH_ANALYSIS` | KI-generierte taktische Match-Analyse (1:1 zu `MATCH`, überschreibbar). Felder: Status (PENDING/COMPLETED/FAILED), fünf Analyse-Textfelder, JSON-serialisierte Empfehlungsliste, verwendetes LLM-Modell, Generierungszeit, Fehlermeldung bei FAILED. |
+| `players` | Spielerprofile (Name, Geschlecht, Spielhand, Backhand-Typ, Ranking, Nationalität, Geburtsdatum). Das `active`-Flag erlaubt das Deaktivieren (Soft-Delete) beteiligter Spieler ohne Verlust der Match-Historie (FA-13). |
+| `matches` | Begegnungen zwischen zwei Spielern (`player1_id`/`player2_id` → `players`) mit Format (`sets_to_win`, `match_tiebreak`, `short_set`) und `status` (`IN_PROGRESS`/`COMPLETED`). |
+| `match_scores` | Aktueller Spielstand eines Matches (1:1 zu `matches`, UNIQUE `match_id`): Punkte/Games/Sätze beider Spieler, Einstand-/Vorteil-Flags, laufender Satz (`current_set`), Aufschläger (`serving_player`, FA-16), Ace-Zähler sowie `is_done` mit `winner`. |
+| `points` | Einzelne Punkte (1:n zu `matches`): Satz-/Spiel-/Punktnummer, Gewinner, Punkt-/Schlag-/Richtungstyp, Aufschläger, Break-Point-Flag, Aufschlagversuch (1./2. Aufschlag), Bemerkung, Zeitstempel. |
+| `match_analysis` | KI-generierte taktische Analyse (1:1 zu `matches`, UNIQUE `match_id`, `ON DELETE CASCADE`): Status (PENDING/COMPLETED/FAILED), fünf Analyse-Textfelder, JSON-serialisierte Empfehlungsliste, verwendetes LLM-Modell, Generierungszeit, Fehlermeldung bei FAILED. |
+
+> Sätze und Statistiken werden **nicht eigenständig persistiert**: Der Satzstand ist Teil von `match_scores`, aggregierte Statistiken (Head-to-Head, Match-Statistik) werden zur Laufzeit aus `points` berechnet. Es gibt daher keine `match_set`- oder `match_stats`-Tabelle.
 
 ---
 

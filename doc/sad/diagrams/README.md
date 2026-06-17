@@ -35,8 +35,9 @@ done
 | `TSaS_Deployment.drawio` | Verteilungssicht – Docker-Compose-Container (frontend, backend, db, keycloak) + externer LLM-Dienst → Kapitel 7.1 |
 | `TSaS_Backend_Module.drawio` | Backend – Fachliche Module (Übersicht) → Kapitel 5.2 |
 | `TSaS_Backend_CleanArchitecture.drawio` | Backend – Clean Architecture Klassen-Detail (Infrastructure → Application → Domain) → Kapitel 5.3 |
+| `TSaS_Datenmodell.drawio` | Datenmodell (ER) – `players`, `matches`, `match_scores`, `points`, `match_analysis`; deckungsgleich mit den Flyway-Migrationen V1–V5 → Kapitel 11 |
 
-Beim SVG-Export oben die Dateinamen entsprechend ergänzen (`TSaS_Fachlicher_Kontext`, `TSaS_Deployment`).
+Beim SVG-Export oben die Dateinamen entsprechend ergänzen (`TSaS_Fachlicher_Kontext`, `TSaS_Deployment`, `TSaS_Datenmodell`).
 
 > Inhaltlich abgeglichen mit dem aktuellen Code: Scoring ist im `match-module`
 > konsolidiert (kein eigenes `scoring-module`), das `ai-module` (KI-Match-Analyse
