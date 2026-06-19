@@ -2,7 +2,7 @@
   <div class="pickers">
     <mat-form-field appearance="outline">
       <mat-label>Spieler 1</mat-label>
-      <mat-select data-testid="select-p1" [ngModel]="player1Id()" (ngModelChange)="player1Id.set($event); onSelect()">
+      <mat-select data-testid="select-p1" panelClass="h2h-panel" [ngModel]="player1Id()" (ngModelChange)="player1Id.set($event); onSelect()">
         @for (p of players(); track p.id) {
           <mat-option [value]="p.id">{{ p.firstName }} {{ p.lastName }}</mat-option>
         }
@@ -11,7 +11,7 @@
 
     <mat-form-field appearance="outline">
       <mat-label>Spieler 2</mat-label>
-      <mat-select data-testid="select-p2" [ngModel]="player2Id()" (ngModelChange)="player2Id.set($event); onSelect()">
+      <mat-select data-testid="select-p2" panelClass="h2h-panel" [ngModel]="player2Id()" (ngModelChange)="player2Id.set($event); onSelect()">
         @for (p of players(); track p.id) {
           <mat-option [value]="p.id">{{ p.firstName }} {{ p.lastName }}</mat-option>
         }

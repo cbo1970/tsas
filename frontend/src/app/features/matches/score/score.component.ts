@@ -31,7 +31,8 @@ import { PointType, StrokeType, RecordPointRequest } from '../../../core/models/
       display: flex;
       flex-direction: column;
       height: 100dvh;
-      background: #0f172a;
+      /* US-Open-Platz: dunkles Umrandungsblau → helleres Court-Blau */
+      background: linear-gradient(160deg, #103A6B 0%, #2D72B8 100%);
       color: white;
       overflow: hidden;
       font-family: sans-serif;

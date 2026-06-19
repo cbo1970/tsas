@@ -11,10 +11,10 @@ import { MatchStatistics } from '../../../core/models/statistics.model';
   imports: [MatButtonModule, NgClass],
   templateUrl: './statistics.component.html',
   styles: [`
-    :host { display: block; min-height: 100dvh; background: #0f172a; color: #eee; font-family: sans-serif; }
+    :host { display: block; min-height: 100dvh; background: linear-gradient(160deg, #103A6B 0%, #2D72B8 100%); color: #eee; font-family: sans-serif; }
     .page { max-width: 480px; margin: 0 auto; padding: 16px; }
     .player-row { display: grid; grid-template-columns: 1fr 48px 1fr; align-items: end; margin-bottom: 8px; }
-    .player-name { text-align: center; font-weight: 700; font-size: 15px; }
+    .player-name { text-align: center; font-weight: 700; font-size: 15px; color: #fff; }
     .set-scores { margin-bottom: 12px; }
     .set-row { display: grid; grid-template-columns: 1fr 48px 1fr; align-items: center; gap: 4px; margin-bottom: 4px; }
     .set-label { text-align: center; font-size: 10px; color: #555; }

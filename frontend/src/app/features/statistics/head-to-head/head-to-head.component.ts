@@ -13,9 +13,18 @@ import { HeadToHeadStatistics } from '../../../core/models/statistics.model';
   imports: [MatFormFieldModule, MatSelectModule, FormsModule],
   templateUrl: './head-to-head.component.html',
   styles: [`
-    :host { display: block; min-height: 100dvh; background: #0f172a; color: #eee; font-family: sans-serif; }
+    :host { display: block; min-height: 100dvh; background: linear-gradient(160deg, #103A6B 0%, #2D72B8 100%); color: #eee; font-family: sans-serif; }
     .page { max-width: 520px; margin: 0 auto; padding: 16px; }
     .pickers { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    /* ausgewählter Spielername + Feld auf dem blauen Hintergrund lesbar (weiss) */
+    :host ::ng-deep .pickers .mat-mdc-select-value,
+    :host ::ng-deep .pickers .mat-mdc-select-value-text,
+    :host ::ng-deep .pickers .mat-mdc-select-min-line,
+    :host ::ng-deep .pickers .mat-mdc-select-placeholder { color: #fff; }
+    :host ::ng-deep .pickers .mat-mdc-select-arrow { color: rgba(255, 255, 255, 0.85); }
+    :host ::ng-deep .pickers .mdc-floating-label { color: #fff; }
+    :host ::ng-deep .pickers .mat-mdc-form-field.mat-focused .mdc-floating-label { color: #fff; }
+    :host ::ng-deep .pickers .mdc-notched-outline > * { border-color: rgba(255, 255, 255, 0.45); }
     .empty-hint { text-align: center; color: #64748b; padding: 32px; }
     .section-title { font-size: 12px; color: #38bdf8; text-transform: uppercase; letter-spacing: .05em; margin: 16px 0 8px; }
     .divider { border-top: 1px solid #1e293b; margin: 10px 0; }
@@ -24,6 +33,7 @@ import { HeadToHeadStatistics } from '../../../core/models/statistics.model';
     .val-left { text-align: right; color: #0ea5e9; }
     .val-right { text-align: left; padding-left: 4px; color: #94a3b8; }
     .val-right.leading { color: #eee; font-weight: 700; }
+    .player-row .val { color: #fff; }
     .stat-label { font-size: 10px; color: #64748b; text-align: center; }
     .bar { display: flex; height: 4px; border-radius: 2px; overflow: hidden; margin-top: 1px; }
     .bar-p1 { background: #0ea5e9; }

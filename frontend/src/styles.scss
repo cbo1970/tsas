@@ -25,3 +25,19 @@ body {
 a {
   text-decoration: none;
 }
+
+/* Head-to-Head Spieler-Auswahl: dunkles Dropdown-Panel mit weissen Spielernamen
+   (Overlay liegt ausserhalb der Komponente, daher global per panelClass gescoped) */
+.h2h-panel.mat-mdc-select-panel {
+  background: #1e293b;
+}
+.h2h-panel .mat-mdc-option .mdc-list-item__primary-text {
+  color: #fff;
+}
+.h2h-panel .mat-mdc-option:hover:not(.mdc-list-item--disabled),
+.h2h-panel .mat-mdc-option.mat-mdc-option-active {
+  background: rgba(255, 255, 255, 0.1);
+}
+.h2h-panel .mat-mdc-option.mdc-list-item--selected:not(.mat-mdc-option-multiple) {
+  background: rgba(255, 255, 255, 0.16);
+}
