@@ -12,6 +12,7 @@ import java.util.UUID;
 public class Match {
 
     private UUID id;
+    private UUID ownerId;
     private UUID player1Id;
     private UUID player2Id;
     private int setsToWin;
@@ -21,9 +22,10 @@ public class Match {
 
     public Match() {}
 
-    public Match(UUID id, UUID player1Id, UUID player2Id, int setsToWin,
+    public Match(UUID id, UUID ownerId, UUID player1Id, UUID player2Id, int setsToWin,
                  boolean matchTiebreak, boolean shortSet, MatchStatus status) {
         this.id = id;
+        this.ownerId = ownerId;
         this.player1Id = player1Id;
         this.player2Id = player2Id;
         this.setsToWin = setsToWin;
@@ -34,6 +36,9 @@ public class Match {
 
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
+
+    public UUID getOwnerId() { return ownerId; }
+    public void setOwnerId(UUID ownerId) { this.ownerId = ownerId; }
 
     public UUID getPlayer1Id() { return player1Id; }
     public void setPlayer1Id(UUID player1Id) { this.player1Id = player1Id; }

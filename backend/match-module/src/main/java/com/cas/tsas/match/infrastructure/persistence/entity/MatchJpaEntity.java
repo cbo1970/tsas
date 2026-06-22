@@ -13,6 +13,9 @@ public class MatchJpaEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(name = "owner_id", nullable = false)
+    private UUID ownerId;
+
     @Column(name = "player1_id", nullable = false)
     private UUID player1Id;
 
@@ -36,6 +39,9 @@ public class MatchJpaEntity {
 
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
+
+    public UUID getOwnerId() { return ownerId; }
+    public void setOwnerId(UUID ownerId) { this.ownerId = ownerId; }
 
     public UUID getPlayer1Id() { return player1Id; }
     public void setPlayer1Id(UUID player1Id) { this.player1Id = player1Id; }

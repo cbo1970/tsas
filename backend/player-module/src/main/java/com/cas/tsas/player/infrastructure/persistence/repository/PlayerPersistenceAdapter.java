@@ -42,6 +42,18 @@ public class PlayerPersistenceAdapter implements LoadPlayerPort, SavePlayerPort,
     }
 
     @Override
+    public Optional<Player> findByIdAndOwner(UUID id, UUID ownerId) {
+        return repository.findByIdAndOwnerId(id, ownerId).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Player> findAllByOwner(UUID ownerId) {
+        return repository.findAllByOwnerId(ownerId).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
     public Player savePlayer(Player player) {
         var entity = mapper.toEntity(player);
         var saved = repository.save(entity);

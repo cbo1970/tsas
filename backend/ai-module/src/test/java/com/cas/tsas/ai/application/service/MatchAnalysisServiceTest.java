@@ -67,11 +67,11 @@ class MatchAnalysisServiceTest {
     }
 
     private Match completedMatch() {
-        return new Match(matchId, p1Id, p2Id, 2, false, false, MatchStatus.COMPLETED);
+        return new Match(matchId, UUID.randomUUID(), p1Id, p2Id, 2, false, false, MatchStatus.COMPLETED);
     }
 
     private Player player(UUID id, String first, String last) {
-        return new Player(id, first, last, Gender.MALE, Handedness.RIGHT,
+        return new Player(id, UUID.randomUUID(), first, last, Gender.MALE, Handedness.RIGHT,
                 BackhandType.TWO_HANDED, "N3", "GER", null);
     }
 
@@ -103,7 +103,7 @@ class MatchAnalysisServiceTest {
 
     @Test
     void generate_throwsWhenMatchNotCompleted() {
-        Match inProgress = new Match(matchId, p1Id, p2Id, 2, false, false, MatchStatus.IN_PROGRESS);
+        Match inProgress = new Match(matchId, UUID.randomUUID(), p1Id, p2Id, 2, false, false, MatchStatus.IN_PROGRESS);
         when(getMatchUseCase.findById(matchId)).thenReturn(inProgress);
 
         assertThatThrownBy(() -> service.generate(matchId))

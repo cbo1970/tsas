@@ -7,6 +7,21 @@
   "duplicateEmailsAllowed": false,
   "resetPasswordAllowed": true,
   "editUsernameAllowed": false,
+  "roles": {
+    "realm": [
+      {
+        "name": "default-roles-tsas",
+        "composite": true,
+        "composites": {
+          "realm": ["COACH"]
+        },
+        "clientRole": false,
+        "containerId": "tsas"
+      },
+      { "name": "COACH", "description": "Default role: standard coach access" },
+      { "name": "ADMIN", "description": "Full access across all owners" }
+    ]
+  },
   "accessTokenLifespan": 900,
   "ssoSessionMaxLifespan": 2592000,
   "clients": [

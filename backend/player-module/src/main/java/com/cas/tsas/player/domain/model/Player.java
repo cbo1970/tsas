@@ -10,6 +10,7 @@ import java.util.UUID;
 public class Player {
 
     private UUID id;
+    private UUID ownerId;
     private String firstName;
     private String lastName;
     private Gender gender;
@@ -22,10 +23,11 @@ public class Player {
 
     public Player() {}
 
-    public Player(UUID id, String firstName, String lastName, Gender gender,
+    public Player(UUID id, UUID ownerId, String firstName, String lastName, Gender gender,
                   Handedness handedness, BackhandType backhandType,
                   String ranking, String nationality, LocalDate birthDate) {
         this.id = id;
+        this.ownerId = ownerId;
         this.firstName = firstName;
         this.lastName = lastName;
         this.gender = gender;
@@ -38,6 +40,9 @@ public class Player {
 
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
+
+    public UUID getOwnerId() { return ownerId; }
+    public void setOwnerId(UUID ownerId) { this.ownerId = ownerId; }
 
     public String getFirstName() { return firstName; }
     public void setFirstName(String firstName) { this.firstName = firstName; }
