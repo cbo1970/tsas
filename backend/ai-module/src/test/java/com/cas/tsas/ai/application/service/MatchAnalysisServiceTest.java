@@ -71,7 +71,7 @@ class MatchAnalysisServiceTest {
     }
 
     private Player player(UUID id, String first, String last) {
-        return new Player(id, first, last, Gender.MALE, Handedness.RIGHT,
+        return new Player(id, UUID.randomUUID(), first, last, Gender.MALE, Handedness.RIGHT,
                 BackhandType.TWO_HANDED, "N3", "GER", null);
     }
 

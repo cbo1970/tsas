@@ -45,13 +45,14 @@ class PlayerServiceTest {
     @InjectMocks private PlayerService playerService;
 
     private static final UUID PLAYER_ID = UUID.randomUUID();
+    private static final UUID OWNER_ID = UUID.randomUUID();
 
     // -------------------------------------------------------------------------
     // Factories
     // -------------------------------------------------------------------------
 
     private static Player activePlayer() {
-        Player p = new Player(PLAYER_ID, "Max", "Muster", Gender.MALE,
+        Player p = new Player(PLAYER_ID, OWNER_ID, "Max", "Muster", Gender.MALE,
                 Handedness.RIGHT, BackhandType.TWO_HANDED, "4.0", "CH", LocalDate.of(2000, 1, 1));
         p.setActive(true);
         return p;

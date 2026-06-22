@@ -78,7 +78,7 @@ class MatchServiceTest {
     }
 
     private static Player anyPlayer(UUID id) {
-        return new Player(id, "Test", "Player", null, null, null, null, null, null);
+        return new Player(id, UUID.randomUUID(), "Test", "Player", null, null, null, null, null, null);
     }
 
     private static RecordPointUseCase.RecordPointCommand winnerCommand() {

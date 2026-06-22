@@ -48,7 +48,9 @@ public class PlayerService implements CreatePlayerUseCase, SearchPlayerUseCase, 
 
     @Override
     public Player createPlayer(CreatePlayerCommand command) {
+        // TODO TEN-55 Task 9: replace null ownerId with currentUser.get().id()
         Player player = new Player(
+                null,
                 null,
                 command.firstName(),
                 command.lastName(),
