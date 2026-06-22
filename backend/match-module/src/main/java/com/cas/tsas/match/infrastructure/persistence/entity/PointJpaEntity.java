@@ -4,12 +4,18 @@ import com.cas.tsas.match.domain.model.Direction;
 import com.cas.tsas.match.domain.model.PointType;
 import com.cas.tsas.match.domain.model.StrokeType;
 import jakarta.persistence.*;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
 @Table(name = "points")
+@EntityListeners(AuditingEntityListener.class)
 public class PointJpaEntity {
 
     public PointJpaEntity() {}
@@ -60,6 +66,22 @@ public class PointJpaEntity {
     @Column(name = "recorded_at", nullable = false, updatable = false)
     private Instant recordedAt;
 
+    @CreatedDate
+    @Column(name = "created_at", updatable = false)
+    private Instant createdAt;
+
+    @CreatedBy
+    @Column(name = "created_by", updatable = false)
+    private UUID createdBy;
+
+    @LastModifiedDate
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
+    @LastModifiedBy
+    @Column(name = "updated_by")
+    private UUID updatedBy;
+
     @PrePersist
     void prePersist() {
         recordedAt = Instant.now();
@@ -92,4 +114,16 @@ public class PointJpaEntity {
     public Integer getServeAttempt() { return serveAttempt; }
     public void setServeAttempt(Integer serveAttempt) { this.serveAttempt = serveAttempt; }
     public Instant getRecordedAt() { return recordedAt; }
+
+    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+
+    public UUID getCreatedBy() { return createdBy; }
+    public void setCreatedBy(UUID createdBy) { this.createdBy = createdBy; }
+
+    public Instant getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
+
+    public UUID getUpdatedBy() { return updatedBy; }
+    public void setUpdatedBy(UUID updatedBy) { this.updatedBy = updatedBy; }
 }
