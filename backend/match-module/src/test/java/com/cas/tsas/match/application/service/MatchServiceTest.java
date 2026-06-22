@@ -114,8 +114,10 @@ class MatchServiceTest {
 
         @Test
         void saves_match_and_creates_initial_score() {
-            when(loadPlayerPort.loadPlayer(PLAYER1_ID)).thenReturn(Optional.of(anyPlayer(PLAYER1_ID)));
-            when(loadPlayerPort.loadPlayer(PLAYER2_ID)).thenReturn(Optional.of(anyPlayer(PLAYER2_ID)));
+            when(loadPlayerPort.findByIdAndOwner(PLAYER1_ID, OWNER_ID))
+                    .thenReturn(Optional.of(anyPlayer(PLAYER1_ID)));
+            when(loadPlayerPort.findByIdAndOwner(PLAYER2_ID, OWNER_ID))
+                    .thenReturn(Optional.of(anyPlayer(PLAYER2_ID)));
             when(saveMatchPort.saveMatch(any())).thenReturn(inProgressMatch());
 
             Match result = matchService.createMatch(command);
@@ -128,7 +130,7 @@ class MatchServiceTest {
 
         @Test
         void throws_PlayerNotFoundException_when_player1_not_found() {
-            when(loadPlayerPort.loadPlayer(PLAYER1_ID)).thenReturn(Optional.empty());
+            when(loadPlayerPort.findByIdAndOwner(PLAYER1_ID, OWNER_ID)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> matchService.createMatch(command))
                     .isInstanceOf(PlayerNotFoundException.class);
@@ -136,23 +138,65 @@ class MatchServiceTest {
 
         @Test
         void throws_PlayerNotFoundException_when_player2_not_found() {
-            when(loadPlayerPort.loadPlayer(PLAYER1_ID)).thenReturn(Optional.of(anyPlayer(PLAYER1_ID)));
-            when(loadPlayerPort.loadPlayer(PLAYER2_ID)).thenReturn(Optional.empty());
+            when(loadPlayerPort.findByIdAndOwner(PLAYER1_ID, OWNER_ID))
+                    .thenReturn(Optional.of(anyPlayer(PLAYER1_ID)));
+            when(loadPlayerPort.findByIdAndOwner(PLAYER2_ID, OWNER_ID))
+                    .thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> matchService.createMatch(command))
                     .isInstanceOf(PlayerNotFoundException.class);
         }
 
         @Test
+        void creates_throws_when_player1_not_owned() {
+            // Owner-aware load returns empty because the player belongs to a different coach.
+            when(loadPlayerPort.findByIdAndOwner(PLAYER1_ID, OWNER_ID)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> matchService.createMatch(command))
+                    .isInstanceOf(PlayerNotFoundException.class);
+            // No fallback to the unfiltered load — would otherwise leak the foreign player.
+            verify(loadPlayerPort, never()).loadPlayer(any());
+            verify(saveMatchPort, never()).saveMatch(any());
+        }
+
+        @Test
+        void creates_throws_when_player2_not_owned() {
+            when(loadPlayerPort.findByIdAndOwner(PLAYER1_ID, OWNER_ID))
+                    .thenReturn(Optional.of(anyPlayer(PLAYER1_ID)));
+            when(loadPlayerPort.findByIdAndOwner(PLAYER2_ID, OWNER_ID)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> matchService.createMatch(command))
+                    .isInstanceOf(PlayerNotFoundException.class);
+            verify(loadPlayerPort, never()).loadPlayer(any());
+            verify(saveMatchPort, never()).saveMatch(any());
+        }
+
+        @Test
         void assigns_current_user_as_owner() {
             asUser(OWNER_A, Role.COACH);
+            when(loadPlayerPort.findByIdAndOwner(PLAYER1_ID, OWNER_A))
+                    .thenReturn(Optional.of(anyPlayer(PLAYER1_ID)));
+            when(loadPlayerPort.findByIdAndOwner(PLAYER2_ID, OWNER_A))
+                    .thenReturn(Optional.of(anyPlayer(PLAYER2_ID)));
+            when(saveMatchPort.saveMatch(any())).thenAnswer(inv -> inv.getArgument(0));
+
+            matchService.createMatch(command);
+
+            verify(saveMatchPort).saveMatch(argThat(m -> OWNER_A.equals(m.getOwnerId())));
+        }
+
+        @Test
+        void admin_can_create_match_with_any_players() {
+            asUser(OWNER_A, Role.ADMIN);
             when(loadPlayerPort.loadPlayer(PLAYER1_ID)).thenReturn(Optional.of(anyPlayer(PLAYER1_ID)));
             when(loadPlayerPort.loadPlayer(PLAYER2_ID)).thenReturn(Optional.of(anyPlayer(PLAYER2_ID)));
             when(saveMatchPort.saveMatch(any())).thenAnswer(inv -> inv.getArgument(0));
 
             matchService.createMatch(command);
 
-            verify(saveMatchPort).saveMatch(argThat(m -> OWNER_A.equals(m.getOwnerId())));
+            // Admin uses the unfiltered load — owner check is bypassed.
+            verify(loadPlayerPort, never()).findByIdAndOwner(any(), any());
+            verify(saveMatchPort).saveMatch(any());
         }
     }
 

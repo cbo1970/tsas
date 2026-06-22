@@ -255,4 +255,21 @@ class OwnershipIntegrationTest extends AbstractIntegrationTest {
                         .with(coach(USER_A)))
                 .andExpect(status().isNotFound());
     }
+
+    // -------------------------------------------------------------------------
+    // Match creation cross-tenant
+    // -------------------------------------------------------------------------
+
+    @Test
+    void user_A_cannot_create_match_with_user_B_players() throws Exception {
+        UUID foreign1 = createPlayerAs(USER_B, "Bob1");
+        UUID foreign2 = createPlayerAs(USER_B, "Bob2");
+
+        String body = json.writeValueAsString(Map.of(
+                "player1Id", foreign1, "player2Id", foreign2,
+                "setsToWin", 2, "matchTiebreak", false, "shortSet", false
+        ));
+        mockMvc.perform(jsonPost("/api/matches", body).with(coach(USER_A)))
+                .andExpect(status().isNotFound());
+    }
 }

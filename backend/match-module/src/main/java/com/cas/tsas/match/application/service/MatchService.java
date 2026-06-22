@@ -89,15 +89,27 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
      * neither is already engaged in an active (in-progress) match. Persists the
      * match together with a fresh, zeroed initial score.
      *
+     * <p>For non-admin callers both player IDs must resolve to players owned by
+     * the caller; if either does not, a {@link PlayerNotFoundException} (→ 404)
+     * is thrown. Admins may reference any player.
+     *
      * @throws com.cas.tsas.player.domain.exception.PlayerNotFoundException if either player is unknown
      * @throws ActiveMatchExistsException if a player already has a match in progress
      */
     @Override
     public Match createMatch(CreateMatchCommand command) {
-        loadPlayerPort.loadPlayer(command.player1Id())
-                .orElseThrow(() -> new PlayerNotFoundException(command.player1Id()));
-        loadPlayerPort.loadPlayer(command.player2Id())
-                .orElseThrow(() -> new PlayerNotFoundException(command.player2Id()));
+        if (isAdmin()) {
+            loadPlayerPort.loadPlayer(command.player1Id())
+                    .orElseThrow(() -> new PlayerNotFoundException(command.player1Id()));
+            loadPlayerPort.loadPlayer(command.player2Id())
+                    .orElseThrow(() -> new PlayerNotFoundException(command.player2Id()));
+        } else {
+            UUID ownerId = currentUser().id();
+            loadPlayerPort.findByIdAndOwner(command.player1Id(), ownerId)
+                    .orElseThrow(() -> new PlayerNotFoundException(command.player1Id()));
+            loadPlayerPort.findByIdAndOwner(command.player2Id(), ownerId)
+                    .orElseThrow(() -> new PlayerNotFoundException(command.player2Id()));
+        }
 
         if (loadMatchPort.existsActiveMatchForPlayer(command.player1Id())) {
             throw new ActiveMatchExistsException(command.player1Id());
