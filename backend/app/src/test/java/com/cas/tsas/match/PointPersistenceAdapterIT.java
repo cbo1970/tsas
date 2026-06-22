@@ -44,6 +44,8 @@ class PointPersistenceAdapterIT {
         registry.add("spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.PostgreSQLDialect");
     }
 
+    private static final UUID TEST_OWNER = UUID.randomUUID();
+
     @Autowired PointPersistenceAdapter pointAdapter;
     @Autowired MatchPersistenceAdapter matchAdapter;
     @Autowired PlayerJpaRepository playerJpaRepository;
@@ -53,15 +55,17 @@ class PointPersistenceAdapterIT {
     @BeforeEach
     void setUp() {
         PlayerJpaEntity p1 = new PlayerJpaEntity();
+        p1.setOwnerId(TEST_OWNER);
         p1.setFirstName("A"); p1.setLastName("B");
         UUID p1Id = playerJpaRepository.save(p1).getId();
 
         PlayerJpaEntity p2 = new PlayerJpaEntity();
+        p2.setOwnerId(TEST_OWNER);
         p2.setFirstName("C"); p2.setLastName("D");
         UUID p2Id = playerJpaRepository.save(p2).getId();
 
         Match match = matchAdapter.saveMatch(
-                new Match(null, p1Id, p2Id, 2, false, false, MatchStatus.IN_PROGRESS));
+                new Match(null, TEST_OWNER, p1Id, p2Id, 2, false, false, MatchStatus.IN_PROGRESS));
         matchId = match.getId();
     }
 
@@ -130,13 +134,15 @@ class PointPersistenceAdapterIT {
     @Test
     void loadPointsByMatch_does_not_return_points_of_other_matches() {
         PlayerJpaEntity p1 = new PlayerJpaEntity();
+        p1.setOwnerId(TEST_OWNER);
         p1.setFirstName("X"); p1.setLastName("Y");
         UUID p1Id = playerJpaRepository.save(p1).getId();
         PlayerJpaEntity p2 = new PlayerJpaEntity();
+        p2.setOwnerId(TEST_OWNER);
         p2.setFirstName("Z"); p2.setLastName("Q");
         UUID p2Id = playerJpaRepository.save(p2).getId();
         Match otherMatch = matchAdapter.saveMatch(
-                new Match(null, p1Id, p2Id, 2, false, false, MatchStatus.IN_PROGRESS));
+                new Match(null, TEST_OWNER, p1Id, p2Id, 2, false, false, MatchStatus.IN_PROGRESS));
 
         pointAdapter.savePoint(new Point(null, matchId, 1, 1, 1, 1,
                 PointType.WINNER, null, null, 1, false, null, null));

@@ -11,6 +11,7 @@ public class PlayerMapper {
     public Player toDomain(PlayerJpaEntity entity) {
         Player player = new Player(
                 entity.getId(),
+                entity.getOwnerId(),
                 entity.getFirstName(),
                 entity.getLastName(),
                 entity.getGender(),
@@ -27,6 +28,7 @@ public class PlayerMapper {
     public PlayerJpaEntity toEntity(Player player) {
         PlayerJpaEntity entity = new PlayerJpaEntity();
         entity.setId(player.getId());
+        entity.setOwnerId(player.getOwnerId());
         entity.setFirstName(player.getFirstName());
         entity.setLastName(player.getLastName());
         entity.setGender(player.getGender());

@@ -13,4 +13,8 @@ public interface LoadMatchPort {
     List<Match> loadAllMatches();
 
     boolean existsActiveMatchForPlayer(UUID playerId);
+
+    Optional<Match> findByIdAndOwner(UUID id, UUID ownerId);
+
+    List<Match> findAllByOwner(UUID ownerId);
 }

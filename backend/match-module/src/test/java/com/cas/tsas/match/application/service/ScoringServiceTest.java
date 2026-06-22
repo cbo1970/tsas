@@ -25,17 +25,17 @@ class ScoringServiceTest {
     // -------------------------------------------------------------------------
 
     private static Match normalMatch() {
-        return new Match(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+        return new Match(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                 2, false, false, MatchStatus.IN_PROGRESS);
     }
 
     private static Match matchWithMatchTiebreak() {
-        return new Match(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+        return new Match(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                 2, true, false, MatchStatus.IN_PROGRESS);
     }
 
     private static Match shortSetMatch() {
-        return new Match(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+        return new Match(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                 2, false, true, MatchStatus.IN_PROGRESS);
     }
 

@@ -1,5 +1,8 @@
 package com.cas.tsas.match.application.service;
 
+import com.cas.tsas.auth.application.port.in.CurrentUserProvider;
+import com.cas.tsas.auth.domain.CurrentUser;
+import com.cas.tsas.auth.domain.Role;
 import com.cas.tsas.match.application.port.in.CreateMatchUseCase;
 import com.cas.tsas.match.application.port.in.RecordPointUseCase;
 import com.cas.tsas.match.application.port.in.SetScoreUseCase;
@@ -29,9 +32,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -42,6 +48,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class MatchServiceTest {
 
     @Mock private LoadMatchPort loadMatchPort;
@@ -51,6 +58,7 @@ class MatchServiceTest {
     @Mock private SaveMatchScorePort saveMatchScorePort;
     @Mock private SavePointPort savePointPort;
     @Mock private CountPointsInGamePort countPointsInGamePort;
+    @Mock private CurrentUserProvider currentUserProvider;
 
     private MatchService matchService;
 
@@ -58,19 +66,30 @@ class MatchServiceTest {
     void setUp() {
         matchService = new MatchService(loadMatchPort, saveMatchPort, loadPlayerPort,
                 loadMatchScorePort, saveMatchScorePort, new ScoringService(),
-                savePointPort, countPointsInGamePort);
+                savePointPort, countPointsInGamePort, currentUserProvider);
+        // Default identity: a COACH that owns the fixture match. Tests that
+        // need a different identity (e.g. admin, foreign owner) override via
+        // asUser(...).
+        asUser(OWNER_ID, Role.COACH);
+    }
+
+    private void asUser(UUID id, Role... roles) {
+        when(currentUserProvider.get()).thenReturn(new CurrentUser(id, Set.of(roles)));
     }
 
     private static final UUID MATCH_ID   = UUID.randomUUID();
+    private static final UUID OWNER_ID   = UUID.randomUUID();
+    private static final UUID OWNER_A    = UUID.randomUUID();
+    private static final UUID OWNER_B    = UUID.randomUUID();
     private static final UUID PLAYER1_ID = UUID.randomUUID();
     private static final UUID PLAYER2_ID = UUID.randomUUID();
 
     private static Match inProgressMatch() {
-        return new Match(MATCH_ID, PLAYER1_ID, PLAYER2_ID, 2, false, false, MatchStatus.IN_PROGRESS);
+        return new Match(MATCH_ID, OWNER_ID, PLAYER1_ID, PLAYER2_ID, 2, false, false, MatchStatus.IN_PROGRESS);
     }
 
     private static Match completedMatch() {
-        return new Match(MATCH_ID, PLAYER1_ID, PLAYER2_ID, 2, false, false, MatchStatus.COMPLETED);
+        return new Match(MATCH_ID, OWNER_ID, PLAYER1_ID, PLAYER2_ID, 2, false, false, MatchStatus.COMPLETED);
     }
 
     private static MatchScore freshScore() {
@@ -78,7 +97,7 @@ class MatchServiceTest {
     }
 
     private static Player anyPlayer(UUID id) {
-        return new Player(id, "Test", "Player", null, null, null, null, null, null);
+        return new Player(id, UUID.randomUUID(), "Test", "Player", null, null, null, null, null, null);
     }
 
     private static RecordPointUseCase.RecordPointCommand winnerCommand() {
@@ -95,8 +114,10 @@ class MatchServiceTest {
 
         @Test
         void saves_match_and_creates_initial_score() {
-            when(loadPlayerPort.loadPlayer(PLAYER1_ID)).thenReturn(Optional.of(anyPlayer(PLAYER1_ID)));
-            when(loadPlayerPort.loadPlayer(PLAYER2_ID)).thenReturn(Optional.of(anyPlayer(PLAYER2_ID)));
+            when(loadPlayerPort.findByIdAndOwner(PLAYER1_ID, OWNER_ID))
+                    .thenReturn(Optional.of(anyPlayer(PLAYER1_ID)));
+            when(loadPlayerPort.findByIdAndOwner(PLAYER2_ID, OWNER_ID))
+                    .thenReturn(Optional.of(anyPlayer(PLAYER2_ID)));
             when(saveMatchPort.saveMatch(any())).thenReturn(inProgressMatch());
 
             Match result = matchService.createMatch(command);
@@ -109,7 +130,7 @@ class MatchServiceTest {
 
         @Test
         void throws_PlayerNotFoundException_when_player1_not_found() {
-            when(loadPlayerPort.loadPlayer(PLAYER1_ID)).thenReturn(Optional.empty());
+            when(loadPlayerPort.findByIdAndOwner(PLAYER1_ID, OWNER_ID)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> matchService.createMatch(command))
                     .isInstanceOf(PlayerNotFoundException.class);
@@ -117,11 +138,65 @@ class MatchServiceTest {
 
         @Test
         void throws_PlayerNotFoundException_when_player2_not_found() {
-            when(loadPlayerPort.loadPlayer(PLAYER1_ID)).thenReturn(Optional.of(anyPlayer(PLAYER1_ID)));
-            when(loadPlayerPort.loadPlayer(PLAYER2_ID)).thenReturn(Optional.empty());
+            when(loadPlayerPort.findByIdAndOwner(PLAYER1_ID, OWNER_ID))
+                    .thenReturn(Optional.of(anyPlayer(PLAYER1_ID)));
+            when(loadPlayerPort.findByIdAndOwner(PLAYER2_ID, OWNER_ID))
+                    .thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> matchService.createMatch(command))
                     .isInstanceOf(PlayerNotFoundException.class);
+        }
+
+        @Test
+        void creates_throws_when_player1_not_owned() {
+            // Owner-aware load returns empty because the player belongs to a different coach.
+            when(loadPlayerPort.findByIdAndOwner(PLAYER1_ID, OWNER_ID)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> matchService.createMatch(command))
+                    .isInstanceOf(PlayerNotFoundException.class);
+            // No fallback to the unfiltered load — would otherwise leak the foreign player.
+            verify(loadPlayerPort, never()).loadPlayer(any());
+            verify(saveMatchPort, never()).saveMatch(any());
+        }
+
+        @Test
+        void creates_throws_when_player2_not_owned() {
+            when(loadPlayerPort.findByIdAndOwner(PLAYER1_ID, OWNER_ID))
+                    .thenReturn(Optional.of(anyPlayer(PLAYER1_ID)));
+            when(loadPlayerPort.findByIdAndOwner(PLAYER2_ID, OWNER_ID)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> matchService.createMatch(command))
+                    .isInstanceOf(PlayerNotFoundException.class);
+            verify(loadPlayerPort, never()).loadPlayer(any());
+            verify(saveMatchPort, never()).saveMatch(any());
+        }
+
+        @Test
+        void assigns_current_user_as_owner() {
+            asUser(OWNER_A, Role.COACH);
+            when(loadPlayerPort.findByIdAndOwner(PLAYER1_ID, OWNER_A))
+                    .thenReturn(Optional.of(anyPlayer(PLAYER1_ID)));
+            when(loadPlayerPort.findByIdAndOwner(PLAYER2_ID, OWNER_A))
+                    .thenReturn(Optional.of(anyPlayer(PLAYER2_ID)));
+            when(saveMatchPort.saveMatch(any())).thenAnswer(inv -> inv.getArgument(0));
+
+            matchService.createMatch(command);
+
+            verify(saveMatchPort).saveMatch(argThat(m -> OWNER_A.equals(m.getOwnerId())));
+        }
+
+        @Test
+        void admin_can_create_match_with_any_players() {
+            asUser(OWNER_A, Role.ADMIN);
+            when(loadPlayerPort.loadPlayer(PLAYER1_ID)).thenReturn(Optional.of(anyPlayer(PLAYER1_ID)));
+            when(loadPlayerPort.loadPlayer(PLAYER2_ID)).thenReturn(Optional.of(anyPlayer(PLAYER2_ID)));
+            when(saveMatchPort.saveMatch(any())).thenAnswer(inv -> inv.getArgument(0));
+
+            matchService.createMatch(command);
+
+            // Admin uses the unfiltered load — owner check is bypassed.
+            verify(loadPlayerPort, never()).findByIdAndOwner(any(), any());
+            verify(saveMatchPort).saveMatch(any());
         }
     }
 
@@ -130,19 +205,52 @@ class MatchServiceTest {
     class FindById {
 
         @Test
-        void returns_match_when_found() {
+        void returns_match_when_owned_by_current_user() {
             Match match = inProgressMatch();
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(match));
+            when(loadMatchPort.findByIdAndOwner(MATCH_ID, OWNER_ID)).thenReturn(Optional.of(match));
 
             assertThat(matchService.findById(MATCH_ID)).isEqualTo(match);
         }
 
         @Test
         void throws_MatchNotFoundException_when_not_found() {
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.empty());
+            when(loadMatchPort.findByIdAndOwner(MATCH_ID, OWNER_ID)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> matchService.findById(MATCH_ID))
                     .isInstanceOf(MatchNotFoundException.class);
+        }
+
+        @Test
+        void returns_match_when_owner_matches() {
+            UUID id = UUID.randomUUID();
+            asUser(OWNER_A, Role.COACH);
+            Match m = new Match(id, OWNER_A, PLAYER1_ID, PLAYER2_ID, 2, false, false, MatchStatus.IN_PROGRESS);
+            when(loadMatchPort.findByIdAndOwner(id, OWNER_A)).thenReturn(Optional.of(m));
+
+            assertThat(matchService.findById(id)).isEqualTo(m);
+        }
+
+        @Test
+        void throws_MatchNotFoundException_when_owned_by_someone_else() {
+            UUID id = UUID.randomUUID();
+            asUser(OWNER_A, Role.COACH);
+            when(loadMatchPort.findByIdAndOwner(id, OWNER_A)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> matchService.findById(id))
+                    .isInstanceOf(MatchNotFoundException.class);
+            // Owner-aware path: never falls back to the unfiltered load.
+            verify(loadMatchPort, never()).loadMatch(any());
+        }
+
+        @Test
+        void uses_unfiltered_load_for_admin() {
+            UUID id = UUID.randomUUID();
+            asUser(OWNER_A, Role.COACH, Role.ADMIN);
+            Match foreign = new Match(id, OWNER_B, PLAYER1_ID, PLAYER2_ID, 2, false, false, MatchStatus.IN_PROGRESS);
+            when(loadMatchPort.loadMatch(id)).thenReturn(Optional.of(foreign));
+
+            assertThat(matchService.findById(id)).isEqualTo(foreign);
+            verify(loadMatchPort, never()).findByIdAndOwner(any(), any());
         }
     }
 
@@ -151,11 +259,24 @@ class MatchServiceTest {
     class FindAll {
 
         @Test
-        void delegates_to_port_and_returns_all_matches() {
-            List<Match> matches = List.of(inProgressMatch());
-            when(loadMatchPort.loadAllMatches()).thenReturn(matches);
+        void filters_by_current_owner_for_non_admin() {
+            asUser(OWNER_A, Role.COACH);
+            Match m = new Match(UUID.randomUUID(), OWNER_A, PLAYER1_ID, PLAYER2_ID, 2, false, false, MatchStatus.IN_PROGRESS);
+            when(loadMatchPort.findAllByOwner(OWNER_A)).thenReturn(List.of(m));
 
-            assertThat(matchService.findAll()).isEqualTo(matches);
+            assertThat(matchService.findAll()).containsExactly(m);
+            verify(loadMatchPort, never()).loadAllMatches();
+        }
+
+        @Test
+        void returns_everything_for_admin() {
+            asUser(OWNER_A, Role.COACH, Role.ADMIN);
+            Match a = new Match(UUID.randomUUID(), OWNER_A, PLAYER1_ID, PLAYER2_ID, 2, false, false, MatchStatus.IN_PROGRESS);
+            Match b = new Match(UUID.randomUUID(), OWNER_B, PLAYER1_ID, PLAYER2_ID, 2, false, false, MatchStatus.IN_PROGRESS);
+            when(loadMatchPort.loadAllMatches()).thenReturn(List.of(a, b));
+
+            assertThat(matchService.findAll()).hasSize(2);
+            verify(loadMatchPort, never()).findAllByOwner(any());
         }
     }
 
@@ -166,7 +287,7 @@ class MatchServiceTest {
         @Test
         void returns_score_when_match_and_score_exist() {
             MatchScore score = freshScore();
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(inProgressMatch()));
+            when(loadMatchPort.findByIdAndOwner(MATCH_ID, OWNER_ID)).thenReturn(Optional.of(inProgressMatch()));
             when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
 
             assertThat(matchService.getScore(MATCH_ID)).isEqualTo(score);
@@ -174,7 +295,7 @@ class MatchServiceTest {
 
         @Test
         void throws_MatchNotFoundException_when_match_not_found() {
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.empty());
+            when(loadMatchPort.findByIdAndOwner(MATCH_ID, OWNER_ID)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> matchService.getScore(MATCH_ID))
                     .isInstanceOf(MatchNotFoundException.class);
@@ -188,7 +309,7 @@ class MatchServiceTest {
         @Test
         void applies_point_to_score_and_saves_it() {
             MatchScore score = freshScore();
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(inProgressMatch()));
+            when(loadMatchPort.findByIdAndOwner(MATCH_ID, OWNER_ID)).thenReturn(Optional.of(inProgressMatch()));
             when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
             when(saveMatchScorePort.saveMatchScore(score)).thenReturn(score);
             when(countPointsInGamePort.countPointsInGame(any(), anyInt(), anyInt())).thenReturn(0);
@@ -205,7 +326,7 @@ class MatchServiceTest {
         void ace_point_type_increments_ace_counter_for_winner() {
             MatchScore score = freshScore();
             score.setServingPlayer(1);
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(inProgressMatch()));
+            when(loadMatchPort.findByIdAndOwner(MATCH_ID, OWNER_ID)).thenReturn(Optional.of(inProgressMatch()));
             when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
             when(saveMatchScorePort.saveMatchScore(score)).thenReturn(score);
             when(countPointsInGamePort.countPointsInGame(any(), anyInt(), anyInt())).thenReturn(0);
@@ -221,7 +342,7 @@ class MatchServiceTest {
 
         @Test
         void throws_MatchNotFoundException_when_match_not_found() {
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.empty());
+            when(loadMatchPort.findByIdAndOwner(MATCH_ID, OWNER_ID)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> matchService.recordPoint(winnerCommand()))
                     .isInstanceOf(MatchNotFoundException.class);
@@ -229,7 +350,7 @@ class MatchServiceTest {
 
         @Test
         void throws_MatchAlreadyCompleted_when_match_already_completed() {
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(completedMatch()));
+            when(loadMatchPort.findByIdAndOwner(MATCH_ID, OWNER_ID)).thenReturn(Optional.of(completedMatch()));
 
             assertThatThrownBy(() -> matchService.recordPoint(winnerCommand()))
                     .isInstanceOf(MatchAlreadyCompletedException.class)
@@ -240,7 +361,7 @@ class MatchServiceTest {
         void persists_serve_attempt_on_point() {
             MatchScore score = freshScore();
             score.setServingPlayer(1);
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(inProgressMatch()));
+            when(loadMatchPort.findByIdAndOwner(MATCH_ID, OWNER_ID)).thenReturn(Optional.of(inProgressMatch()));
             when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
             when(saveMatchScorePort.saveMatchScore(score)).thenReturn(score);
             when(countPointsInGamePort.countPointsInGame(any(), anyInt(), anyInt())).thenReturn(0);
@@ -260,7 +381,7 @@ class MatchServiceTest {
             Match match = inProgressMatch();
             MatchScore score = freshScore();
             score.setDone(true);
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(match));
+            when(loadMatchPort.findByIdAndOwner(MATCH_ID, OWNER_ID)).thenReturn(Optional.of(match));
             when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
             when(saveMatchScorePort.saveMatchScore(score)).thenReturn(score);
             when(countPointsInGamePort.countPointsInGame(any(), anyInt(), anyInt())).thenReturn(0);
@@ -282,7 +403,7 @@ class MatchServiceTest {
             MatchScore score = freshScore();
             var command = new SetScoreUseCase.SetScoreCommand(
                     MATCH_ID, 1, 2, 3, 1, 0, 0, false, null, 1, false, null);
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(match));
+            when(loadMatchPort.findByIdAndOwner(MATCH_ID, OWNER_ID)).thenReturn(Optional.of(match));
             when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
             when(saveMatchScorePort.saveMatchScore(score)).thenReturn(score);
 
@@ -300,7 +421,7 @@ class MatchServiceTest {
             MatchScore score = freshScore();
             var command = new SetScoreUseCase.SetScoreCommand(
                     MATCH_ID, 0, 0, 0, 0, 2, 0, false, null, 3, true, "PLAYER1");
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(match));
+            when(loadMatchPort.findByIdAndOwner(MATCH_ID, OWNER_ID)).thenReturn(Optional.of(match));
             when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
             when(saveMatchScorePort.saveMatchScore(any())).thenReturn(score);
 
@@ -315,7 +436,7 @@ class MatchServiceTest {
             MatchScore score = freshScore();
             var command = new SetScoreUseCase.SetScoreCommand(
                     MATCH_ID, 0, 0, 1, 0, 1, 0, false, null, 2, false, null);
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(match));
+            when(loadMatchPort.findByIdAndOwner(MATCH_ID, OWNER_ID)).thenReturn(Optional.of(match));
             when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
             when(saveMatchScorePort.saveMatchScore(any())).thenReturn(score);
 
@@ -332,7 +453,7 @@ class MatchServiceTest {
         @Test
         void sets_match_status_to_completed() {
             Match match = inProgressMatch();
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(match));
+            when(loadMatchPort.findByIdAndOwner(MATCH_ID, OWNER_ID)).thenReturn(Optional.of(match));
             when(saveMatchPort.saveMatch(any())).thenReturn(match);
             when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.empty());
 
@@ -345,7 +466,7 @@ class MatchServiceTest {
         void marks_score_done_and_determines_winner_by_sets() {
             Match match = inProgressMatch();
             MatchScore score = new MatchScore(null, MATCH_ID, 0, 0, 0, 0, 2, 1, false, null, 3, false, null, 0, 0, null);
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(match));
+            when(loadMatchPort.findByIdAndOwner(MATCH_ID, OWNER_ID)).thenReturn(Optional.of(match));
             when(saveMatchPort.saveMatch(any())).thenReturn(match);
             when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
 
@@ -362,13 +483,54 @@ class MatchServiceTest {
             MatchScore score = freshScore();
             score.setDone(true);
             score.setWinner("PLAYER2");
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(match));
+            when(loadMatchPort.findByIdAndOwner(MATCH_ID, OWNER_ID)).thenReturn(Optional.of(match));
             when(saveMatchPort.saveMatch(any())).thenReturn(match);
             when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
 
             matchService.endMatch(MATCH_ID);
 
             verify(saveMatchScorePort, never()).saveMatchScore(any());
+        }
+
+        @Test
+        void throws_MatchNotFoundException_when_owned_by_someone_else() {
+            asUser(OWNER_A, Role.COACH);
+            when(loadMatchPort.findByIdAndOwner(MATCH_ID, OWNER_A)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> matchService.endMatch(MATCH_ID))
+                    .isInstanceOf(MatchNotFoundException.class);
+            verify(saveMatchPort, never()).saveMatch(any());
+        }
+    }
+
+    // =========================================================================
+    @Nested
+    class EndMatchWalkover {
+
+        @Test
+        void throws_MatchNotFoundException_when_owned_by_someone_else() {
+            asUser(OWNER_A, Role.COACH);
+            when(loadMatchPort.findByIdAndOwner(MATCH_ID, OWNER_A)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> matchService.endMatchWalkover(MATCH_ID, true))
+                    .isInstanceOf(MatchNotFoundException.class);
+            verify(saveMatchPort, never()).saveMatch(any());
+        }
+
+        @Test
+        void marks_match_completed_and_assigns_winner() {
+            Match match = inProgressMatch();
+            MatchScore score = freshScore();
+            when(loadMatchPort.findByIdAndOwner(MATCH_ID, OWNER_ID)).thenReturn(Optional.of(match));
+            when(saveMatchPort.saveMatch(any())).thenReturn(match);
+            when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
+
+            matchService.endMatchWalkover(MATCH_ID, true);
+
+            verify(saveMatchPort).saveMatch(argThat(m -> m.getStatus() == MatchStatus.COMPLETED));
+            verify(saveMatchScorePort).saveMatchScore(argThat(s ->
+                    s.isDone() && "PLAYER1".equals(s.getWinner())
+            ));
         }
     }
 
@@ -378,7 +540,7 @@ class MatchServiceTest {
 
         @Test
         void throws_MatchNotFoundException_when_match_not_found() {
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.empty());
+            when(loadMatchPort.findByIdAndOwner(MATCH_ID, OWNER_ID)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() ->
                 matchService.setServingPlayer(
@@ -388,7 +550,7 @@ class MatchServiceTest {
 
         @Test
         void throws_MatchAlreadyCompleted_when_match_already_completed() {
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(completedMatch()));
+            when(loadMatchPort.findByIdAndOwner(MATCH_ID, OWNER_ID)).thenReturn(Optional.of(completedMatch()));
 
             assertThatThrownBy(() ->
                 matchService.setServingPlayer(
@@ -398,7 +560,7 @@ class MatchServiceTest {
 
         @Test
         void sets_serving_player_to_1_for_player1() {
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(inProgressMatch()));
+            when(loadMatchPort.findByIdAndOwner(MATCH_ID, OWNER_ID)).thenReturn(Optional.of(inProgressMatch()));
             MatchScore score = freshScore();
             when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
             when(saveMatchScorePort.saveMatchScore(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -411,7 +573,7 @@ class MatchServiceTest {
 
         @Test
         void sets_serving_player_to_2_for_player2() {
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(inProgressMatch()));
+            when(loadMatchPort.findByIdAndOwner(MATCH_ID, OWNER_ID)).thenReturn(Optional.of(inProgressMatch()));
             MatchScore score = freshScore();
             when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.of(score));
             when(saveMatchScorePort.saveMatchScore(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -424,7 +586,7 @@ class MatchServiceTest {
 
         @Test
         void throws_MatchNotFoundException_when_score_not_found() {
-            when(loadMatchPort.loadMatch(MATCH_ID)).thenReturn(Optional.of(inProgressMatch()));
+            when(loadMatchPort.findByIdAndOwner(MATCH_ID, OWNER_ID)).thenReturn(Optional.of(inProgressMatch()));
             when(loadMatchScorePort.loadMatchScore(MATCH_ID)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() ->

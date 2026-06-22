@@ -53,6 +53,7 @@ class HeadToHeadApiIT extends AbstractIntegrationTest {
 
     private UUID seedMatch(UUID p1, UUID p2) {
         MatchJpaEntity m = new MatchJpaEntity();
+        m.setOwnerId(DEFAULT_USER);
         m.setPlayer1Id(p1);
         m.setPlayer2Id(p2);
         m.setSetsToWin(2);

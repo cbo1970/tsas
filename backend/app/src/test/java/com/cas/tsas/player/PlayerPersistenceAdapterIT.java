@@ -44,7 +44,7 @@ class PlayerPersistenceAdapterIT {
     private PlayerPersistenceAdapter adapter;
 
     private static Player newPlayer(String first, String last) {
-        return new Player(null, first, last, Gender.MALE, Handedness.RIGHT,
+        return new Player(null, UUID.randomUUID(), first, last, Gender.MALE, Handedness.RIGHT,
                 BackhandType.TWO_HANDED, "4.0", "CH", LocalDate.of(2000, 1, 1));
     }
 

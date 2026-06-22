@@ -1,5 +1,8 @@
 package com.cas.tsas.statistics.application.service;
 
+import com.cas.tsas.auth.application.port.in.CurrentUserProvider;
+import com.cas.tsas.auth.domain.CurrentUser;
+import com.cas.tsas.auth.domain.Role;
 import com.cas.tsas.match.application.port.out.LoadMatchScorePort;
 import com.cas.tsas.match.application.port.out.LoadMatchesByPlayersPort;
 import com.cas.tsas.match.application.port.out.LoadPointsByMatchPort;
@@ -18,6 +21,7 @@ import org.mockito.Mockito;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,10 +36,13 @@ class HeadToHeadStatisticsServiceTest {
     private LoadMatchesByPlayersPort loadMatchesByPlayersPort;
     private LoadPointsByMatchPort loadPointsByMatchPort;
     private LoadMatchScorePort loadMatchScorePort;
+    private CurrentUserProvider currentUserProvider;
     private HeadToHeadStatisticsService service;
 
     private final UUID alice = UUID.randomUUID();
     private final UUID bob = UUID.randomUUID();
+    private static final UUID USER_A = UUID.randomUUID();
+    private static final UUID USER_B = UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
@@ -43,11 +50,19 @@ class HeadToHeadStatisticsServiceTest {
         loadMatchesByPlayersPort = Mockito.mock(LoadMatchesByPlayersPort.class);
         loadPointsByMatchPort = Mockito.mock(LoadPointsByMatchPort.class);
         loadMatchScorePort = Mockito.mock(LoadMatchScorePort.class);
+        currentUserProvider = Mockito.mock(CurrentUserProvider.class);
         service = new HeadToHeadStatisticsService(
-                loadPlayerPort, loadMatchesByPlayersPort, loadPointsByMatchPort, loadMatchScorePort);
+                loadPlayerPort, loadMatchesByPlayersPort, loadPointsByMatchPort,
+                loadMatchScorePort, currentUserProvider);
 
-        when(loadPlayerPort.loadPlayer(alice)).thenReturn(Optional.of(player(alice)));
-        when(loadPlayerPort.loadPlayer(bob)).thenReturn(Optional.of(player(bob)));
+        // Default identity: COACH USER_A who owns both alice and bob.
+        asUser(USER_A, Role.COACH);
+        when(loadPlayerPort.findByIdAndOwner(alice, USER_A)).thenReturn(Optional.of(player(alice)));
+        when(loadPlayerPort.findByIdAndOwner(bob, USER_A)).thenReturn(Optional.of(player(bob)));
+    }
+
+    private void asUser(UUID id, Role... roles) {
+        when(currentUserProvider.get()).thenReturn(new CurrentUser(id, Set.of(roles)));
     }
 
     private Player player(UUID id) {
@@ -57,7 +72,11 @@ class HeadToHeadStatisticsServiceTest {
     }
 
     private Match match(UUID id, UUID p1, UUID p2) {
-        return new Match(id, p1, p2, 2, false, false, MatchStatus.COMPLETED);
+        return new Match(id, USER_A, p1, p2, 2, false, false, MatchStatus.COMPLETED);
+    }
+
+    private Match matchOwnedBy(UUID id, UUID p1, UUID p2, UUID ownerId) {
+        return new Match(id, ownerId, p1, p2, 2, false, false, MatchStatus.COMPLETED);
     }
 
     private Point p(int set, int game, int pt, int winner, PointType type,
@@ -79,16 +98,76 @@ class HeadToHeadStatisticsServiceTest {
 
     @Test
     void throws_when_player1_unknown() {
-        when(loadPlayerPort.loadPlayer(alice)).thenReturn(Optional.empty());
+        when(loadPlayerPort.findByIdAndOwner(alice, USER_A)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> service.compute(alice, bob))
                 .isInstanceOf(PlayerNotFoundException.class);
     }
 
     @Test
     void throws_when_player2_unknown() {
-        when(loadPlayerPort.loadPlayer(bob)).thenReturn(Optional.empty());
+        when(loadPlayerPort.findByIdAndOwner(bob, USER_A)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> service.compute(alice, bob))
                 .isInstanceOf(PlayerNotFoundException.class);
+    }
+
+    @Test
+    void compute_throws_when_caller_does_not_own_either_player() {
+        UUID p1 = UUID.randomUUID();
+        UUID p2 = UUID.randomUUID();
+        asUser(USER_A, Role.COACH);
+        when(loadPlayerPort.findByIdAndOwner(p1, USER_A)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.compute(p1, p2))
+                .isInstanceOf(PlayerNotFoundException.class);
+    }
+
+    @Test
+    void compute_throws_when_caller_owns_only_player1() {
+        UUID p2Foreign = UUID.randomUUID();
+        when(loadPlayerPort.findByIdAndOwner(alice, USER_A)).thenReturn(Optional.of(player(alice)));
+        when(loadPlayerPort.findByIdAndOwner(p2Foreign, USER_A)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.compute(alice, p2Foreign))
+                .isInstanceOf(PlayerNotFoundException.class);
+    }
+
+    @Test
+    void compute_filters_matches_to_callers_owned_matches_only() {
+        UUID ownMatch = UUID.randomUUID();
+        UUID foreignMatch = UUID.randomUUID();
+        when(loadMatchesByPlayersPort.loadMatchesBetween(alice, bob)).thenReturn(List.of(
+                match(ownMatch, alice, bob),
+                matchOwnedBy(foreignMatch, alice, bob, USER_B)
+        ));
+        when(loadMatchScorePort.loadMatchScore(any())).thenReturn(Optional.empty());
+        when(loadPointsByMatchPort.loadPointsByMatch(ownMatch)).thenReturn(List.of(
+                p(1, 1, 1, 1, PointType.WINNER, null, null, false)
+        ));
+
+        HeadToHeadStatistics r = service.compute(alice, bob);
+
+        // Only the own match's point was counted; the foreign match was skipped entirely.
+        assertThat(r.player1().winners()).isEqualTo(1);
+        Mockito.verify(loadPointsByMatchPort, Mockito.never()).loadPointsByMatch(foreignMatch);
+    }
+
+    @Test
+    void compute_for_admin_bypasses_owner_filters() {
+        asUser(USER_B, Role.ADMIN);
+        when(loadPlayerPort.loadPlayer(alice)).thenReturn(Optional.of(player(alice)));
+        when(loadPlayerPort.loadPlayer(bob)).thenReturn(Optional.of(player(bob)));
+        UUID ownedByOther = UUID.randomUUID();
+        when(loadMatchesByPlayersPort.loadMatchesBetween(alice, bob)).thenReturn(List.of(
+                matchOwnedBy(ownedByOther, alice, bob, USER_A)
+        ));
+        when(loadMatchScorePort.loadMatchScore(any())).thenReturn(Optional.empty());
+        when(loadPointsByMatchPort.loadPointsByMatch(ownedByOther)).thenReturn(List.of(
+                p(1, 1, 1, 1, PointType.WINNER, null, null, false)
+        ));
+
+        HeadToHeadStatistics r = service.compute(alice, bob);
+
+        assertThat(r.player1().winners()).isEqualTo(1);
     }
 
     @Test

@@ -11,4 +11,8 @@ public interface LoadPlayerPort {
     Optional<Player> loadPlayer(UUID id);
 
     List<Player> loadAllPlayers();
+
+    Optional<Player> findByIdAndOwner(UUID id, UUID ownerId);
+
+    List<Player> findAllByOwner(UUID ownerId);
 }

@@ -1,5 +1,8 @@
 package com.cas.tsas.match.application.service;
 
+import com.cas.tsas.auth.application.port.in.CurrentUserProvider;
+import com.cas.tsas.auth.domain.CurrentUser;
+import com.cas.tsas.auth.domain.Role;
 import com.cas.tsas.match.application.port.in.CreateMatchUseCase;
 import com.cas.tsas.match.application.port.in.EndMatchUseCase;
 import com.cas.tsas.match.application.port.in.GetMatchUseCase;
@@ -26,15 +29,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
  * Orchestrates the match lifecycle (creation, point recording, manual score
- * correction and completion). The tennis counting rules themselves are not
- * implemented here but delegated to {@link ScoringService}; this service is
- * responsible for loading/persisting the match and its score, deriving point
- * metadata (set/game/point number, break-point flag), maintaining ace counters
- * and flipping the match status to completed once the score is decided.
+ * correction and completion). Reads and writes are scoped to the current user
+ * as owner; users with the {@code ADMIN} role bypass the owner filter. The
+ * tennis counting rules themselves are not implemented here but delegated to
+ * {@link ScoringService}; this service is responsible for loading/persisting
+ * the match and its score, deriving point metadata (set/game/point number,
+ * break-point flag), maintaining ace counters and flipping the match status to
+ * completed once the score is decided.
  */
 @Service
 @Transactional
@@ -49,6 +55,7 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
     private final ScoringService scoringService;
     private final SavePointPort savePointPort;
     private final CountPointsInGamePort countPointsInGamePort;
+    private final CurrentUserProvider currentUserProvider;
 
     public MatchService(LoadMatchPort loadMatchPort, SaveMatchPort saveMatchPort,
                         LoadPlayerPort loadPlayerPort,
@@ -56,7 +63,8 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
                         SaveMatchScorePort saveMatchScorePort,
                         ScoringService scoringService,
                         SavePointPort savePointPort,
-                        CountPointsInGamePort countPointsInGamePort) {
+                        CountPointsInGamePort countPointsInGamePort,
+                        CurrentUserProvider currentUserProvider) {
         this.loadMatchPort = loadMatchPort;
         this.saveMatchPort = saveMatchPort;
         this.loadPlayerPort = loadPlayerPort;
@@ -65,6 +73,15 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
         this.scoringService = scoringService;
         this.savePointPort = savePointPort;
         this.countPointsInGamePort = countPointsInGamePort;
+        this.currentUserProvider = currentUserProvider;
+    }
+
+    private CurrentUser currentUser() {
+        return currentUserProvider.get();
+    }
+
+    private boolean isAdmin() {
+        return currentUser().hasRole(Role.ADMIN);
     }
 
     /**
@@ -72,15 +89,27 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
      * neither is already engaged in an active (in-progress) match. Persists the
      * match together with a fresh, zeroed initial score.
      *
+     * <p>For non-admin callers both player IDs must resolve to players owned by
+     * the caller; if either does not, a {@link PlayerNotFoundException} (→ 404)
+     * is thrown. Admins may reference any player.
+     *
      * @throws com.cas.tsas.player.domain.exception.PlayerNotFoundException if either player is unknown
      * @throws ActiveMatchExistsException if a player already has a match in progress
      */
     @Override
     public Match createMatch(CreateMatchCommand command) {
-        loadPlayerPort.loadPlayer(command.player1Id())
-                .orElseThrow(() -> new PlayerNotFoundException(command.player1Id()));
-        loadPlayerPort.loadPlayer(command.player2Id())
-                .orElseThrow(() -> new PlayerNotFoundException(command.player2Id()));
+        if (isAdmin()) {
+            loadPlayerPort.loadPlayer(command.player1Id())
+                    .orElseThrow(() -> new PlayerNotFoundException(command.player1Id()));
+            loadPlayerPort.loadPlayer(command.player2Id())
+                    .orElseThrow(() -> new PlayerNotFoundException(command.player2Id()));
+        } else {
+            UUID ownerId = currentUser().id();
+            loadPlayerPort.findByIdAndOwner(command.player1Id(), ownerId)
+                    .orElseThrow(() -> new PlayerNotFoundException(command.player1Id()));
+            loadPlayerPort.findByIdAndOwner(command.player2Id(), ownerId)
+                    .orElseThrow(() -> new PlayerNotFoundException(command.player2Id()));
+        }
 
         if (loadMatchPort.existsActiveMatchForPlayer(command.player1Id())) {
             throw new ActiveMatchExistsException(command.player1Id());
@@ -89,7 +118,7 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
             throw new ActiveMatchExistsException(command.player2Id());
         }
 
-        Match match = new Match(null, command.player1Id(), command.player2Id(),
+        Match match = new Match(null, currentUser().id(), command.player1Id(), command.player2Id(),
                 command.setsToWin(), command.matchTiebreak(), command.shortSet(),
                 MatchStatus.IN_PROGRESS);
         Match saved = saveMatchPort.saveMatch(match);
@@ -104,19 +133,24 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
     @Override
     @Transactional(readOnly = true)
     public Match findById(UUID id) {
-        return loadMatchPort.loadMatch(id).orElseThrow(() -> new MatchNotFoundException(id));
+        Optional<Match> match = isAdmin()
+                ? loadMatchPort.loadMatch(id)
+                : loadMatchPort.findByIdAndOwner(id, currentUser().id());
+        return match.orElseThrow(() -> new MatchNotFoundException(id));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Match> findAll() {
-        return loadMatchPort.loadAllMatches();
+        return isAdmin()
+                ? loadMatchPort.loadAllMatches()
+                : loadMatchPort.findAllByOwner(currentUser().id());
     }
 
     @Override
     @Transactional(readOnly = true)
     public MatchScore getScore(UUID matchId) {
-        loadMatchPort.loadMatch(matchId).orElseThrow(() -> new MatchNotFoundException(matchId));
+        findById(matchId);
         return loadMatchScorePort.loadMatchScore(matchId)
                 .orElseThrow(() -> new MatchNotFoundException(matchId));
     }
@@ -135,8 +169,7 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
      */
     @Override
     public MatchScore recordPoint(RecordPointCommand command) {
-        Match match = loadMatchPort.loadMatch(command.matchId())
-                .orElseThrow(() -> new MatchNotFoundException(command.matchId()));
+        Match match = findById(command.matchId());
 
         if (match.getStatus() == MatchStatus.COMPLETED) {
             throw new MatchAlreadyCompletedException(command.matchId());
@@ -207,8 +240,7 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
      */
     @Override
     public MatchScore setScore(SetScoreCommand command) {
-        Match match = loadMatchPort.loadMatch(command.matchId())
-                .orElseThrow(() -> new MatchNotFoundException(command.matchId()));
+        Match match = findById(command.matchId());
 
         MatchScore score = loadMatchScorePort.loadMatchScore(command.matchId())
                 .orElseThrow(() -> new MatchNotFoundException(command.matchId()));
@@ -241,8 +273,7 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
     /** Sets which player is currently serving on an in-progress match. */
     @Override
     public MatchScore setServingPlayer(SetServingPlayerCommand command) {
-        Match match = loadMatchPort.loadMatch(command.matchId())
-                .orElseThrow(() -> new MatchNotFoundException(command.matchId()));
+        Match match = findById(command.matchId());
 
         if (match.getStatus() == MatchStatus.COMPLETED) {
             throw new MatchAlreadyCompletedException(command.matchId());
@@ -261,8 +292,7 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
      */
     @Override
     public Match endMatch(UUID matchId) {
-        Match match = loadMatchPort.loadMatch(matchId)
-                .orElseThrow(() -> new MatchNotFoundException(matchId));
+        Match match = findById(matchId);
 
         match.setStatus(MatchStatus.COMPLETED);
         Match saved = saveMatchPort.saveMatch(match);
@@ -290,8 +320,7 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
      */
     @Override
     public Match endMatchWalkover(UUID matchId, boolean player1Wins) {
-        Match match = loadMatchPort.loadMatch(matchId)
-                .orElseThrow(() -> new MatchNotFoundException(matchId));
+        Match match = findById(matchId);
 
         if (match.getStatus() == MatchStatus.COMPLETED) {
             throw new MatchAlreadyCompletedException(matchId);

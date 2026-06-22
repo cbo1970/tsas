@@ -48,6 +48,18 @@ public class MatchPersistenceAdapter implements LoadMatchPort, LoadMatchesByPlay
     }
 
     @Override
+    public Optional<Match> findByIdAndOwner(UUID id, UUID ownerId) {
+        return repository.findByIdAndOwnerId(id, ownerId).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Match> findAllByOwner(UUID ownerId) {
+        return repository.findAllByOwnerId(ownerId).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
     public boolean existsByPlayerId(UUID playerId) {
         return repository.existsByPlayer1IdOrPlayer2Id(playerId, playerId);
     }
