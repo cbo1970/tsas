@@ -13,6 +13,10 @@ spring:
         jwt:
           jwk-set-uri: http://localhost:18080/realms/tsas/protocol/openid-connect/certs
 
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level [%X{correlationId:-}] %logger{36} - %msg%n"
+
 tsas:
   cors:
     allowed-origins:
