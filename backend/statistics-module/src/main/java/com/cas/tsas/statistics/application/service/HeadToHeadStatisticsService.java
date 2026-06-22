@@ -1,5 +1,8 @@
 package com.cas.tsas.statistics.application.service;
 
+import com.cas.tsas.auth.application.port.in.CurrentUserProvider;
+import com.cas.tsas.auth.domain.CurrentUser;
+import com.cas.tsas.auth.domain.Role;
 import com.cas.tsas.match.application.port.out.LoadMatchScorePort;
 import com.cas.tsas.match.application.port.out.LoadMatchesByPlayersPort;
 import com.cas.tsas.match.application.port.out.LoadPointsByMatchPort;
@@ -24,6 +27,10 @@ import java.util.UUID;
  * (each match's positional player 1/2 is mapped to the actual player), then derived into
  * percentages. Match/set balance is taken from the persisted {@link MatchScore} of completed
  * matches only.
+ *
+ * <p>Access is owner-bound: a non-admin caller must own both players, otherwise a
+ * {@link PlayerNotFoundException} is raised (404). Matches considered for the aggregation are
+ * filtered to the caller's owned matches; admins bypass both filters.
  */
 @Service
 public class HeadToHeadStatisticsService implements ComputeHeadToHeadStatisticsUseCase {
@@ -32,15 +39,18 @@ public class HeadToHeadStatisticsService implements ComputeHeadToHeadStatisticsU
     private final LoadMatchesByPlayersPort loadMatchesByPlayersPort;
     private final LoadPointsByMatchPort loadPointsByMatchPort;
     private final LoadMatchScorePort loadMatchScorePort;
+    private final CurrentUserProvider currentUserProvider;
 
     public HeadToHeadStatisticsService(LoadPlayerPort loadPlayerPort,
                                        LoadMatchesByPlayersPort loadMatchesByPlayersPort,
                                        LoadPointsByMatchPort loadPointsByMatchPort,
-                                       LoadMatchScorePort loadMatchScorePort) {
+                                       LoadMatchScorePort loadMatchScorePort,
+                                       CurrentUserProvider currentUserProvider) {
         this.loadPlayerPort = loadPlayerPort;
         this.loadMatchesByPlayersPort = loadMatchesByPlayersPort;
         this.loadPointsByMatchPort = loadPointsByMatchPort;
         this.loadMatchScorePort = loadMatchScorePort;
+        this.currentUserProvider = currentUserProvider;
     }
 
     @Override
@@ -48,15 +58,30 @@ public class HeadToHeadStatisticsService implements ComputeHeadToHeadStatisticsU
         if (player1Id.equals(player2Id)) {
             throw new IllegalArgumentException("player1 and player2 must be different");
         }
-        loadPlayerPort.loadPlayer(player1Id).orElseThrow(() -> new PlayerNotFoundException(player1Id));
-        loadPlayerPort.loadPlayer(player2Id).orElseThrow(() -> new PlayerNotFoundException(player2Id));
+        CurrentUser current = currentUserProvider.get();
+        boolean admin = current.hasRole(Role.ADMIN);
+        if (admin) {
+            loadPlayerPort.loadPlayer(player1Id)
+                    .orElseThrow(() -> new PlayerNotFoundException(player1Id));
+            loadPlayerPort.loadPlayer(player2Id)
+                    .orElseThrow(() -> new PlayerNotFoundException(player2Id));
+        } else {
+            loadPlayerPort.findByIdAndOwner(player1Id, current.id())
+                    .orElseThrow(() -> new PlayerNotFoundException(player1Id));
+            loadPlayerPort.findByIdAndOwner(player2Id, current.id())
+                    .orElseThrow(() -> new PlayerNotFoundException(player2Id));
+        }
 
         Accumulator acc1 = new Accumulator();
         Accumulator acc2 = new Accumulator();
         int totalPoints = 0;
         int matchesPlayed = 0;
 
-        for (Match match : loadMatchesByPlayersPort.loadMatchesBetween(player1Id, player2Id)) {
+        List<Match> matches = loadMatchesByPlayersPort.loadMatchesBetween(player1Id, player2Id);
+        for (Match match : matches) {
+            if (!admin && !current.id().equals(match.getOwnerId())) {
+                continue;
+            }
             boolean p1IsPosition1 = match.getPlayer1Id().equals(player1Id);
             Accumulator pos1 = p1IsPosition1 ? acc1 : acc2;
             Accumulator pos2 = p1IsPosition1 ? acc2 : acc1;

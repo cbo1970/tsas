@@ -239,4 +239,20 @@ class OwnershipIntegrationTest extends AbstractIntegrationTest {
         mockMvc.perform(post("/api/matches/{id}/analysis", matchId).with(coach(USER_A)))
                 .andExpect(status().isNotFound());
     }
+
+    // -------------------------------------------------------------------------
+    // Head-to-head statistics cross-tenant
+    // -------------------------------------------------------------------------
+
+    @Test
+    void user_A_cannot_compute_h2h_between_user_B_players() throws Exception {
+        UUID p1 = createPlayerAs(USER_B, "Bob1");
+        UUID p2 = createPlayerAs(USER_B, "Bob2");
+
+        mockMvc.perform(get("/api/statistics/head-to-head")
+                        .param("player1", p1.toString())
+                        .param("player2", p2.toString())
+                        .with(coach(USER_A)))
+                .andExpect(status().isNotFound());
+    }
 }
