@@ -1,5 +1,8 @@
 package com.cas.tsas.player.application.service;
 
+import com.cas.tsas.auth.application.port.in.CurrentUserProvider;
+import com.cas.tsas.auth.domain.CurrentUser;
+import com.cas.tsas.auth.domain.Role;
 import com.cas.tsas.player.application.port.in.CreatePlayerUseCase;
 import com.cas.tsas.player.application.port.in.UpdatePlayerUseCase;
 import com.cas.tsas.player.application.port.out.DeletePlayerPort;
@@ -13,12 +16,15 @@ import com.cas.tsas.player.domain.model.BackhandType;
 import com.cas.tsas.player.domain.model.Gender;
 import com.cas.tsas.player.domain.model.Handedness;
 import com.cas.tsas.player.domain.model.Player;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -34,6 +40,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class PlayerServiceTest {
 
     @Mock private LoadPlayerPort loadPlayerPort;
@@ -41,11 +48,26 @@ class PlayerServiceTest {
     @Mock private DeletePlayerPort deletePlayerPort;
     @Mock private HasMatchesPort hasMatchesPort;
     @Mock private FindActiveMatchPort findActiveMatchPort;
+    @Mock private CurrentUserProvider currentUserProvider;
 
     @InjectMocks private PlayerService playerService;
 
     private static final UUID PLAYER_ID = UUID.randomUUID();
     private static final UUID OWNER_ID = UUID.randomUUID();
+    private static final UUID OWNER_A = UUID.randomUUID();
+    private static final UUID OWNER_B = UUID.randomUUID();
+
+    @BeforeEach
+    void setUpDefaultUser() {
+        // Default identity: a COACH that owns the fixture player. Tests that
+        // need a different identity (e.g. admin, foreign owner) override via
+        // asUser(...).
+        asUser(OWNER_ID, Role.COACH);
+    }
+
+    private void asUser(UUID id, Role... roles) {
+        when(currentUserProvider.get()).thenReturn(new CurrentUser(id, Set.of(roles)));
+    }
 
     // -------------------------------------------------------------------------
     // Factories
@@ -95,6 +117,17 @@ class PlayerServiceTest {
 
             verify(savePlayerPort).savePlayer(argThat(p -> p.getId() == null));
         }
+
+        @Test
+        void assigns_current_user_as_owner() {
+            asUser(OWNER_A, Role.COACH);
+            when(savePlayerPort.savePlayer(any())).thenAnswer(inv -> inv.getArgument(0));
+
+            Player p = playerService.createPlayer(new CreatePlayerUseCase.CreatePlayerCommand(
+                    "X", "Y", null, null, null, null, null, null));
+
+            assertThat(p.getOwnerId()).isEqualTo(OWNER_A);
+        }
     }
 
     // =========================================================================
@@ -102,19 +135,52 @@ class PlayerServiceTest {
     class FindById {
 
         @Test
-        void returns_player_when_found() {
+        void returns_player_when_owned_by_current_user() {
             Player player = activePlayer();
-            when(loadPlayerPort.loadPlayer(PLAYER_ID)).thenReturn(Optional.of(player));
+            when(loadPlayerPort.findByIdAndOwner(PLAYER_ID, OWNER_ID)).thenReturn(Optional.of(player));
 
             assertThat(playerService.findById(PLAYER_ID)).isEqualTo(player);
         }
 
         @Test
         void throws_PlayerNotFoundException_when_not_found() {
-            when(loadPlayerPort.loadPlayer(PLAYER_ID)).thenReturn(Optional.empty());
+            when(loadPlayerPort.findByIdAndOwner(PLAYER_ID, OWNER_ID)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> playerService.findById(PLAYER_ID))
                     .isInstanceOf(PlayerNotFoundException.class);
+        }
+
+        @Test
+        void returns_player_when_owner_matches() {
+            UUID id = UUID.randomUUID();
+            asUser(OWNER_A, Role.COACH);
+            Player p = new Player(id, OWNER_A, "A", "L", null, null, null, null, null, null);
+            when(loadPlayerPort.findByIdAndOwner(id, OWNER_A)).thenReturn(Optional.of(p));
+
+            assertThat(playerService.findById(id)).isEqualTo(p);
+        }
+
+        @Test
+        void throws_PlayerNotFoundException_when_owned_by_someone_else() {
+            UUID id = UUID.randomUUID();
+            asUser(OWNER_A, Role.COACH);
+            when(loadPlayerPort.findByIdAndOwner(id, OWNER_A)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> playerService.findById(id))
+                    .isInstanceOf(PlayerNotFoundException.class);
+            // Owner-aware path: never falls back to the unfiltered load.
+            verify(loadPlayerPort, never()).loadPlayer(any());
+        }
+
+        @Test
+        void uses_unfiltered_load_for_admin() {
+            UUID id = UUID.randomUUID();
+            asUser(OWNER_A, Role.COACH, Role.ADMIN);
+            Player foreign = new Player(id, OWNER_B, "B", "L", null, null, null, null, null, null);
+            when(loadPlayerPort.loadPlayer(id)).thenReturn(Optional.of(foreign));
+
+            assertThat(playerService.findById(id)).isEqualTo(foreign);
+            verify(loadPlayerPort, never()).findByIdAndOwner(any(), any());
         }
     }
 
@@ -123,11 +189,24 @@ class PlayerServiceTest {
     class FindAll {
 
         @Test
-        void delegates_to_port_and_returns_all_players() {
-            List<Player> players = List.of(activePlayer());
-            when(loadPlayerPort.loadAllPlayers()).thenReturn(players);
+        void filters_by_current_owner_for_non_admin() {
+            asUser(OWNER_A, Role.COACH);
+            Player p = new Player(UUID.randomUUID(), OWNER_A, "A", "L", null, null, null, null, null, null);
+            when(loadPlayerPort.findAllByOwner(OWNER_A)).thenReturn(List.of(p));
 
-            assertThat(playerService.findAll()).isEqualTo(players);
+            assertThat(playerService.findAll()).extracting(Player::getFirstName).containsExactly("A");
+            verify(loadPlayerPort, never()).loadAllPlayers();
+        }
+
+        @Test
+        void returns_everything_for_admin() {
+            asUser(OWNER_A, Role.COACH, Role.ADMIN);
+            Player a = new Player(UUID.randomUUID(), OWNER_A, "A", "L", null, null, null, null, null, null);
+            Player b = new Player(UUID.randomUUID(), OWNER_B, "B", "L", null, null, null, null, null, null);
+            when(loadPlayerPort.loadAllPlayers()).thenReturn(List.of(a, b));
+
+            assertThat(playerService.findAll()).hasSize(2);
+            verify(loadPlayerPort, never()).findAllByOwner(any());
         }
     }
 
@@ -138,7 +217,7 @@ class PlayerServiceTest {
         @Test
         void updates_all_fields_and_saves() {
             Player existing = activePlayer();
-            when(loadPlayerPort.loadPlayer(PLAYER_ID)).thenReturn(Optional.of(existing));
+            when(loadPlayerPort.findByIdAndOwner(PLAYER_ID, OWNER_ID)).thenReturn(Optional.of(existing));
             when(savePlayerPort.savePlayer(existing)).thenReturn(existing);
 
             Player result = playerService.updatePlayer(updateCommand());
@@ -155,7 +234,7 @@ class PlayerServiceTest {
 
         @Test
         void throws_PlayerNotFoundException_when_player_not_found() {
-            when(loadPlayerPort.loadPlayer(PLAYER_ID)).thenReturn(Optional.empty());
+            when(loadPlayerPort.findByIdAndOwner(PLAYER_ID, OWNER_ID)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> playerService.updatePlayer(updateCommand()))
                     .isInstanceOf(PlayerNotFoundException.class);
@@ -187,8 +266,8 @@ class PlayerServiceTest {
 
         @Test
         void deletes_player_when_no_matches_exist() {
+            when(loadPlayerPort.findByIdAndOwner(PLAYER_ID, OWNER_ID)).thenReturn(Optional.of(activePlayer()));
             when(hasMatchesPort.existsByPlayerId(PLAYER_ID)).thenReturn(false);
-            when(loadPlayerPort.loadPlayer(PLAYER_ID)).thenReturn(Optional.of(activePlayer()));
 
             playerService.deletePlayer(PLAYER_ID);
 
@@ -197,6 +276,7 @@ class PlayerServiceTest {
 
         @Test
         void throws_PlayerHasMatches_when_player_has_matches() {
+            when(loadPlayerPort.findByIdAndOwner(PLAYER_ID, OWNER_ID)).thenReturn(Optional.of(activePlayer()));
             when(hasMatchesPort.existsByPlayerId(PLAYER_ID)).thenReturn(true);
 
             assertThatThrownBy(() -> playerService.deletePlayer(PLAYER_ID))
@@ -206,8 +286,7 @@ class PlayerServiceTest {
 
         @Test
         void throws_PlayerNotFoundException_when_player_not_found() {
-            when(hasMatchesPort.existsByPlayerId(PLAYER_ID)).thenReturn(false);
-            when(loadPlayerPort.loadPlayer(PLAYER_ID)).thenReturn(Optional.empty());
+            when(loadPlayerPort.findByIdAndOwner(PLAYER_ID, OWNER_ID)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> playerService.deletePlayer(PLAYER_ID))
                     .isInstanceOf(PlayerNotFoundException.class);
@@ -222,7 +301,7 @@ class PlayerServiceTest {
         @Test
         void sets_active_to_false_and_saves() {
             Player player = activePlayer();
-            when(loadPlayerPort.loadPlayer(PLAYER_ID)).thenReturn(Optional.of(player));
+            when(loadPlayerPort.findByIdAndOwner(PLAYER_ID, OWNER_ID)).thenReturn(Optional.of(player));
             when(savePlayerPort.savePlayer(player)).thenReturn(player);
 
             playerService.deactivatePlayer(PLAYER_ID);
@@ -233,7 +312,7 @@ class PlayerServiceTest {
 
         @Test
         void throws_PlayerNotFoundException_when_player_not_found() {
-            when(loadPlayerPort.loadPlayer(PLAYER_ID)).thenReturn(Optional.empty());
+            when(loadPlayerPort.findByIdAndOwner(PLAYER_ID, OWNER_ID)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> playerService.deactivatePlayer(PLAYER_ID))
                     .isInstanceOf(PlayerNotFoundException.class);

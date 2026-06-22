@@ -1,5 +1,8 @@
 package com.cas.tsas.player.application.service;
 
+import com.cas.tsas.auth.application.port.in.CurrentUserProvider;
+import com.cas.tsas.auth.domain.CurrentUser;
+import com.cas.tsas.auth.domain.Role;
 import com.cas.tsas.player.application.port.in.CreatePlayerUseCase;
 import com.cas.tsas.player.application.port.in.DeletePlayerUseCase;
 import com.cas.tsas.player.application.port.in.SearchPlayerUseCase;
@@ -17,14 +20,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
 /**
- * Implements the player use cases (create, search, update, delete). Deletion
- * is guarded against players that participate in matches, in which case
- * deactivation (soft delete) is offered instead. Match-related lookups are
- * delegated to ports implemented by the match module.
+ * Implements the player use cases (create, search, update, delete). Reads and
+ * writes are scoped to the current user as owner; users with the {@code ADMIN}
+ * role bypass the owner filter. Deletion is guarded against players that
+ * participate in matches, in which case deactivation (soft delete) is offered
+ * instead. Match-related lookups are delegated to ports implemented by the
+ * match module.
  */
 @Service
 @Transactional
@@ -35,23 +41,33 @@ public class PlayerService implements CreatePlayerUseCase, SearchPlayerUseCase, 
     private final DeletePlayerPort deletePlayerPort;
     private final HasMatchesPort hasMatchesPort;
     private final FindActiveMatchPort findActiveMatchPort;
+    private final CurrentUserProvider currentUserProvider;
 
     public PlayerService(LoadPlayerPort loadPlayerPort, SavePlayerPort savePlayerPort,
                          DeletePlayerPort deletePlayerPort, HasMatchesPort hasMatchesPort,
-                         FindActiveMatchPort findActiveMatchPort) {
+                         FindActiveMatchPort findActiveMatchPort,
+                         CurrentUserProvider currentUserProvider) {
         this.loadPlayerPort = loadPlayerPort;
         this.savePlayerPort = savePlayerPort;
         this.deletePlayerPort = deletePlayerPort;
         this.hasMatchesPort = hasMatchesPort;
         this.findActiveMatchPort = findActiveMatchPort;
+        this.currentUserProvider = currentUserProvider;
+    }
+
+    private CurrentUser currentUser() {
+        return currentUserProvider.get();
+    }
+
+    private boolean isAdmin() {
+        return currentUser().hasRole(Role.ADMIN);
     }
 
     @Override
     public Player createPlayer(CreatePlayerCommand command) {
-        // TODO TEN-55 Task 9: replace null ownerId with currentUser.get().id()
         Player player = new Player(
                 null,
-                null,
+                currentUser().id(),
                 command.firstName(),
                 command.lastName(),
                 command.gender(),
@@ -67,14 +83,18 @@ public class PlayerService implements CreatePlayerUseCase, SearchPlayerUseCase, 
     @Override
     @Transactional(readOnly = true)
     public Player findById(UUID id) {
-        return loadPlayerPort.loadPlayer(id)
-                .orElseThrow(() -> new PlayerNotFoundException(id));
+        Optional<Player> player = isAdmin()
+                ? loadPlayerPort.loadPlayer(id)
+                : loadPlayerPort.findByIdAndOwner(id, currentUser().id());
+        return player.orElseThrow(() -> new PlayerNotFoundException(id));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Player> findAll() {
-        return loadPlayerPort.loadAllPlayers();
+        return isAdmin()
+                ? loadPlayerPort.loadAllPlayers()
+                : loadPlayerPort.findAllByOwner(currentUser().id());
     }
 
     /**
@@ -89,8 +109,7 @@ public class PlayerService implements CreatePlayerUseCase, SearchPlayerUseCase, 
 
     @Override
     public Player updatePlayer(UpdatePlayerCommand command) {
-        Player player = loadPlayerPort.loadPlayer(command.id())
-                .orElseThrow(() -> new PlayerNotFoundException(command.id()));
+        Player player = findById(command.id());
         player.setFirstName(command.firstName());
         player.setLastName(command.lastName());
         player.setGender(command.gender());
@@ -112,27 +131,28 @@ public class PlayerService implements CreatePlayerUseCase, SearchPlayerUseCase, 
      * (to preserve match history); use {@link #deactivatePlayer(UUID)} instead.
      *
      * @throws PlayerHasMatchesException if the player participates in any match
-     * @throws PlayerNotFoundException if no such player exists
+     * @throws PlayerNotFoundException if no such player exists (or is not owned
+     *                                 by the current non-admin user)
      */
     @Override
     public void deletePlayer(UUID id) {
+        Player player = findById(id);
         if (hasMatchesPort.existsByPlayerId(id)) {
             throw new PlayerHasMatchesException(id);
         }
-        loadPlayerPort.loadPlayer(id).orElseThrow(() -> new PlayerNotFoundException(id));
-        deletePlayerPort.deletePlayer(id);
+        deletePlayerPort.deletePlayer(player.getId());
     }
 
     /**
      * Soft-deletes a player by setting {@code active = false}, keeping the
      * record (and its match history) intact.
      *
-     * @throws PlayerNotFoundException if no such player exists
+     * @throws PlayerNotFoundException if no such player exists (or is not owned
+     *                                 by the current non-admin user)
      */
     @Override
     public void deactivatePlayer(UUID id) {
-        Player player = loadPlayerPort.loadPlayer(id)
-                .orElseThrow(() -> new PlayerNotFoundException(id));
+        Player player = findById(id);
         player.setActive(false);
         savePlayerPort.savePlayer(player);
     }
