@@ -11,6 +11,7 @@ public class MatchMapper {
     public Match toDomain(MatchJpaEntity entity) {
         return new Match(
                 entity.getId(),
+                entity.getOwnerId(),
                 entity.getPlayer1Id(),
                 entity.getPlayer2Id(),
                 entity.getSetsToWin(),
@@ -23,6 +24,7 @@ public class MatchMapper {
     public MatchJpaEntity toEntity(Match match) {
         MatchJpaEntity entity = new MatchJpaEntity();
         entity.setId(match.getId());
+        entity.setOwnerId(match.getOwnerId());
         entity.setPlayer1Id(match.getPlayer1Id());
         entity.setPlayer2Id(match.getPlayer2Id());
         entity.setSetsToWin(match.getSetsToWin());

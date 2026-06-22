@@ -57,7 +57,7 @@ class HeadToHeadStatisticsServiceTest {
     }
 
     private Match match(UUID id, UUID p1, UUID p2) {
-        return new Match(id, p1, p2, 2, false, false, MatchStatus.COMPLETED);
+        return new Match(id, UUID.randomUUID(), p1, p2, 2, false, false, MatchStatus.COMPLETED);
     }
 
     private Point p(int set, int game, int pt, int winner, PointType type,

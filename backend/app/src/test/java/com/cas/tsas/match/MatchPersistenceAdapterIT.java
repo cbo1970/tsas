@@ -67,7 +67,7 @@ class MatchPersistenceAdapterIT {
     }
 
     Match newMatch() {
-        return new Match(null, player1Id, player2Id, 2, false, false, MatchStatus.IN_PROGRESS);
+        return new Match(null, UUID.randomUUID(), player1Id, player2Id, 2, false, false, MatchStatus.IN_PROGRESS);
     }
 
     // =========================================================================
@@ -145,7 +145,7 @@ class MatchPersistenceAdapterIT {
 
         @Test
         void excludes_completed_matches() {
-            Match completed = new Match(null, player1Id, player2Id, 2, false, false, MatchStatus.COMPLETED);
+            Match completed = new Match(null, UUID.randomUUID(), player1Id, player2Id, 2, false, false, MatchStatus.COMPLETED);
             matchAdapter.saveMatch(completed);
 
             Map<UUID, UUID> result = matchAdapter.findActiveMatchIdsByPlayerIds(Set.of(player1Id));

@@ -89,7 +89,8 @@ public class MatchService implements CreateMatchUseCase, GetMatchUseCase, Record
             throw new ActiveMatchExistsException(command.player2Id());
         }
 
-        Match match = new Match(null, command.player1Id(), command.player2Id(),
+        // TODO TEN-55 Task 12: replace null ownerId with currentUser.get().id()
+        Match match = new Match(null, null, command.player1Id(), command.player2Id(),
                 command.setsToWin(), command.matchTiebreak(), command.shortSet(),
                 MatchStatus.IN_PROGRESS);
         Match saved = saveMatchPort.saveMatch(match);

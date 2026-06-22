@@ -61,7 +61,7 @@ class PointPersistenceAdapterIT {
         UUID p2Id = playerJpaRepository.save(p2).getId();
 
         Match match = matchAdapter.saveMatch(
-                new Match(null, p1Id, p2Id, 2, false, false, MatchStatus.IN_PROGRESS));
+                new Match(null, UUID.randomUUID(), p1Id, p2Id, 2, false, false, MatchStatus.IN_PROGRESS));
         matchId = match.getId();
     }
 
@@ -136,7 +136,7 @@ class PointPersistenceAdapterIT {
         p2.setFirstName("Z"); p2.setLastName("Q");
         UUID p2Id = playerJpaRepository.save(p2).getId();
         Match otherMatch = matchAdapter.saveMatch(
-                new Match(null, p1Id, p2Id, 2, false, false, MatchStatus.IN_PROGRESS));
+                new Match(null, UUID.randomUUID(), p1Id, p2Id, 2, false, false, MatchStatus.IN_PROGRESS));
 
         pointAdapter.savePoint(new Point(null, matchId, 1, 1, 1, 1,
                 PointType.WINNER, null, null, 1, false, null, null));

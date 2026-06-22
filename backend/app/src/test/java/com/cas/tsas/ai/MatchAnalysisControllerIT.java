@@ -101,7 +101,7 @@ class MatchAnalysisControllerIT extends AbstractIntegrationTest {
         UUID p2Id = playerRepo.save(p2).getId();
 
         Match match = matchAdapter.saveMatch(
-                new Match(null, p1Id, p2Id, 2, false, false, status));
+                new Match(null, UUID.randomUUID(), p1Id, p2Id, 2, false, false, status));
         UUID matchId = match.getId();
 
         for (int i = 1; i <= pointCount; i++) {

@@ -63,7 +63,7 @@ class MatchAnalysisPersistenceAdapterIT {
         UUID p2Id = playerJpaRepository.save(p2).getId();
 
         matchId = matchAdapter.saveMatch(
-                new Match(null, p1Id, p2Id, 2, false, false, MatchStatus.COMPLETED)).getId();
+                new Match(null, UUID.randomUUID(), p1Id, p2Id, 2, false, false, MatchStatus.COMPLETED)).getId();
     }
 
     @Test

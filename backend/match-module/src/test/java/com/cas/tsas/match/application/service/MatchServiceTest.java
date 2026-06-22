@@ -62,15 +62,16 @@ class MatchServiceTest {
     }
 
     private static final UUID MATCH_ID   = UUID.randomUUID();
+    private static final UUID OWNER_ID   = UUID.randomUUID();
     private static final UUID PLAYER1_ID = UUID.randomUUID();
     private static final UUID PLAYER2_ID = UUID.randomUUID();
 
     private static Match inProgressMatch() {
-        return new Match(MATCH_ID, PLAYER1_ID, PLAYER2_ID, 2, false, false, MatchStatus.IN_PROGRESS);
+        return new Match(MATCH_ID, OWNER_ID, PLAYER1_ID, PLAYER2_ID, 2, false, false, MatchStatus.IN_PROGRESS);
     }
 
     private static Match completedMatch() {
-        return new Match(MATCH_ID, PLAYER1_ID, PLAYER2_ID, 2, false, false, MatchStatus.COMPLETED);
+        return new Match(MATCH_ID, OWNER_ID, PLAYER1_ID, PLAYER2_ID, 2, false, false, MatchStatus.COMPLETED);
     }
 
     private static MatchScore freshScore() {
