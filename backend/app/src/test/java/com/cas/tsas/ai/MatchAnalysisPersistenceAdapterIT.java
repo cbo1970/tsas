@@ -46,6 +46,8 @@ class MatchAnalysisPersistenceAdapterIT {
         registry.add("spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.PostgreSQLDialect");
     }
 
+    private static final UUID TEST_OWNER = UUID.randomUUID();
+
     @Autowired MatchAnalysisPersistenceAdapter adapter;
     @Autowired MatchPersistenceAdapter matchAdapter;
     @Autowired PlayerJpaRepository playerJpaRepository;
@@ -55,15 +57,17 @@ class MatchAnalysisPersistenceAdapterIT {
     @BeforeEach
     void setUp() {
         PlayerJpaEntity p1 = new PlayerJpaEntity();
+        p1.setOwnerId(TEST_OWNER);
         p1.setFirstName("A"); p1.setLastName("B");
         UUID p1Id = playerJpaRepository.save(p1).getId();
 
         PlayerJpaEntity p2 = new PlayerJpaEntity();
+        p2.setOwnerId(TEST_OWNER);
         p2.setFirstName("C"); p2.setLastName("D");
         UUID p2Id = playerJpaRepository.save(p2).getId();
 
         matchId = matchAdapter.saveMatch(
-                new Match(null, UUID.randomUUID(), p1Id, p2Id, 2, false, false, MatchStatus.COMPLETED)).getId();
+                new Match(null, TEST_OWNER, p1Id, p2Id, 2, false, false, MatchStatus.COMPLETED)).getId();
     }
 
     @Test

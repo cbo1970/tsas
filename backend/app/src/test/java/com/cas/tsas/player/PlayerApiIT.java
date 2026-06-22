@@ -115,6 +115,7 @@ class PlayerApiIT extends AbstractIntegrationTest {
             UUID player2Id = createPlayer("Anna");
 
             var match = new com.cas.tsas.match.infrastructure.persistence.entity.MatchJpaEntity();
+            match.setOwnerId(DEFAULT_USER);
             match.setPlayer1Id(playerId);
             match.setPlayer2Id(player2Id);
             match.setSetsToWin(2);
@@ -143,6 +144,7 @@ class PlayerApiIT extends AbstractIntegrationTest {
             UUID player2Id = createPlayer("Anna");
 
             var match = new com.cas.tsas.match.infrastructure.persistence.entity.MatchJpaEntity();
+            match.setOwnerId(DEFAULT_USER);
             match.setPlayer1Id(playerId);
             match.setPlayer2Id(player2Id);
             match.setSetsToWin(2);

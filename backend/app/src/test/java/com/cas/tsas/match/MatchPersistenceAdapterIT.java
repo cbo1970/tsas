@@ -45,6 +45,8 @@ class MatchPersistenceAdapterIT {
         registry.add("spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.PostgreSQLDialect");
     }
 
+    private static final UUID TEST_OWNER = UUID.randomUUID();
+
     @Autowired MatchPersistenceAdapter matchAdapter;
     @Autowired MatchScorePersistenceAdapter scoreAdapter;
     @Autowired MatchJpaRepository matchJpaRepository;
@@ -56,18 +58,20 @@ class MatchPersistenceAdapterIT {
     @BeforeEach
     void insertPlayers() {
         PlayerJpaEntity p1 = new PlayerJpaEntity();
+        p1.setOwnerId(TEST_OWNER);
         p1.setFirstName("Player");
         p1.setLastName("One");
         player1Id = playerJpaRepository.save(p1).getId();
 
         PlayerJpaEntity p2 = new PlayerJpaEntity();
+        p2.setOwnerId(TEST_OWNER);
         p2.setFirstName("Player");
         p2.setLastName("Two");
         player2Id = playerJpaRepository.save(p2).getId();
     }
 
     Match newMatch() {
-        return new Match(null, UUID.randomUUID(), player1Id, player2Id, 2, false, false, MatchStatus.IN_PROGRESS);
+        return new Match(null, TEST_OWNER, player1Id, player2Id, 2, false, false, MatchStatus.IN_PROGRESS);
     }
 
     // =========================================================================
@@ -145,7 +149,7 @@ class MatchPersistenceAdapterIT {
 
         @Test
         void excludes_completed_matches() {
-            Match completed = new Match(null, UUID.randomUUID(), player1Id, player2Id, 2, false, false, MatchStatus.COMPLETED);
+            Match completed = new Match(null, TEST_OWNER, player1Id, player2Id, 2, false, false, MatchStatus.COMPLETED);
             matchAdapter.saveMatch(completed);
 
             Map<UUID, UUID> result = matchAdapter.findActiveMatchIdsByPlayerIds(Set.of(player1Id));
