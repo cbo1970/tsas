@@ -91,4 +91,16 @@ class JwtCurrentUserProviderTest {
 
         assertThat(user.roles()).containsExactly(Role.ADMIN);
     }
+
+    @Test
+    void throws_when_sub_is_not_a_uuid() {
+        Jwt jwt = Jwt.withTokenValue("t").header("alg", "none")
+                .subject("not-a-uuid")
+                .issuedAt(Instant.now()).expiresAt(Instant.now().plusSeconds(60))
+                .build();
+        SecurityContextHolder.getContext().setAuthentication(
+                new JwtAuthenticationToken(jwt, List.of()));
+
+        assertThatThrownBy(provider::get).isInstanceOf(IllegalStateException.class);
+    }
 }
