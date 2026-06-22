@@ -2,9 +2,11 @@ package com.cas.tsas;
 
 import com.cas.tsas.auth.domain.Role;
 import com.cas.tsas.auth.testsupport.JwtTestSupport;
+import com.cas.tsas.common.web.CorrelationIdFilter;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -52,12 +54,16 @@ public abstract class AbstractIntegrationTest {
     @Autowired
     private WebApplicationContext wac;
 
+    @Autowired
+    private FilterRegistrationBean<CorrelationIdFilter> correlationIdFilterRegistration;
+
     protected MockMvc mockMvc;
 
     @BeforeEach
     void setUpMockMvc() {
         mockMvc = MockMvcBuilders.webAppContextSetup(wac)
                 .apply(springSecurity())
+                .addFilter(correlationIdFilterRegistration.getFilter())
                 .defaultRequest(get("/").with(JwtTestSupport.withUser(DEFAULT_USER, Role.COACH)))
                 .build();
     }

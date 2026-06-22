@@ -3,6 +3,7 @@ package com.cas.tsas.security;
 import com.cas.tsas.AbstractIntegrationTest;
 import com.cas.tsas.auth.domain.Role;
 import com.cas.tsas.auth.testsupport.JwtTestSupport;
+import com.cas.tsas.common.web.CorrelationIdFilter;
 import com.cas.tsas.player.infrastructure.persistence.entity.PlayerJpaEntity;
 import com.cas.tsas.player.infrastructure.persistence.repository.PlayerJpaRepository;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -17,6 +18,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -84,5 +86,17 @@ class AuditingIT extends AbstractIntegrationTest {
         assertThat(stored.getCreatedAt()).isEqualTo(initialCreatedAt);
         assertThat(stored.getUpdatedBy()).isEqualTo(ADMIN);
         assertThat(stored.getUpdatedAt()).isAfter(initialCreatedAt);
+    }
+
+    @Test
+    void correlation_id_is_echoed_back() throws Exception {
+        MvcResult res = mockMvc.perform(get("/api/players")
+                        .header(CorrelationIdFilter.HEADER, "correlation-test-id")
+                        .with(JwtTestSupport.withUser(USER_A, Role.COACH)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertThat(res.getResponse().getHeader(CorrelationIdFilter.HEADER))
+                .isEqualTo("correlation-test-id");
     }
 }
