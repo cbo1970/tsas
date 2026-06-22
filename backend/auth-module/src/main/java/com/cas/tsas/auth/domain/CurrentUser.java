@@ -1,5 +1,6 @@
 package com.cas.tsas.auth.domain;
 
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -7,8 +8,8 @@ import java.util.UUID;
 public record CurrentUser(UUID id, Set<Role> roles) {
 
     public CurrentUser {
-        if (id == null) throw new IllegalArgumentException("id must not be null");
-        if (roles == null) throw new IllegalArgumentException("roles must not be null");
+        Objects.requireNonNull(id, "id must not be null");
+        Objects.requireNonNull(roles, "roles must not be null");
         roles = Set.copyOf(roles);
     }
 
