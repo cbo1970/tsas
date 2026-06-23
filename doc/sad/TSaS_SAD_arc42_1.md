@@ -26,7 +26,8 @@
 10. Qualitätsanforderungen
 11. Datenmodell
 12. Risiken und technische Schulden
-13. Glossar
+13. KI-Werkzeuge im Projekt
+14. Glossar
 
 ---
 
@@ -477,7 +478,45 @@ Das relationale Datenmodell bildet die Kernentitäten der Tennismatch-Dokumentat
 
 ---
 
-## 13. Glossar
+## 13. KI-Werkzeuge im Projekt
+
+### 13.1 Eingesetzte Werkzeuge
+
+| Werkzeug | Version / Modell | Einsatzbereich |
+|---|---|---|
+| Claude Code | Opus 4.7 / 4.8 (1M-Context-Beta) | Hauptassistent für Spezifikation, Planung, Implementierung und Review |
+| Superpowers Skill-Suite | `superpowers:brainstorming`, `writing-plans`, `subagent-driven-development`, `verification-before-completion`, `systematic-debugging` | Strukturierter Spec → Plan → Implementierungs-Workflow |
+| `pr-review-toolkit:review-pr` / `/code-review ultra` | Multi-Agent-Review (fan-out + adversarial verify) | Codeüberprüfung vor Merge |
+| Context7 MCP (`mcp__plugin_context7_context7__query-docs`) | – | Doc-Recherche für Bibliotheken (Spring AI, springdoc, Testcontainers) |
+| GitHub MCP (`mcp__github__*`) | – | PR-/Issue-Verwaltung, Branch-Operationen |
+
+### 13.2 Einsatz pro Phase
+
+**Generierung.** Jede grössere Änderung folgt dem Workflow Brainstorming → Spec → Plan → Implementierung mit TDD. Spec- und Plan-Dokumente liegen unter `docs/superpowers/specs/` (15 Designdokumente) bzw. `docs/superpowers/plans/` (16 Plandokumente) und tragen das jeweilige TEN-Ticket im Dateinamen. Belegbeispiele:
+
+- `docs/superpowers/specs/2026-05-17-ai-match-analysis-postmortem-design.md` + Plan `docs/superpowers/plans/2026-05-17-ai-match-analysis-postmortem.md` — Spec/Plan für das `ai-module` (FA-11).
+- `docs/superpowers/specs/2026-06-22-ten-60-bean-validation-design.md` + Plan `docs/superpowers/plans/2026-06-22-ten-60-bean-validation.md` — Spec/Plan für Bean Validation auf REST-DTOs (TEN-60).
+- `docs/superpowers/specs/2026-06-22-ten-55-owner-binding-rbac-design.md` + Plan `docs/superpowers/plans/2026-06-22-ten-55-owner-binding-rbac.md` — Owner-Binding/RBAC (TEN-55).
+
+**Review.** Vor jedem Merge auf `develop` läuft `/code-review` oder `pr-review-toolkit:review-pr` mit Multi-Agent-Fan-out gegen das Diff. Befunde landen als Inline-PR-Kommentar oder als Edit-Anweisung im Working Tree. Belege:
+
+- `doc/bewertungskriterien/Code-Pruefung_Kriterien_7_und_8.md` ist ein KI-erstellter Selbst-Audit gegen die Bewertungskriterien 7 + 8. Die dort identifizierten Lücken (Scoring-Modul-Konsolidierung, modulübergreifendes Domänenmodell, fehlende Modul-Durchsetzung) wurden anschliessend in **ADR-12**, **ADR-13** und `backend/app/src/test/java/com/cas/tsas/ArchitectureTest.java` adressiert.
+
+**Refactoring.** Spec-getriebene Cleanups mit TDD-Schleife. Belegbeispiele aus `git log` auf `develop`:
+
+- `cc6e502 feat(match): typed enums + @Size on RecordPointRequest + IT (TEN-60)`
+- `d96f4da feat(player): @Size limits on DTO string fields + IT (TEN-60)`
+- `2a0bcf1 docs(plans): add TEN-60 bean-validation implementation plan`
+
+**Recherche.** Punktuelle Recherche-Aufgaben (Spring AI 2.x Boot-4-Kompatibilität, JaCoCo-Aggregation über Multi-Module, Spring Security Test JWT-Mock, Testcontainers + Podman) wurden über Web-Recherche-Subagenten und `mcp__plugin_context7_context7__query-docs` durchgeführt. Ergebnisse flossen in ADR-10 (Spring AI Milestone-Risiko in R-07) und ADR-11 (CI/Coverage-Gate-Schwellen-Begründung) ein.
+
+### 13.3 Eigenständigkeit
+
+Eine separate Eigenständigkeitserklärung liegt unter `doc/sad/TSaS_Eigenstaendigkeitserklaerung.md`. Sie bestätigt, dass alle KI-Vorschläge vor Übernahme geprüft, angenommen oder zurückgewiesen wurden. Die drei wichtigsten bewusst **nicht** an die KI delegierten Entscheidungen sind in Kapitel 14 (Reflexion und Fazit) mit Begründung und Beleg ausgewiesen.
+
+---
+
+## 14. Glossar
 
 | Begriff | Definition |
 |---------|-----------|
