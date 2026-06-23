@@ -27,7 +27,8 @@
 11. Datenmodell
 12. Risiken und technische Schulden
 13. KI-Werkzeuge im Projekt
-14. Glossar
+14. Reflexion und Fazit
+15. Glossar
 
 ---
 
@@ -516,7 +517,48 @@ Eine separate Eigenständigkeitserklärung liegt unter `doc/sad/TSaS_Eigenstaend
 
 ---
 
-## 14. Glossar
+## 14. Reflexion und Fazit
+
+Drei Bereiche wurden im Projektverlauf bewusst **nicht an die KI delegiert** — Vorschläge wurden zurückgewiesen, manuell überschrieben oder ohne KI-Unterstützung getroffen. Begründungen und Belege:
+
+### 14.1 Veto 1 — Security-Konfiguration
+
+**Entscheidung:** Die Security-Konfiguration (`backend/auth-module/.../SecurityConfig.java`, der Keycloak-Realm-Export `docker/keycloak/realm-export.json`, JWT-Validator-Setup, CORS, Pfad-basierte Permits) wurde **ohne KI-Generierung** verfasst und in jedem Review-Schritt zeilenweise gegen die OAuth2-/OIDC-Spec geprüft.
+
+**Begründung:** Eine fehlerhafte Token-Validation (`aud`-/`iss`-Prüfung, JWK-Set-URL, Permit-Patterns) führt unmittelbar zu Auth-Bypass-Lücken. Generative Tools neigen dazu, `permitAll()` als „lauffähigen" Default vorzuschlagen oder eine `aud`-Prüfung in `JwtValidators.createDefaultWithIssuer(...)` zu unterlassen — beide Muster sind in `SecurityConfig.java` bewusst manuell entschieden.
+
+**Beleg:** `doc/sad/TSaS_STRIDE_Threat_Analysis.md` §2.1 listet die noch offene `aud`-Lücke (Befund S1) als Hoch-Risiko. Sie wurde im manuellen STRIDE-Audit identifiziert; ein KI-Review hätte sie wahrscheinlich nicht als Lücke erkannt, weil `JwtValidators.createDefaultWithIssuer` formal „korrekt" ist. Die Backlog-Entscheidung (Mitigation in eigenem Ticket) bleibt bei einem Menschen.
+
+### 14.2 Veto 2 — Architekturentscheidungen (ADRs)
+
+**Entscheidung:** Die 13 ADRs in §9 wurden inhaltlich **manuell** entschieden; die KI half lediglich beim Ausformulieren der Trade-off-Texte.
+
+**Begründung:** KI-generierte ADR-Vorschläge tendieren zu konservativen „Best-Practice"-Empfehlungen (z. B. „nimm Spring Modulith, weil es aktuell ist") und übersehen Kontextfaktoren wie Team-Grösse, Erfahrung und Roadmap. Drei konkrete Gegen-Entscheidungen:
+
+- **ADR-07** verwirft Spring Modulith bewusst zugunsten von Gradle-Multi-Module-Compile-Zeit-Grenzen — entgegen dem aktuellen Hype.
+- **ADR-12** konsolidiert das ursprünglich vorgesehene `scoring-module` wieder ins `match-module`, nachdem die Implementierung zeigte, dass die Modulgrenze keinen fachlichen Mehrwert bringt.
+- **ADR-13** erlaubt geteilte Domänen-Wertobjekte modulübergreifend statt einer Anti-Corruption-Schicht — die KI hätte hier vermutlich Spiegel-DTO-Mapper an jeder Grenze vorgeschlagen.
+
+**Beleg:** SAD §9 (ADR-Tabelle); die Begründungstexte enthalten konkrete Kontextfaktoren („V1 klein", „kleines Team", „spätere Extraktion möglich"), die nicht aus dem Code ableitbar sind. ADR-12 und ADR-13 sind explizit Korrekturen früherer Bausteinskizzen — Spuren der manuellen Nachjustierung.
+
+### 14.3 Veto 3 — Tennis-Domänenregeln im Scoring
+
+**Entscheidung:** `backend/match-module/.../application/service/ScoringService.java` (Punkte, Spiele, Sätze, Tiebreak, Match-Tiebreak, Short Set, Einstand-/Vorteil-Logik, Break-Point-Erkennung) wurde gegen das **ITF-Regelwerk manuell verifiziert** statt aus KI-Generierung übernommen.
+
+**Begründung:** LLMs haben unzuverlässige Domänenkenntnis bei Sport-Regelwerken — insbesondere bei Edge Cases wie Match-Tiebreak (bis 10 Punkte, Aufschlägerwechsel nach erstem Punkt, danach je 2), Short Set (bis 4 Games statt 6), Tiebreak-Wechsel-Sequenz. Falsche Scoring-Regeln würde der Coach am Platz sofort bemerken — das ist die kritischste Domäne der App.
+
+**Beleg:** 60 Tests im `match-module` (Snapshot SAD §8.7), davon der Grossteil explizite Edge-Case-Tests für Tiebreak / Match-Tiebreak / Short Set; `ScoringService.java`-JavaDoc verweist auf das ITF-Regelwerk als Quelle. Die hohe Branch-Coverage (74,2 %) im `match-module` ist ein direktes Ergebnis dieser Manuell-Verifikation: jede Edge-Case-Verzweigung hat einen Test, nicht weil die KI darum gebeten hat, sondern weil das ITF-Regelwerk sie vorgibt.
+
+### 14.4 Übertrag auf die künftige Arbeitsweise
+
+- **KI als Drafting- und Review-Werkzeug, nicht als Entscheider.** Spec, Plan, Code werden generiert — aber Entscheidungen (Stil-Wahl, Trade-offs, Domänenregeln, Security) bleiben beim Menschen.
+- **Adversariales Review als Standard.** Ein zweiter, unabhängiger KI-Agent (`/code-review ultra` oder `pr-review-toolkit:review-pr`) prüft jeden grösseren Diff — kein einzelnes Modell entscheidet allein.
+- **Belegpflicht für KI-Vorschläge.** Wenn ein Vorschlag übernommen wird, muss er in einer Spec, einem ADR oder einem Commit-Diff nachvollziehbar sein. Ohne Beleg keine Übernahme.
+- **Domänenregeln immer testen.** Tennis-Scoring, Statistik-Aggregation und Security-Pfade haben dedizierte Test-Suites; das 70-%-Branch-Coverage-Gate hält diese Disziplin durch.
+
+---
+
+## 15. Glossar
 
 | Begriff | Definition |
 |---------|-----------|
