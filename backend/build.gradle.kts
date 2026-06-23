@@ -10,6 +10,11 @@ plugins {
     jacoco
 }
 
+allprojects {
+    group = "com.cas.tsas"
+    version = "0.1.0"
+}
+
 repositories {
     // Needed so the root project can resolve the JaCoCo Ant artifacts used by
     // the aggregate report / verification tasks defined below.
