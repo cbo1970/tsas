@@ -6,11 +6,8 @@ import com.cas.tsas.match.application.port.in.GetMatchUseCase;
 import com.cas.tsas.match.application.port.in.RecordPointUseCase;
 import com.cas.tsas.match.application.port.in.SetScoreUseCase;
 import com.cas.tsas.match.application.port.in.SetServingPlayerUseCase;
-import com.cas.tsas.match.domain.model.Direction;
 import com.cas.tsas.match.domain.model.Match;
 import com.cas.tsas.match.domain.model.MatchScore;
-import com.cas.tsas.match.domain.model.PointType;
-import com.cas.tsas.match.domain.model.StrokeType;
 import com.cas.tsas.match.infrastructure.web.dto.request.CreateMatchRequest;
 import com.cas.tsas.match.infrastructure.web.dto.request.EndMatchWalkoverRequest;
 import com.cas.tsas.match.infrastructure.web.dto.request.RecordPointRequest;
@@ -84,8 +81,8 @@ public class MatchController {
 
     /**
      * Records a point on the match. The optional point/stroke/direction fields
-     * arrive as strings and are converted to their domain enums (null when
-     * absent) before being passed to the use case.
+     * are deserialised by Jackson directly into their domain enums (or {@code
+     * null} when absent / blank) before being passed to the use case.
      */
     @PostMapping("/{id}/points")
     @ResponseStatus(HttpStatus.CREATED)
@@ -94,9 +91,9 @@ public class MatchController {
         var command = new RecordPointUseCase.RecordPointCommand(
                 id,
                 request.winner(),
-                request.pointType() != null ? PointType.valueOf(request.pointType()) : null,
-                request.strokeType() != null ? StrokeType.valueOf(request.strokeType()) : null,
-                request.direction() != null ? Direction.valueOf(request.direction()) : null,
+                request.pointType(),
+                request.strokeType(),
+                request.direction(),
                 request.remark(),
                 request.serveAttempt()
         );
