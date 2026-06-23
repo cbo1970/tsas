@@ -11,6 +11,7 @@ Das Format orientiert sich an [Keep a Changelog 1.1.0](https://keepachangelog.co
 
 ### Security
 - Container-Hardening nach STRIDE E5 (TEN-63): Backend-Image läuft als UID 10001 (`app`), Frontend wechselt auf `nginxinc/nginx-unprivileged:alpine` (UID 101, Container-Port 8080). `docker/compose.yml` aktiviert `read_only: true` (ausser Keycloak-Dev-Stack), `tmpfs` für `/tmp` und Service-spezifische Schreibpfade, `cap_drop: [ALL]`, `security_opt: [no-new-privileges:true]` sowie `mem_limit`/`cpus`-Limits pro Service. Healthchecks in den Dockerfiles. Frontend-Host-Port 80 mappt auf Container 8080.
+- Security-Header im nginx nach STRIDE T1 (TEN-62): `Strict-Transport-Security`, `Content-Security-Policy` (mit Keycloak-Whitelist für OAuth2/PKCE), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` und ein restriktiver `Permissions-Policy`-Block. Vererbt sich auch über die `/api/`-Proxy-Location und den SPA-`try_files`-Fallback.
 
 ## [0.1.0] – 2026-06-23
 
