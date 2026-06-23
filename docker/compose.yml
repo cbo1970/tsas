@@ -8,6 +8,16 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-tsas}
     volumes:
       - ../volume/postgres:/var/lib/postgresql/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=64M
+      - /var/run/postgresql:size=8M
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETGID, SETUID, DAC_READ_SEARCH, FOWNER]
+    mem_limit: 512m
+    cpus: 1.0
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-tsas}"]
       interval: 10s
@@ -18,6 +28,7 @@ services:
     image: quay.io/keycloak/keycloak:26.6.1
     command: >
       start-dev --import-realm
+      --health-enabled=true
       --https-port=8443
       --https-certificate-file=/opt/keycloak/certs/localhost.pem
       --https-certificate-key-file=/opt/keycloak/certs/localhost-key.pem
@@ -31,8 +42,17 @@ services:
     ports:
       - "8443:8443"
       - "18080:8080"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    mem_limit: 768m
+    cpus: 1.0
+    # The Keycloak image ships no curl/wget. The management port 9000
+    # (enabled via --health-enabled=true) only opens once Quarkus has
+    # fully started, so a TCP connect probe via bash /dev/tcp is a
+    # reliable liveness signal.
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health/ready"]
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000"]
       interval: 15s
       timeout: 5s
       retries: 8
@@ -50,6 +70,14 @@ services:
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/tsas/protocol/openid-connect/certs
     ports:
       - "8080:8080"
+    read_only: true
+    tmpfs:
+      - /tmp:size=128M
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    mem_limit: 768m
+    cpus: 1.0
     depends_on:
       db:
         condition: service_healthy
@@ -61,7 +89,17 @@ services:
       context: ..
       dockerfile: docker/frontend/Dockerfile
     ports:
-      - "80:80"
+      - "80:8080"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16M
+      - /var/cache/nginx:size=32M
+      - /var/run:size=4M
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    mem_limit: 128m
+    cpus: 0.5
     depends_on:
       - backend
 
