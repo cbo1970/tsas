@@ -1,0 +1,54 @@
+@startuml TSaS_Seq_GenerateAnalysis
+title KI-Match-Analyse generieren — Sequenz (Szenario §6.2)
+
+skinparam sequenceMessageAlign center
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+
+actor Coach
+participant "Angular SPA\n(match-analysis)" as FE
+participant "Spring Boot\nResource Server" as API
+participant "MatchAnalysisController\n(ai-module/web)" as Ctrl
+participant "MatchAnalysisService\n(application)" as Svc
+participant "MatchStatisticsService" as Stats
+participant "LlmClientPort\n(OpenAiLlmAdapter / FakeLlmClientAdapter)" as Llm
+database "match_analysis" as DB
+participant "OpenAI\nChat Completions" as OpenAI
+
+Coach -> FE : Klick „Taktische Analyse generieren"
+FE -> API : POST /api/matches/{id}/analysis\nAuthorization: Bearer <JWT>
+activate API
+API -> Ctrl : generateAnalysis(id)
+activate Ctrl
+Ctrl -> Svc : generate(matchId)
+activate Svc
+Svc -> Svc : assert MatchStatus = COMPLETED\nelse 409
+Svc -> Stats : compute(matchId)
+Stats --> Svc : MatchStatistics
+Svc -> Svc : assert totalPoints ≥ 10\nelse 422
+Svc -> Llm : generateAnalysis(stats, playerMeta)
+activate Llm
+alt API-Key konfiguriert
+  Llm -> OpenAI : ChatClient.entity(MatchAnalysis.class)
+  OpenAI --> Llm : structured JSON
+else kein API-Key
+  Llm -> Llm : deterministic stub
+end
+Llm --> Svc : MatchAnalysis (COMPLETED) /\n  oder Exception
+deactivate Llm
+alt erfolgreich
+  Svc -> DB : UPSERT match_analysis (status COMPLETED)
+else LLM-Fehler
+  Svc -> DB : UPSERT match_analysis (status FAILED, errorMessage)
+  Svc -> Ctrl : throw AnalysisGenerationException
+  Ctrl --> API : 502 ProblemDetail
+end
+DB --> Svc : persisted
+Svc --> Ctrl : MatchAnalysisResponse
+deactivate Svc
+Ctrl --> API : 200 OK + JSON
+deactivate Ctrl
+API --> FE : 200 + Analyse
+deactivate API
+FE -> Coach : 5 Textfelder + Empfehlungen
+@enduml

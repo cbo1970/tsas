@@ -218,6 +218,10 @@ Die Austauschbarkeit über Ports zeigt sich exemplarisch am `LlmClientPort`: Der
 
 ### 6.1 Szenario: Punkt erfassen
 
+![TSaS – Punkt erfassen (Sequenz)](diagrams/TSaS_Seq_RecordPoint.svg)
+
+*Quelle: [`diagrams/TSaS_Seq_RecordPoint.puml`](diagrams/TSaS_Seq_RecordPoint.puml).*
+
 Dieses Szenario beschreibt den typischen Ablauf, wenn ein Trainer während eines Matches einen Punkt erfasst:
 
 1. Der Trainer klickt im Angular-Frontend auf die Schaltfläche für den Punkttyp (z.B. „Forehand Winner").
@@ -229,6 +233,10 @@ Dieses Szenario beschreibt den typischen Ablauf, wenn ein Trainer während eines
 7. Das Frontend aktualisiert die Anzeige des Spielstands.
 
 ### 6.2 Szenario: KI-gestützte Match-Analyse (Postmortem)
+
+![TSaS – KI-Match-Analyse generieren (Sequenz)](diagrams/TSaS_Seq_GenerateAnalysis.svg)
+
+*Quelle: [`diagrams/TSaS_Seq_GenerateAnalysis.puml`](diagrams/TSaS_Seq_GenerateAnalysis.puml).*
 
 Dieses Szenario beschreibt die Generierung einer taktischen Match-Analyse nach Match-Ende:
 

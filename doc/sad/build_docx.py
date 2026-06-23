@@ -31,7 +31,11 @@ DIAGRAM_WIDTHS = {
     "TSaS_Backend_CleanArchitecture":("Backend_CleanArchitecture", "16cm"),
     "TSaS_Deployment":               ("Deployment", "15cm"),
     "TSaS_Datenmodell":              ("Datenmodell", "16cm"),
+    "TSaS_Seq_RecordPoint":          ("Seq_RecordPoint", "14cm"),
+    "TSaS_Seq_GenerateAnalysis":     ("Seq_GenerateAnalysis", "15cm"),
 }
+
+PLANTUML_SOURCES = {"TSaS_Seq_RecordPoint", "TSaS_Seq_GenerateAnalysis"}
 
 
 def patch_zip(src, dst, edits):
@@ -58,9 +62,14 @@ def helvetica_reference(tmp):
 
 
 def export_pngs(tmp):
+    import shutil
     for src, (dst, _) in DIAGRAM_WIDTHS.items():
+        out_png = os.path.join(tmp, dst + ".png")
+        if src in PLANTUML_SOURCES:
+            shutil.copyfile(os.path.join(DIAGRAMS, src + ".png"), out_png)
+            continue
         subprocess.run([DRAWIO, "--export", "--format", "png", "--scale", "2.5",
-                        "--border", "8", "--output", os.path.join(tmp, dst + ".png"),
+                        "--border", "8", "--output", out_png,
                         os.path.join(DIAGRAMS, src + ".drawio")],
                        check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
