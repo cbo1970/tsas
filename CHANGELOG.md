@@ -9,6 +9,9 @@ Das Format orientiert sich an [Keep a Changelog 1.1.0](https://keepachangelog.co
 ### Added
 - Semantic Versioning + CHANGELOG eingeführt (TEN-67) — `allprojects { version = "0.1.0" }` im Backend, `0.1.0` im Frontend, ADR-14 im SAD §9.
 
+### Security
+- Container-Hardening nach STRIDE E5 (TEN-63): Backend-Image läuft als UID 10001 (`app`), Frontend wechselt auf `nginxinc/nginx-unprivileged:alpine` (UID 101, Container-Port 8080). `docker/compose.yml` aktiviert `read_only: true` (ausser Keycloak-Dev-Stack), `tmpfs` für `/tmp` und Service-spezifische Schreibpfade, `cap_drop: [ALL]`, `security_opt: [no-new-privileges:true]` sowie `mem_limit`/`cpus`-Limits pro Service. Healthchecks in den Dockerfiles. Frontend-Host-Port 80 mappt auf Container 8080.
+
 ## [0.1.0] – 2026-06-23
 
 Erstes versioniertes Release des MVP — Web-App für Tennis-Score-Erfassung, Statistiken und KI-Match-Analyse, ausgeliefert via Docker Compose.

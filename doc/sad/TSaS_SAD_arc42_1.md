@@ -275,10 +275,25 @@ Die Applikation wird mittels Docker Compose deployed. Das folgende Deployment-Di
 
 | Container | Inhalt | Ports | Bemerkung |
 |-----------|--------|-------|-----------|
-| `frontend` | Nginx + Angular SPA (statische Build-Artefakte) | 80 | Nginx liefert die SPA aus und proxied `/api/`-Requests an den Backend-Container. |
-| `backend` | Spring Boot API (Java 25) | 8080 | Nur intern erreichbar (kein direkter Portmapping nach aussen im Produktiv-Setup). |
+| `frontend` | nginx-unprivileged + Angular SPA (statische Build-Artefakte) | Host 80 → Container 8080 | Nginx läuft als UID 101 und liefert die SPA aus; proxied `/api/`-Requests an den Backend-Container. |
+| `backend` | Spring Boot API (Java 25) | 8080 | Läuft als UID 10001 (`app`-User). Nur intern erreichbar (kein direkter Portmapping nach aussen im Produktiv-Setup). |
 | `db` | PostgreSQL 16 | 5432 (intern) | Persistentes Volume. Kein Port-Mapping nach aussen. |
 | `keycloak` | Keycloak 26 | 8443 (HTTPS), 18080 (HTTP intern für JWKS) | Realm `tsas` wird beim Start automatisch importiert. |
+
+### 7.1.1 Container-Hardening (TEN-63 / STRIDE E5)
+
+Alle Services in `docker/compose.yml` laufen mit folgenden Sicherheits-Defaults — adressiert STRIDE-Befunde T4 (Datenzugriff) und D5 (Ressourcen-Erschöpfung):
+
+| Massnahme | Wirkung |
+|---|---|
+| **Non-root Runtime-User** | `backend` als UID 10001 (`app`), `frontend` über `nginxinc/nginx-unprivileged:alpine` als UID 101 (`nginx`). |
+| `read_only: true` + Targeted `tmpfs` | Root-Filesystem nicht beschreibbar; nur explizit deklarierte Pfade (`/tmp`, nginx-Caches, postgres-`/var/run/postgresql`) sind beschreibbar. Keycloak ist davon ausgenommen (Dev-Stack mit `start-dev`-Modus und H2-Volume). |
+| `cap_drop: [ALL]` | Alle Linux-Capabilities entfernt. Nur `postgres` behält die für `initdb`/`chown` nötigen `CHOWN, SETGID, SETUID, DAC_READ_SEARCH, FOWNER`. |
+| `security_opt: [no-new-privileges:true]` | Prozesse können sich nicht über `setuid`-Binaries Rechte erweitern. |
+| `mem_limit` + `cpus` | Ressourcen-Limits pro Service (`db` 512m/1.0, `keycloak` 768m/1.0, `backend` 768m/1.0, `frontend` 128m/0.5) verhindern Container-übergreifende DoS. |
+| `HEALTHCHECK` in den Dockerfiles | `backend` prüft `/actuator/health` (`permitAll`), `frontend` prüft Root-Path — orchestrator-agnostische Liveness. |
+
+Die Frontend-Portumlegung — Host-Port 80 mappt nun auf Container-Port 8080 — folgt direkt aus dem Wechsel auf `nginxinc/nginx-unprivileged` (Privileged Bind unter 1024 entfällt).
 
 ### 7.2 Docker Compose Struktur
 
