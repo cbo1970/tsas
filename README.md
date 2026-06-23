@@ -2,6 +2,8 @@
 
 Web application for tennis match tracking and statistics.
 
+**Version:** 0.1.0 — Releases und Änderungen sind in [`CHANGELOG.md`](CHANGELOG.md) dokumentiert (Keep a Changelog 1.1.0). Die Versionierung folgt [Semantic Versioning 2.0.0](https://semver.org/) — solange `0.x`, gelten MINOR-Erhöhungen als potenziell breaking (siehe ADR-14 im SAD).
+
 ## Stack
 
 | Layer | Technology |
