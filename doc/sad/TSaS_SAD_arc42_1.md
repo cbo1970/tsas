@@ -295,6 +295,18 @@ Alle Services in `docker/compose.yml` laufen mit folgenden Sicherheits-Defaults 
 
 Die Frontend-Portumlegung — Host-Port 80 mappt nun auf Container-Port 8080 — folgt direkt aus dem Wechsel auf `nginxinc/nginx-unprivileged` (Privileged Bind unter 1024 entfällt).
 
+### 7.1.2 Security-Header im nginx (TEN-62 / STRIDE T1)
+
+Der nginx vor der Angular-SPA setzt folgende Security-Header auf jeder Antwort (`add_header … always;` auf Server-Scope, vererbt durch alle Locations — auch durch die `/api/`-Proxy-Location und den `try_files`-Fallback):
+
+| Header | Wert | Wirkung |
+|---|---|---|
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains; preload` | Erzwingt HTTPS für 1 Jahr inkl. Subdomains; greift erst wenn der TLS-Terminator vor nginx aktiv ist (kein Effekt über plain HTTP). |
+| `Content-Security-Policy` | `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://localhost:8443; frame-src 'self' https://localhost:8443; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self' https://localhost:8443` | XSS-Mitigation. `'unsafe-inline'` bei `style-src` ist nötig für Angular Materials Runtime-Style-Injection (kein SSR/Nonces in dieser Build-Variante). `connect-src`/`form-action` enthalten die Keycloak-Realm, damit der OAuth2/PKCE-Flow funktioniert. `frame-ancestors 'none'` blockiert Clickjacking. |
+| `X-Content-Type-Options` | `nosniff` | Verhindert MIME-Sniffing. Spring Security setzt diesen Header zusätzlich auf API-Antworten — die Duplikation ist harmlos (identischer Wert). |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | Verhindert Referrer-Leakage an Dritte. |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), fullscreen=(self)` | Sperrt Browser-APIs, die die SPA nicht braucht — verhindert Eskalation eines XSS in Device-API-Zugriff. |
+
 ### 7.2 Docker Compose Struktur
 
 Schematischer Aufbau der `docker/compose.yml`:
