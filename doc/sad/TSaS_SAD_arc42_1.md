@@ -130,6 +130,8 @@ Die Kommunikation zwischen den Systemkomponenten erfolgt über folgende technisc
 | Spring Boot API ↔ PostgreSQL | JDBC/TCP, Port 5432 |
 | Spring Boot API ↔ Keycloak | OAuth2/OIDC, HTTPS, Port 8443 |
 
+> **OpenAPI-Vertrag:** Das Backend exponiert seinen REST-Vertrag maschinenlesbar unter `GET /v3/api-docs` (OpenAPI 3.x JSON) und für menschliche Konsumenten unter `GET /swagger-ui.html`. Die Pfade sind `permitAll()` (öffentlicher Vertrag), die Operationen selbst weiterhin durch Bearer-JWT geschützt (Security-Scheme `bearer-jwt`).
+
 ---
 
 ## 4. Lösungsstrategie
@@ -337,6 +339,7 @@ Die Datenpersistenz erfolgt über Spring Data JPA / Hibernate mit PostgreSQL. Je
 Die Fehlerbehandlung erfolgt deklarativ über `@RestControllerAdvice`. Querschnittliche Fälle liegen zentral im `common-module` (`CommonExceptionHandler`): fachliche Zustandskonflikte (Basisklasse `ConflictException`) → HTTP 409, Bean-Validation-Fehler (`MethodArgumentNotValidException`) → HTTP 400 mit Feld-Details, ungültige Argumente (z. B. unbekannter Enum-Wert) → HTTP 400. Modulspezifische Domain-Exceptions werden in den jeweiligen Advices abgebildet: `GlobalExceptionHandler` (Player/Match „nicht gefunden" → 404) und `AiExceptionHandler` (`InsufficientMatchDataException` → 422, `AnalysisGenerationException` → 502). Technische Fehler ergeben HTTP 5xx.
 
 Das Antwortformat folgt **RFC 7807** über Springs `ProblemDetail` (Felder `type`, `title`, `status`, `detail`, ggf. zusätzliche Properties wie `errors`) — der Spring-native Standard, der das früher geplante Ad-hoc-Format `{error-code, message, timestamp}` ablöst.
+Die ProblemDetail-Schemas (400, 404, 409, 422, 502) werden mit der OpenAPI-Spec via springdoc automatisch publiziert und sind unter `/v3/api-docs` einsehbar.
 
 ### 8.4 Logging und Monitoring
 
