@@ -28,6 +28,7 @@ services:
     image: quay.io/keycloak/keycloak:26.6.1
     command: >
       start-dev --import-realm
+      --health-enabled=true
       --https-port=8443
       --https-certificate-file=/opt/keycloak/certs/localhost.pem
       --https-certificate-key-file=/opt/keycloak/certs/localhost-key.pem
@@ -46,8 +47,12 @@ services:
     cap_drop: [ALL]
     mem_limit: 768m
     cpus: 1.0
+    # The Keycloak image ships no curl/wget. The management port 9000
+    # (enabled via --health-enabled=true) only opens once Quarkus has
+    # fully started, so a TCP connect probe via bash /dev/tcp is a
+    # reliable liveness signal.
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health/ready"]
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000"]
       interval: 15s
       timeout: 5s
       retries: 8
