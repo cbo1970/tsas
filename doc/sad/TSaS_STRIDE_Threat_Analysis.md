@@ -26,7 +26,7 @@
 
 | # | Befund | Risiko | Quelle |
 |---|---|---|---|
-| S1 | **Keine `aud`-Prüfung im JwtDecoder.** Nur `issuer` wird validiert (`JwtValidators.createDefaultWithIssuer`). Jedes Token aus der `tsas`-Realm für irgendeinen Client wird akzeptiert. | Hoch | `auth-module/.../SecurityConfig.java:44-46` |
+| S1 | ~~**Keine `aud`-Prüfung im JwtDecoder.** Nur `issuer` wird validiert.~~ **MITIGATED (TEN-56)** — `JwtClaimValidator("aud", a -> a != null && a.contains("tsas-frontend"))` ist via `DelegatingOAuth2TokenValidator` zusätzlich registriert; Erwartungs-Audience konfigurierbar über `tsas.security.expected-audience`. Keycloak-Realm hat den passenden `oidc-audience-mapper` auf dem `tsas-frontend`-Client. | erledigt | `auth-module/.../SecurityConfig.java`, `docker/keycloak/realm-export.json` |
 | S2 | **Self-Registration offen** (`registrationAllowed: true`), keine E-Mail-Verifizierung, kein Admin-Approval. | Hoch | `docker/keycloak/realm-export.json:3` |
 | S3 | **Keycloak-Admin `admin/admin`** als Default (`${KC_ADMIN_PASSWORD:-admin}`). | Kritisch (sobald exponiert) | `docker/compose.yml:26` |
 | S4 | **Postgres-Default-Creds `tsas/tsas/tsas`** hart kodiert; Port 5432 auf Host exponiert. | Hoch | `docker/db/compose.yaml:6-10` |
