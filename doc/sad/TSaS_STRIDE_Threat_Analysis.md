@@ -77,7 +77,7 @@
 | # | Befund | Risiko | Quelle |
 |---|---|---|---|
 | E1 | **Autorisierung = `authenticated()`**, keine Rollen, kein `@PreAuthorize`. Jeder eingeloggte User kann jeden Endpoint nutzen. | **Kritisch** | `SecurityConfig.java:32-35`, alle Controller |
-| E2 | **`test`-Profil = `permitAll`.** Kein Startup-Guard gegen „test in Prod". | Hoch (Konfig-Risiko) | `SecurityConfigLocal.java:18-30` |
+| E2 | ~~**`test`-Profil = `permitAll`.** Kein Startup-Guard gegen „test in Prod".~~ **MITIGATED (TEN-57)** — `TestProfileSecurityConfig` ist aus `main` entfernt und lebt nur noch in `auth-module/src/testFixtures/` (nicht im Boot-Jar). Zusätzlich `TestProfileGuard` als `EnvironmentPostProcessor`: bricht den Boot ab, wenn `test` mit `prod`/`production`/`docker` kombiniert ist oder `spring.datasource.url` nicht H2-in-memory ist. 8 Unit-Tests + `@PostConstruct`-Warning-Log bei aktivem `permitAll`. | erledigt | `auth-module/.../TestProfileGuard.java`, `auth-module/src/testFixtures/.../TestProfileSecurityConfig.java` |
 | E3 | **Wildcard-`redirectUris`** im Keycloak-Client (`http://localhost:4200/*`). Lokal OK, in Prod Open-Redirect-Risiko. | Niedrig (lokal) / Hoch (Prod) | `realm-export.json:22-25` |
 | E4 | **CORS** `allowedHeaders=*` + `allowCredentials=true` + kein Aud-Check → ein kompromittierter Realm-Client bekommt Vollzugriff. | Mittel | `CorsConfig.java:25-36` |
 | E5 | **JwtAuthenticationConverter** nicht angepasst → Keycloak-Rollen (`realm_access.roles`) werden nicht zu Spring-Authorities. Latentes Risiko bei späterem `@PreAuthorize`. | Mittel | `SecurityConfig.java:36` |
