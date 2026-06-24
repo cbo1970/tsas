@@ -33,7 +33,7 @@ Daten sind pro Nutzer über die `owner_id` (Keycloak-`sub`) mandantengebunden �
 
 ### Art. 17 — Recht auf Löschung
 
-`DELETE /api/me` löscht innerhalb einer einzigen Transaktion **alle** Aggregate des aktuell authentifizierten Nutzers in korrekter Foreign-Key-Reihenfolge:
+`DELETE /api/dataexport` löscht innerhalb einer einzigen Transaktion **alle** Aggregate des aktuell authentifizierten Nutzers in korrekter Foreign-Key-Reihenfolge:
 
 1. `points` (alle Punkte aller eigenen Matches)
 2. `match_scores` (alle Spielstand-Records)
@@ -51,7 +51,7 @@ Die Antwort enthält die Counts der gelöschten Datensätze für Audit-Zwecke. E
 
 ### Art. 20 — Recht auf Datenübertragbarkeit
 
-`GET /api/me/export` liefert einen vollständigen JSON-Snapshot aller eigenen Aggregate, strukturiert als:
+`GET /api/dataexport/export` liefert einen vollständigen JSON-Snapshot aller eigenen Aggregate, strukturiert als:
 
 ```json
 {

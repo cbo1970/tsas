@@ -1,4 +1,4 @@
-package com.cas.tsas.app.me;
+package com.cas.tsas.app.dataexport;
 
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -12,24 +12,24 @@ import org.springframework.web.bind.annotation.RestController;
  * ab — kein User-Parameter, kein Cross-Tenant-Zugriff.
  */
 @RestController
-@RequestMapping("/api/me")
-public class MeController {
+@RequestMapping("/api/dataexport")
+public class DataExportController {
 
-    private final MeService meService;
+    private final DataExportService dataExportService;
 
-    public MeController(MeService meService) {
-        this.meService = meService;
+    public DataExportController(DataExportService dataExportService) {
+        this.dataExportService = dataExportService;
     }
 
     /** Art. 20 — Datenübertragbarkeit. JSON-Snapshot aller eigenen Aggregate. */
     @GetMapping(value = "/export", produces = MediaType.APPLICATION_JSON_VALUE)
     public UserDataExport export() {
-        return meService.exportCurrentUserData();
+        return dataExportService.exportCurrentUserData();
     }
 
     /** Art. 17 — Recht auf Löschung. Entfernt alle eigenen Aggregate; gibt die gelöschten Counts zurück. */
     @DeleteMapping
-    public MeService.DeletionSummary delete() {
-        return meService.deleteCurrentUserData();
+    public DataExportService.DeletionSummary delete() {
+        return dataExportService.deleteCurrentUserData();
     }
 }

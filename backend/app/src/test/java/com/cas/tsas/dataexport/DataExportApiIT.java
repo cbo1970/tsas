@@ -1,4 +1,4 @@
-package com.cas.tsas.me;
+package com.cas.tsas.dataexport;
 
 import com.cas.tsas.AbstractIntegrationTest;
 import com.cas.tsas.ai.infrastructure.persistence.entity.MatchAnalysisJpaEntity;
@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /** TEN-66: DSGVO Art. 17 (Löschung) und Art. 20 (Export). */
-class MeApiIT extends AbstractIntegrationTest {
+class DataExportApiIT extends AbstractIntegrationTest {
 
     /** Two distinct users so that we can verify cross-tenant isolation on both export and delete. */
     private static final UUID USER_A = UUID.fromString("00000000-0000-0000-0000-0000000000a1");
@@ -62,7 +62,7 @@ class MeApiIT extends AbstractIntegrationTest {
         seed(USER_A, /*matches*/ 2, /*pointsPerMatch*/ 3, /*addAnalysis*/ true);
         seed(USER_B, 1, 1, false);
 
-        mockMvc.perform(get("/api/me/export")
+        mockMvc.perform(get("/api/dataexport/export")
                         .with(JwtTestSupport.withUser(USER_A, Role.COACH)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.header.userId").value(USER_A.toString()))
@@ -78,7 +78,7 @@ class MeApiIT extends AbstractIntegrationTest {
         seed(USER_A, 2, 3, true);
         seed(USER_B, 1, 1, false);
 
-        mockMvc.perform(delete("/api/me")
+        mockMvc.perform(delete("/api/dataexport")
                         .with(JwtTestSupport.withUser(USER_A, Role.COACH)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").value(USER_A.toString()))
@@ -98,7 +98,7 @@ class MeApiIT extends AbstractIntegrationTest {
 
     @Test
     void delete_isIdempotent_returnsZeroCountsWhenNothingToDelete() throws Exception {
-        mockMvc.perform(delete("/api/me")
+        mockMvc.perform(delete("/api/dataexport")
                         .with(JwtTestSupport.withUser(USER_A, Role.COACH)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.players").value(0))

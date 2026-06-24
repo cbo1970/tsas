@@ -103,11 +103,11 @@ export class ApiService {
 
   // DSGVO (TEN-66) — Art. 17 + Art. 20
   exportMyData(): Observable<unknown> {
-    return this.http.get<unknown>(`${this.base}/me/export`);
+    return this.http.get<unknown>(`${this.base}/dataexport/export`);
   }
 
   deleteMyData(): Observable<DeletionSummary> {
-    return this.http.delete<DeletionSummary>(`${this.base}/me`);
+    return this.http.delete<DeletionSummary>(`${this.base}/dataexport`);
   }
 }
 

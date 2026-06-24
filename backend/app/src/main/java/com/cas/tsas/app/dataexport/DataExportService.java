@@ -1,4 +1,4 @@
-package com.cas.tsas.app.me;
+package com.cas.tsas.app.dataexport;
 
 import com.cas.tsas.ai.infrastructure.persistence.entity.MatchAnalysisJpaEntity;
 import com.cas.tsas.ai.infrastructure.persistence.repository.MatchAnalysisJpaRepository;
@@ -30,9 +30,9 @@ import java.util.stream.Collectors;
  * cross-tenant entry point, so the controller does not accept a userId parameter.
  */
 @Service
-public class MeService {
+public class DataExportService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MeService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DataExportService.class);
 
     private final CurrentUserProvider currentUserProvider;
     private final PlayerJpaRepository playerRepo;
@@ -41,7 +41,7 @@ public class MeService {
     private final MatchScoreJpaRepository matchScoreRepo;
     private final MatchAnalysisJpaRepository matchAnalysisRepo;
 
-    public MeService(CurrentUserProvider currentUserProvider,
+    public DataExportService(CurrentUserProvider currentUserProvider,
                      PlayerJpaRepository playerRepo,
                      MatchJpaRepository matchRepo,
                      PointJpaRepository pointRepo,
