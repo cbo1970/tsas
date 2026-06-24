@@ -4,6 +4,7 @@ export type BackhandType = 'ONE_HANDED' | 'TWO_HANDED';
 
 export interface Player {
   id: string;
+  ownerId: string;
   firstName: string;
   lastName: string;
   gender: Gender;

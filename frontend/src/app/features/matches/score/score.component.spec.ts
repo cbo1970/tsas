@@ -23,7 +23,7 @@ const MOCK_SCORE = {
 };
 
 const MOCK_MATCH: MatchWithScore = {
-  id: 'match-1', player1Id: 'p1', player2Id: 'p2',
+  id: 'match-1', ownerId: 'owner-1', player1Id: 'p1', player2Id: 'p2',
   setsToWin: 2, matchTiebreak: false, shortSet: false,
   status: 'IN_PROGRESS', score: MOCK_SCORE as any,
 };

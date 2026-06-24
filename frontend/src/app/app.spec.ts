@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { signal, computed } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { App } from './app';
 import { AuthService } from './core/auth/auth.service';
@@ -9,6 +10,9 @@ const mockAuthService: Partial<AuthService> = {
   logout: () => {},
   login: () => {},
   isAuthenticated: () => false,
+  roles: computed(() => []),
+  isAdmin: computed(() => false),
+  userId: computed(() => null),
 };
 
 describe('App', () => {

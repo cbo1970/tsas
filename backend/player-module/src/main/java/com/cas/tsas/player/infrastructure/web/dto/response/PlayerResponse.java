@@ -10,6 +10,7 @@ import java.util.UUID;
 
 public record PlayerResponse(
         UUID id,
+        UUID ownerId,
         String firstName,
         String lastName,
         Gender gender,
@@ -25,6 +26,7 @@ public record PlayerResponse(
     public static PlayerResponse from(Player player, boolean deletable, UUID activeMatchId) {
         return new PlayerResponse(
                 player.getId(),
+                player.getOwnerId(),
                 player.getFirstName(),
                 player.getLastName(),
                 player.getGender(),

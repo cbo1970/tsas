@@ -3,12 +3,13 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatChipsModule } from '@angular/material/chips';
 import { AuthService } from './core/auth/auth.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, MatToolbarModule, MatButtonModule, MatIconModule],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, MatToolbarModule, MatButtonModule, MatIconModule, MatChipsModule],
   templateUrl: './app.html',
   styles: [`
     :host { display: flex; flex-direction: column; min-height: 100vh; }
@@ -18,10 +19,19 @@ import { AuthService } from './core/auth/auth.service';
     .active-link { background: rgba(255,255,255,0.15); border-radius: 4px; }
     mat-toolbar mat-icon { font-size: 28px; }
     .user-name { font-size: 14px; margin-right: 4px; opacity: 0.9; }
+    .admin-badge {
+      --mdc-chip-elevated-container-color: #c62828;
+      --mdc-chip-label-text-color: #fff;
+      --mdc-chip-with-icon-icon-color: #fff;
+      margin-right: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
   `]
 })
 export class App implements OnInit {
-  private readonly authService = inject(AuthService);
+  protected readonly authService = inject(AuthService);
 
   protected userName = signal('');
 

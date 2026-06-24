@@ -9,18 +9,19 @@ import { Player } from '../../../core/models/player.model';
 // ─── Fixtures ──────────────────────────────────────────────────────────────
 
 const PLAYER1: Player = {
-  id: 'p1', firstName: 'Roger', lastName: 'Federer',
+  id: 'p1', ownerId: 'owner-1', firstName: 'Roger', lastName: 'Federer',
   gender: 'MALE', handedness: 'RIGHT', backhandType: 'ONE_HANDED',
 };
 
 const PLAYER2: Player = {
-  id: 'p2', firstName: 'Rafael', lastName: 'Nadal',
+  id: 'p2', ownerId: 'owner-1', firstName: 'Rafael', lastName: 'Nadal',
   gender: 'MALE', handedness: 'LEFT', backhandType: 'TWO_HANDED',
 };
 
 function makeMatch(overrides: Partial<MatchWithScore> = {}): MatchWithScore {
   return {
     id: 'match-1',
+    ownerId: 'owner-1',
     player1Id: 'p1',
     player2Id: 'p2',
     setsToWin: 2,
