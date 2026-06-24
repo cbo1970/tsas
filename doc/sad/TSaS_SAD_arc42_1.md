@@ -367,6 +367,8 @@ services:
 
 Alle API-Endpunkte (ausser Health-Check) werden durch OAuth2 Bearer Tokens geschützt. Das Frontend nutzt den Authorization Code Flow mit PKCE. Keycloak verwaltet Benutzer, Rollen und Sessions. In Version 1 erfolgt die Registrierung direkt in Keycloak, ab Version 2 zusätzlich über Google als federated Identity Provider.
 
+**JWT-Validierung (TEN-56 / STRIDE S1).** Der `JwtDecoder` kombiniert über `DelegatingOAuth2TokenValidator` drei Validatoren: (a) `JwtValidators.createDefaultWithIssuer(issuerUri)` für `iss` und Default-Claims (Ablauf etc.); (b) JWK-Set-basierte Signaturprüfung über den Nimbus-Decoder; (c) `JwtClaimValidator("aud", a -> a != null && a.contains("tsas-frontend"))` für die Audience. Ohne (c) würde jedes Token aus der `tsas`-Realm akzeptiert — auch eines für einen anderen Client mit höheren Privilegien. Die erwartete Audience ist über `tsas.security.expected-audience` (Default `tsas-frontend`) konfigurierbar; Keycloak liefert das `aud`-Claim per `oidc-audience-mapper` auf dem `tsas-frontend`-Client (siehe `docker/keycloak/realm-export.json`).
+
 **RBAC im Frontend (TEN-65).** Das Backend setzt seit TEN-55 die Realm-Rollen `COACH` und `ADMIN` durch und reicht den JWT-`sub` als `owner_id` in die Persistenz. Der `AuthService` im Frontend (`frontend/src/app/core/auth/auth.service.ts`) parst das Access-Token und exponiert `roles`, `isAdmin` und `userId` als `computed` Signals. Davon abgeleitet:
 
 - Die Toolbar zeigt ein rotes `ADMIN`-Chip, sobald der eingeloggte Nutzer die Rolle hat — sichtbarer Hinweis auf die globale Sicht.
