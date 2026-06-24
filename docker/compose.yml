@@ -58,6 +58,21 @@ services:
       retries: 8
       start_period: 60s
 
+  mailhog:
+    # SMTP sink for Keycloak's verifyEmail flow (TEN-64). UI on 8025, SMTP on 1025;
+    # the realm-export points smtpServer.host=mailhog (Docker service DNS).
+    image: mailhog/mailhog:latest
+    ports:
+      - "8025:8025"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16M
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    mem_limit: 64m
+    cpus: 0.25
+
   backend:
     build:
       context: ..

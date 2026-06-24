@@ -49,6 +49,11 @@ public abstract class AbstractIntegrationTest {
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
+        // Loose rate-limit defaults for the shared IT context — production defaults
+        // (5/day, 1/min) would 429 the second POST of any IT touching the analysis
+        // endpoint. MatchAnalysisRateLimitIT tightens via @TestPropertySource.
+        registry.add("tsas.ai.rate-limit.per-day", () -> "1000");
+        registry.add("tsas.ai.rate-limit.per-minute", () -> "100");
     }
 
     @Autowired

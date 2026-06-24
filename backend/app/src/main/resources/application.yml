@@ -36,6 +36,12 @@ spring:
 tsas:
   ai:
     min-points-for-analysis: ${TSAS_AI_MIN_POINTS:10}
+    # Per-user rate limit for POST /api/matches/{matchId}/analysis. Both bands
+    # must yield a token; defaults keep cost bounded for the MVP single-instance
+    # deployment. See AnalysisRateLimiter for the bucket semantics.
+    rate-limit:
+      per-day: ${TSAS_AI_RATE_LIMIT_PER_DAY:5}
+      per-minute: ${TSAS_AI_RATE_LIMIT_PER_MINUTE:1}
     # LLM-Prompts sind externalisiert (siehe PromptProperties). Defaults liegen im Code und
     # lassen sich hier oder per Umgebungsvariable überschreiben, z. B.:
     # prompt:

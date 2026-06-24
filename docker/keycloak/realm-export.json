@@ -7,6 +7,19 @@
   "duplicateEmailsAllowed": false,
   "resetPasswordAllowed": true,
   "editUsernameAllowed": false,
+  "verifyEmail": true,
+  "smtpServer": {
+    "host": "mailhog",
+    "port": "1025",
+    "from": "noreply@tsas.local",
+    "fromDisplayName": "TSaS",
+    "replyTo": "noreply@tsas.local",
+    "replyToDisplayName": "TSaS",
+    "envelopeFrom": "noreply@tsas.local",
+    "starttls": "false",
+    "ssl": "false",
+    "auth": "false"
+  },
   "roles": {
     "realm": [
       {
