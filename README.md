@@ -44,10 +44,10 @@ podman compose -f docker/db/compose.yaml up -d
 
 PostgreSQL läuft auf `localhost:5432`.
 
-### 2. Keycloak starten
+### 2. Keycloak + Mailhog starten
 
 ```bash
-podman compose -f docker/compose.yml up keycloak -d
+podman compose -f docker/compose.yml up -d keycloak mailhog
 ```
 
 Keycloak ist unter **`https://localhost:8443`** erreichbar.
@@ -57,6 +57,8 @@ Keycloak ist unter **`https://localhost:8443`** erreichbar.
 Der Realm `tsas` wird beim ersten Start automatisch importiert.
 
 > Keycloak ist zusätzlich über HTTP auf `http://localhost:18080` erreichbar (wird intern vom Backend für den JWKS-Abruf verwendet).
+
+**Mailhog (Dev-SMTP-Sink + Inbox-UI)** wird im selben Befehl gestartet — Keycloak schickt Verify-E-Mails an `mailhog:1025` (Service-Discovery im Compose-Netz, kein Host-Port nötig). Die Inbox ist im Browser unter **`http://localhost:8025`** sichtbar. Backend/Frontend müssen dafür **nicht** in Podman laufen: Keycloak in Podman → Mailhog in Podman → Inbox auf dem Host. Bei Bedarf den SMTP-Port auch auf den Host mappen via `KC_SMTP_*`-Override (siehe Konfigurations-Sektion unten).
 
 ### 3. Backend starten
 
