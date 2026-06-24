@@ -266,3 +266,50 @@ curl -sI http://${KC_HOSTNAME}/ | grep -i location
 # Postgres NICHT exponiert
 nc -zv ${KC_HOSTNAME} 5432   # Verbindung muss scheitern
 ```
+
+### Lokaler Prod-Smoke (ohne DNS / öffentliche IP)
+
+Den Overlay kann man auch komplett lokal ausprobieren — die selbstsignierten Dev-Certs unter `docker/keycloak/certs/` reichen aus, `KC_HOSTNAME=localhost` ersetzt den FQDN. Der Browser warnt dann wegen des Self-Signed-Certs; das ist für einen Smoke-Test akzeptabel.
+
+```bash
+# 1. Cert-Verzeichnis vorbereiten (Dev-Certs wiederverwenden)
+mkdir -p /tmp/tsas-tls
+cp docker/keycloak/certs/localhost.pem      /tmp/tsas-tls/tls.crt
+cp docker/keycloak/certs/localhost-key.pem  /tmp/tsas-tls/tls.key
+
+# 2. Minimal-Env anlegen (Demo-Werte; echte Prod braucht starke Credentials)
+cat > docker/.env <<'EOF'
+DB_NAME=tsas
+DB_USERNAME=tsas_app
+DB_PASSWORD=demo_pw_change_me
+KC_DB_NAME=keycloak
+KC_DB_USERNAME=keycloak
+KC_DB_PASSWORD=demo_pw_change_me
+KC_ADMIN_USERNAME=admin
+KC_ADMIN_PASSWORD=demo_pw_change_me
+KC_HOSTNAME=localhost
+KEYCLOAK_ISSUER_URI=https://localhost/realms/tsas
+KC_SMTP_HOST=mailhog
+KC_SMTP_PORT=1025
+KC_SMTP_FROM=noreply@tsas.local
+KC_SMTP_STARTTLS=false
+KC_SMTP_AUTH=false
+KC_SMTP_USER=
+KC_SMTP_PASSWORD=
+OPENAI_API_KEY=sk-test
+TLS_CERT_DIR=/tmp/tsas-tls
+EOF
+
+# 3. Stack hochfahren
+podman compose -f docker/compose.yml -f docker/compose.prod.yml up -d --build
+
+# 4. Smoke
+curl -sIk https://localhost/ | head -1               # → HTTP/2 200
+curl -sI  http://localhost/  | grep -i location      # → Location: https://localhost/
+openssl s_client -connect localhost:443 -servername localhost < /dev/null 2>/dev/null \
+  | openssl x509 -noout -subject                     # → CN=localhost
+```
+
+> **Hinweis:** Mailhog ist im Prod-Overlay entfernt — die Verify-Email-Funktion läuft daher in diesem Smoke nicht. Für einen Verify-Mail-Test stattdessen den Dev-Compose (`compose.yml` allein) verwenden oder einen lokalen MTA bereitstellen.
+
+> **Cleanup:** `podman compose -f docker/compose.yml -f docker/compose.prod.yml down && rm -rf /tmp/tsas-tls docker/.env`.
