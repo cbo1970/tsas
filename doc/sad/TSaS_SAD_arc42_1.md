@@ -317,6 +317,20 @@ Der KI-Match-Analyse-Endpoint löst kostenpflichtige LLM-Aufrufe aus. Kombiniert
 
 Verifiziert via Burst-Integrationstest (`MatchAnalysisRateLimitIT`): 2 erfolgreiche POSTs → 3. POST liefert HTTP 429 mit korrektem `Retry-After`-Header.
 
+### 7.1.4 TLS & Secret-Hygiene im Prod-Overlay (TEN-58 / STRIDE T1+S3+S4+I3+D6)
+
+Der Basis-Compose-File (`docker/compose.yml`) ist auf bequemen Dev-Betrieb getrimmt — Default-Credentials (`tsas/tsas`, `admin/admin`), Mailhog statt echtem SMTP, Keycloak im `start-dev`-Modus mit H2-Volume, nginx auf HTTP. Für produktionsnahe Auslieferung gibt es einen zusätzlichen Overlay `docker/compose.prod.yml`, der den Basis-Stack so überschreibt, dass die STRIDE-Befunde T1, S3, S4, I3 und D6 mitigiert sind:
+
+| Komponente | Massnahme |
+|---|---|
+| **nginx (`docker/frontend/nginx.prod.conf`)** | TLS-Terminierung auf Container-Port 8443 (Host 443); Container-Port 8080 (Host 80) liefert nur HTTP-301-Redirects auf HTTPS. Cert-Mount via `${TLS_CERT_DIR}/tls.{crt,key}`. Bestehende Security-Header (HSTS, CSP, …) bleiben aktiv. |
+| **Keycloak** | `start --hostname=${KC_HOSTNAME} --proxy-headers=xforwarded --db=postgres --db-url-host=db --db-url-database=${KC_DB_NAME}` — Produktionsmodus mit eigener Postgres-DB statt H2; Bootstrap-Admin via `KC_BOOTSTRAP_ADMIN_USERNAME/PASSWORD`, keine Defaults. |
+| **Postgres** | `${DB_PASSWORD:?…}`-Syntax bricht den Start ab, wenn kein Passwort gesetzt ist. Init-Script `docker/db/init/01-create-keycloak-db.sh` legt die Keycloak-DB + den dedizierten Keycloak-DB-User beim ersten Boot an. Kein Host-Port. |
+| **Backend** | `OPENAI_API_KEY`, `DB_*`, `KEYCLOAK_ISSUER_URI` alle required (`${VAR:?…}`); kein Host-Port — Zugriff nur über den nginx-Reverse-Proxy. |
+| **Mailhog** | Entfernt (`!reset null`) — Prod nutzt echtes SMTP (Sendgrid, SES, …) via `KC_SMTP_*`-Env-Vars. |
+
+Aktivierung: `podman compose -f docker/compose.yml -f docker/compose.prod.yml up -d --build`. Eine `.env`-Datei neben `compose.yml` liefert die echten Werte; Vorlage in `docker/.env.prod.example`. Die Cert-Provisionierung (Let's Encrypt o. ä.) liegt ausserhalb des Overlays — er erwartet nur, dass `${TLS_CERT_DIR}` existiert und `tls.crt`/`tls.key` enthält. Verifiziert via `podman compose … config` (Syntax-Check) und exemplarischen `openssl s_client`-/`curl -I`-Smoke-Tests (siehe README).
+
 ### 7.2 Docker Compose Struktur
 
 Schematischer Aufbau der `docker/compose.yml`:
