@@ -35,6 +35,20 @@ services:
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:-admin}
+      # SMTP settings consumed by ${env.…} placeholders in realm-export.json.
+      # Dev defaults wire to the local mailhog service; prod overrides via .env
+      # (e.g. KC_SMTP_HOST=smtp.sendgrid.net, KC_SMTP_AUTH=true, KC_SMTP_USER, KC_SMTP_PASSWORD).
+      KC_SMTP_HOST: ${KC_SMTP_HOST:-mailhog}
+      KC_SMTP_PORT: ${KC_SMTP_PORT:-1025}
+      KC_SMTP_FROM: ${KC_SMTP_FROM:-noreply@tsas.local}
+      KC_SMTP_FROM_NAME: ${KC_SMTP_FROM_NAME:-TSaS}
+      KC_SMTP_REPLY_TO: ${KC_SMTP_REPLY_TO:-noreply@tsas.local}
+      KC_SMTP_ENVELOPE_FROM: ${KC_SMTP_ENVELOPE_FROM:-noreply@tsas.local}
+      KC_SMTP_STARTTLS: ${KC_SMTP_STARTTLS:-false}
+      KC_SMTP_SSL: ${KC_SMTP_SSL:-false}
+      KC_SMTP_AUTH: ${KC_SMTP_AUTH:-false}
+      KC_SMTP_USER: ${KC_SMTP_USER:-}
+      KC_SMTP_PASSWORD: ${KC_SMTP_PASSWORD:-}
     volumes:
       - ./keycloak:/opt/keycloak/data/import
       - ./keycloak/certs:/opt/keycloak/certs
@@ -57,6 +71,21 @@ services:
       timeout: 5s
       retries: 8
       start_period: 60s
+
+  mailhog:
+    # SMTP sink for Keycloak's verifyEmail flow (TEN-64). UI on 8025, SMTP on 1025;
+    # the realm-export points smtpServer.host=mailhog (Docker service DNS).
+    image: mailhog/mailhog:latest
+    ports:
+      - "8025:8025"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16M
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    mem_limit: 64m
+    cpus: 0.25
 
   backend:
     build:

@@ -25,6 +25,11 @@ spring:
 tsas:
   ai:
     min-points-for-analysis: 10
+    # Rate-limit defaults are loose for the shared IT context — the dedicated
+    # MatchAnalysisRateLimitIT overrides them via @TestPropertySource.
+    rate-limit:
+      per-day: 1000
+      per-minute: 100
 
 springdoc:
   api-docs:
