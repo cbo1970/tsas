@@ -2,15 +2,18 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../core/services/api.service';
 import { Player } from '../../../core/models/player.model';
 import { HeadToHeadStatistics } from '../../../core/models/statistics.model';
+import { OpponentPreparation } from '../../../core/models/analysis.model';
 
 @Component({
   selector: 'app-head-to-head',
   standalone: true,
-  imports: [MatFormFieldModule, MatSelectModule, FormsModule],
+  imports: [MatFormFieldModule, MatSelectModule, MatButtonModule, MatProgressSpinnerModule, FormsModule],
   templateUrl: './head-to-head.component.html',
   styles: [`
     :host { display: block; min-height: 100dvh; background: linear-gradient(160deg, #103A6B 0%, #2D72B8 100%); color: #eee; font-family: sans-serif; }
@@ -38,6 +41,20 @@ import { HeadToHeadStatistics } from '../../../core/models/statistics.model';
     .bar { display: flex; height: 4px; border-radius: 2px; overflow: hidden; margin-top: 1px; }
     .bar-p1 { background: #0ea5e9; }
     .bar-p2 { background: #475569; }
+    .prep-actions { margin: 24px 0 8px; text-align: center; }
+    .prep-actions button { color: #fff; background: #0ea5e9; }
+    .prep-actions button[disabled] { opacity: 0.5; }
+    .prep-card { background: rgba(15, 23, 42, 0.55); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 8px; padding: 14px 16px; margin-top: 12px; }
+    .prep-card h3 { font-size: 14px; color: #38bdf8; text-transform: uppercase; letter-spacing: .05em; margin: 12px 0 4px; }
+    .prep-card h3:first-child { margin-top: 0; }
+    .prep-card p { font-size: 13px; line-height: 1.45; color: #e2e8f0; margin: 0 0 8px; white-space: pre-wrap; }
+    .prep-card .recos { list-style: none; padding: 0; margin: 6px 0 0; }
+    .prep-card .recos li { padding: 6px 0; border-top: 1px solid rgba(148, 163, 184, 0.18); }
+    .prep-card .recos li:first-child { border-top: none; }
+    .prep-card .reco-title { font-size: 13px; font-weight: 700; color: #fff; }
+    .prep-card .reco-detail { font-size: 12px; color: #cbd5e1; margin-top: 2px; }
+    .prep-meta { font-size: 11px; color: #94a3b8; margin-top: 10px; }
+    .prep-error { background: rgba(127, 29, 29, 0.55); border: 1px solid #fca5a5; color: #fee2e2; border-radius: 6px; padding: 10px 12px; margin-top: 12px; font-size: 13px; }
   `],
 })
 export class HeadToHeadComponent implements OnInit {
@@ -48,6 +65,11 @@ export class HeadToHeadComponent implements OnInit {
   player1Id = signal<string | null>(null);
   player2Id = signal<string | null>(null);
   stats = signal<HeadToHeadStatistics | null>(null);
+
+  // TEN-51 — KI-Vorbereitung gegen den Gegner
+  preparation = signal<OpponentPreparation | null>(null);
+  preparing = signal<boolean>(false);
+  prepError = signal<string | null>(null);
 
   ngOnInit() {
     this.player1Id.set(this.route.snapshot.queryParamMap.get('player1'));
@@ -60,7 +82,34 @@ export class HeadToHeadComponent implements OnInit {
 
   onSelect() {
     this.stats.set(null);
+    this.preparation.set(null);
+    this.prepError.set(null);
     this.fetchIfReady();
+  }
+
+  /**
+   * TEN-51 — fordert eine KI-gestützte Vorbereitung des „eigenen Spielers" (Spieler 1) gegen
+   * den Gegner (Spieler 2) an. Beide IDs müssen gesetzt und unterschiedlich sein und das
+   * Head-to-Head muss mindestens ein abgeschlossenes Match enthalten (Backend → HTTP 422 sonst).
+   */
+  requestPreparation() {
+    const own = this.player1Id();
+    const opp = this.player2Id();
+    if (!own || !opp || own === opp) return;
+    this.preparation.set(null);
+    this.prepError.set(null);
+    this.preparing.set(true);
+    this.api.generateOpponentPreparation(own, opp).subscribe({
+      next: p => {
+        this.preparation.set(p);
+        this.preparing.set(false);
+      },
+      error: err => {
+        const detail = err?.error?.detail || err?.message || 'KI-Vorbereitung fehlgeschlagen.';
+        this.prepError.set(detail);
+        this.preparing.set(false);
+      }
+    });
   }
 
   private fetchIfReady() {

@@ -12,7 +12,7 @@ import {
 } from '../models/match.model';
 import { RecordPointRequest } from '../models/point.model';
 import { MatchStatistics, HeadToHeadStatistics } from '../models/statistics.model';
-import { MatchAnalysis } from '../models/analysis.model';
+import { MatchAnalysis, OpponentPreparation } from '../models/analysis.model';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -99,6 +99,12 @@ export class ApiService {
 
   generateMatchAnalysis(matchId: string): Observable<MatchAnalysis> {
     return this.http.post<MatchAnalysis>(`${this.base}/matches/${matchId}/analysis`, {});
+  }
+
+  // TEN-51 — KI-Vorbereitung gegen einen Gegner (Head-to-Head-basiert).
+  generateOpponentPreparation(ownPlayerId: string, opponentId: string): Observable<OpponentPreparation> {
+    return this.http.post<OpponentPreparation>(
+      `${this.base}/players/${ownPlayerId}/opponent-preparation/${opponentId}`, {});
   }
 
   // DSGVO (TEN-66) — Art. 17 + Art. 20
