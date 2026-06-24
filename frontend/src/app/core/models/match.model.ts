@@ -2,6 +2,7 @@ export type MatchStatus = 'IN_PROGRESS' | 'COMPLETED';
 
 export interface Match {
   id: string;
+  ownerId: string;
   player1Id: string;
   player2Id: string;
   setsToWin: number;

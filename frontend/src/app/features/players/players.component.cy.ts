@@ -1,31 +1,58 @@
 import { PlayersComponent } from './players.component';
 import { provideHttpClient } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { computed, signal } from '@angular/core';
 import { Player } from '../../core/models/player.model';
 import { Router, provideRouter } from '@angular/router';
+import { AuthService } from '../../core/auth/auth.service';
+
+function makeAuthMock(opts: { isAdmin?: boolean; userId?: string | null } = {}) {
+  const isAdminSig = signal(opts.isAdmin ?? false);
+  const userIdSig = signal<string | null>(opts.userId ?? null);
+  return {
+    isAdmin: computed(() => isAdminSig()),
+    userId: computed(() => userIdSig()),
+    roles: computed(() => (opts.isAdmin ? ['COACH', 'ADMIN'] : ['COACH'])),
+    initialize: () => Promise.resolve(true),
+    userName: () => 'Test User',
+    logout: () => {},
+    login: () => {},
+    isAuthenticated: () => true,
+  } as unknown as AuthService;
+}
 
 const PLAYERS: Player[] = [
   {
-    id: '1', firstName: 'Roger', lastName: 'Federer',
+    id: '1', ownerId: 'owner-1', firstName: 'Roger', lastName: 'Federer',
     gender: 'MALE', handedness: 'RIGHT', backhandType: 'ONE_HANDED',
     ranking: '1', active: true, deletable: true,
   },
   {
-    id: '2', firstName: 'Rafael', lastName: 'Nadal',
+    id: '2', ownerId: 'owner-1', firstName: 'Rafael', lastName: 'Nadal',
     gender: 'MALE', handedness: 'LEFT', backhandType: 'TWO_HANDED',
     ranking: '2', active: true, deletable: false,
   },
   {
-    id: '3', firstName: 'Anna', lastName: 'Muster',
+    id: '3', ownerId: 'owner-1', firstName: 'Anna', lastName: 'Muster',
     gender: 'FEMALE', handedness: 'RIGHT', backhandType: 'TWO_HANDED',
     active: false, deletable: false,
   },
 ];
 
-function mountPlayers(players: Player[] = PLAYERS, extraProviders: any[] = []) {
+function mountPlayers(
+  players: Player[] = PLAYERS,
+  extraProviders: any[] = [],
+  authMock: AuthService = makeAuthMock(),
+) {
   cy.intercept('GET', '**/api/players', players).as('getPlayers');
   cy.mount(PlayersComponent, {
-    providers: [provideRouter([]), provideHttpClient(), provideAnimationsAsync(), ...extraProviders],
+    providers: [
+      provideRouter([]),
+      provideHttpClient(),
+      provideAnimationsAsync(),
+      { provide: AuthService, useValue: authMock },
+      ...extraProviders,
+    ],
   });
   cy.wait('@getPlayers');
 }
@@ -118,6 +145,38 @@ describe('PlayersComponent', () => {
       cy.get('[data-testid="compare-btn"]').first().click();
       cy.get('@navigate').should('have.been.calledWith',
         ['/statistics/head-to-head'], { queryParams: { player1: '1' } });
+    });
+  });
+
+  describe('admin scope toggle (TEN-65)', () => {
+    const MIXED_PLAYERS: Player[] = [
+      { id: '10', ownerId: 'owner-1', firstName: 'My', lastName: 'Player',
+        gender: 'MALE', handedness: 'RIGHT', backhandType: 'ONE_HANDED', active: true, deletable: true },
+      { id: '20', ownerId: 'owner-2', firstName: 'Other', lastName: 'Owner',
+        gender: 'FEMALE', handedness: 'LEFT', backhandType: 'TWO_HANDED', active: true, deletable: true },
+    ];
+
+    it('is hidden for coach role', () => {
+      mountPlayers(MIXED_PLAYERS, [], makeAuthMock({ isAdmin: false, userId: 'owner-1' }));
+      cy.get('[data-cy="admin-scope"]').should('not.exist');
+      // Coach sees what the server returned — both rows present.
+      cy.contains('td', 'My Player'.split(' ')[0]).should('be.visible');
+      cy.contains('td', 'Other').should('be.visible');
+    });
+
+    it('is visible for admin and defaults to "Meine"', () => {
+      mountPlayers(MIXED_PLAYERS, [], makeAuthMock({ isAdmin: true, userId: 'owner-1' }));
+      cy.get('[data-cy="admin-scope"]').should('be.visible');
+      cy.get('[data-cy="scope-mine"]').should('have.class', 'mat-button-toggle-checked');
+      cy.contains('td', 'My').should('be.visible');
+      cy.contains('td', 'Other').should('not.exist');
+    });
+
+    it('shows all owners when admin toggles to "Alle Owner"', () => {
+      mountPlayers(MIXED_PLAYERS, [], makeAuthMock({ isAdmin: true, userId: 'owner-1' }));
+      cy.get('[data-cy="scope-all"]').click();
+      cy.contains('td', 'My').should('be.visible');
+      cy.contains('td', 'Other').should('be.visible');
     });
   });
 });

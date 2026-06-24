@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public record MatchResponse(
         UUID id,
+        UUID ownerId,
         UUID player1Id,
         UUID player2Id,
         int setsToWin,
@@ -17,6 +18,7 @@ public record MatchResponse(
     public static MatchResponse from(Match match) {
         return new MatchResponse(
                 match.getId(),
+                match.getOwnerId(),
                 match.getPlayer1Id(),
                 match.getPlayer2Id(),
                 match.getSetsToWin(),

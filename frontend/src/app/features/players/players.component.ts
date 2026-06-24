@@ -13,9 +13,13 @@ import { MatCardModule } from '@angular/material/card';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { ApiService } from '../../core/services/api.service';
+import { AuthService } from '../../core/auth/auth.service';
 import { Player, CreatePlayerRequest } from '../../core/models/player.model';
 import { PlayerDialogComponent } from './player-dialog.component';
+
+export type Scope = 'mine' | 'all';
 
 @Component({
   selector: 'app-players',
@@ -32,7 +36,8 @@ import { PlayerDialogComponent } from './player-dialog.component';
     MatSnackBarModule,
     MatFormFieldModule,
     MatInputModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatButtonToggleModule
   ],
   templateUrl: './players.component.html',
   styles: [`
@@ -52,6 +57,20 @@ import { PlayerDialogComponent } from './player-dialog.component';
     .inactive-row { opacity: 0.45; }
     .inactive-btn { opacity: 0.3; }
     tr.mat-mdc-row { cursor: pointer; }
+    .admin-scope {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      background: #fff3e0;
+      border: 1px solid #ffcc80;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #5d4037;
+    }
+    .admin-scope mat-icon { color: #c62828; }
+    .admin-scope mat-button-toggle-group { margin-left: auto; }
   `]
 })
 export class PlayersComponent implements OnInit {
@@ -59,20 +78,26 @@ export class PlayersComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
   private readonly router = inject(Router);
+  protected readonly authService = inject(AuthService);
 
   players = signal<Player[]>([]);
   searchTerm = signal('');
   sort = signal<Sort>({ active: 'lastName', direction: 'asc' });
+  /** Admin-only filter: 'mine' shows only the current user's players, 'all' shows everyone. Coaches always see 'mine' (server-enforced). */
+  scope = signal<Scope>('mine');
   displayedColumns = ['firstName', 'lastName', 'ranking', 'status', 'actions'];
 
   filteredPlayers = computed(() => {
     const term = this.searchTerm().toLowerCase().trim();
     const { active, direction } = this.sort();
+    const scope = this.scope();
+    const ownId = this.authService.userId();
 
     let result = this.players().filter(p =>
-      !term ||
-      `${p.firstName} ${p.lastName}`.toLowerCase().includes(term) ||
-      (p.ranking ?? '').toString().toLowerCase().includes(term)
+      (scope === 'all' || !this.authService.isAdmin() || p.ownerId === ownId) &&
+      (!term ||
+        `${p.firstName} ${p.lastName}`.toLowerCase().includes(term) ||
+        (p.ranking ?? '').toString().toLowerCase().includes(term))
     );
 
     if (direction) {

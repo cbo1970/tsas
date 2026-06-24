@@ -8,6 +8,7 @@ Das Format orientiert sich an [Keep a Changelog 1.1.0](https://keepachangelog.co
 
 ### Added
 - Semantic Versioning + CHANGELOG eingeführt (TEN-67) — `allprojects { version = "0.1.0" }` im Backend, `0.1.0` im Frontend, ADR-14 im SAD §9.
+- Admin-UI im Frontend (TEN-65) — `AuthService` exponiert `roles`, `isAdmin`, `userId` als Signals aus dem Access-Token. Toolbar zeigt rotes `ADMIN`-Chip; Spieler-Liste hat für Admins einen Scope-Toggle „Meine / Alle Owner" (Default `Meine`, client-seitiger Filter auf `ownerId === userId`). Coaches sehen den Toggle nicht. `PlayerResponse` und `MatchResponse` enthalten neu `ownerId`. Cypress-Tests prüfen Admin-vs-Coach-Sicht; Vitest-Spec für `AuthService.roles`/`isAdmin`/`userId` ergänzt.
 
 ### Security
 - Container-Hardening nach STRIDE E5 (TEN-63): Backend-Image läuft als UID 10001 (`app`), Frontend wechselt auf `nginxinc/nginx-unprivileged:alpine` (UID 101, Container-Port 8080). `docker/compose.yml` aktiviert `read_only: true` (ausser Keycloak-Dev-Stack), `tmpfs` für `/tmp` und Service-spezifische Schreibpfade, `cap_drop: [ALL]`, `security_opt: [no-new-privileges:true]` sowie `mem_limit`/`cpus`-Limits pro Service. Healthchecks in den Dockerfiles. Frontend-Host-Port 80 mappt auf Container 8080.

@@ -20,6 +20,21 @@
     </button>
   </div>
 
+  @if (authService.isAdmin()) {
+    <div class="admin-scope" data-cy="admin-scope">
+      <mat-icon>shield</mat-icon>
+      <span>Ansicht</span>
+      <mat-button-toggle-group
+        [value]="scope()"
+        (change)="scope.set($event.value)"
+        aria-label="Sichtbarkeit der Spieler"
+        hideSingleSelectionIndicator>
+        <mat-button-toggle value="mine" data-cy="scope-mine">Meine</mat-button-toggle>
+        <mat-button-toggle value="all" data-cy="scope-all">Alle Owner</mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+  }
+
   <mat-card>
     <mat-card-content>
       <table mat-table [dataSource]="filteredPlayers()" matSort (matSortChange)="onSort($event)" class="full-width">

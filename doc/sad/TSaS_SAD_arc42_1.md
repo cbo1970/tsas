@@ -367,6 +367,12 @@ services:
 
 Alle API-Endpunkte (ausser Health-Check) werden durch OAuth2 Bearer Tokens geschützt. Das Frontend nutzt den Authorization Code Flow mit PKCE. Keycloak verwaltet Benutzer, Rollen und Sessions. In Version 1 erfolgt die Registrierung direkt in Keycloak, ab Version 2 zusätzlich über Google als federated Identity Provider.
 
+**RBAC im Frontend (TEN-65).** Das Backend setzt seit TEN-55 die Realm-Rollen `COACH` und `ADMIN` durch und reicht den JWT-`sub` als `owner_id` in die Persistenz. Der `AuthService` im Frontend (`frontend/src/app/core/auth/auth.service.ts`) parst das Access-Token und exponiert `roles`, `isAdmin` und `userId` als `computed` Signals. Davon abgeleitet:
+
+- Die Toolbar zeigt ein rotes `ADMIN`-Chip, sobald der eingeloggte Nutzer die Rolle hat — sichtbarer Hinweis auf die globale Sicht.
+- Die Spieler-Liste enthält für Admins einen Scope-Toggle „Meine / Alle Owner" (`mat-button-toggle-group`, Default `Meine`). Coaches sehen den Toggle nicht; sie bekommen vom Backend ohnehin nur ihre eigenen Daten. Admins filtern serverseitig nicht (Backend liefert ihnen alles), sondern client-seitig auf `ownerId === currentUser.userId`. Für die Filter-Logik enthalten `PlayerResponse` und `MatchResponse` jetzt das Feld `ownerId`.
+- Rollen-Verwaltung selbst bleibt in der Keycloak-Admin-Konsole (`https://localhost:8443/admin`); eine dedizierte UI im Frontend ist Out-of-Scope für V1.
+
 ### 8.2 Persistenz
 
 Die Datenpersistenz erfolgt über Spring Data JPA / Hibernate mit PostgreSQL. Jedes fachliche Modul besitzt eigene Repository-Interfaces. Das Datenbankschema wird via Flyway-Migrationen verwaltet.

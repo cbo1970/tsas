@@ -5,18 +5,18 @@ import { provideRouter } from '@angular/router';
 import { Player } from '../../../core/models/player.model';
 
 const FREE: Player = {
-  id: '1', firstName: 'Roger', lastName: 'Federer',
+  id: '1', ownerId: 'owner-1', firstName: 'Roger', lastName: 'Federer',
   gender: 'MALE', handedness: 'RIGHT', backhandType: 'ONE_HANDED',
 };
 
 const BUSY: Player = {
-  id: '2', firstName: 'Rafael', lastName: 'Nadal',
+  id: '2', ownerId: 'owner-1', firstName: 'Rafael', lastName: 'Nadal',
   gender: 'MALE', handedness: 'LEFT', backhandType: 'TWO_HANDED',
   activeMatchId: 'match-99',
 };
 
 const FREE2: Player = {
-  id: '3', firstName: 'Anna', lastName: 'Muster',
+  id: '3', ownerId: 'owner-1', firstName: 'Anna', lastName: 'Muster',
   gender: 'FEMALE', handedness: 'RIGHT', backhandType: 'TWO_HANDED',
 };
 

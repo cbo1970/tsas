@@ -7,8 +7,8 @@ import { Player } from '../../../core/models/player.model';
 import { HeadToHeadStatistics } from '../../../core/models/statistics.model';
 
 const PLAYERS: Player[] = [
-  { id: 'a', firstName: 'Roger', lastName: 'Federer', gender: 'MALE', handedness: 'RIGHT', backhandType: 'ONE_HANDED', active: true },
-  { id: 'b', firstName: 'Rafael', lastName: 'Nadal', gender: 'MALE', handedness: 'LEFT', backhandType: 'TWO_HANDED', active: true },
+  { id: 'a', ownerId: 'owner-1', firstName: 'Roger', lastName: 'Federer', gender: 'MALE', handedness: 'RIGHT', backhandType: 'ONE_HANDED', active: true },
+  { id: 'b', ownerId: 'owner-1', firstName: 'Rafael', lastName: 'Nadal', gender: 'MALE', handedness: 'LEFT', backhandType: 'TWO_HANDED', active: true },
 ];
 
 const STATS: HeadToHeadStatistics = {

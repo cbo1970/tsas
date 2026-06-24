@@ -8,6 +8,12 @@
   <a mat-button routerLink="/matches/new" routerLinkActive="active-link">
     <mat-icon>add_circle</mat-icon> Neues Match
   </a>
+  @if (authService.isAdmin()) {
+    <mat-chip class="admin-badge" data-cy="admin-badge" highlighted>
+      <mat-icon matChipAvatar>shield</mat-icon>
+      ADMIN
+    </mat-chip>
+  }
   @if (userName()) {
     <span class="user-name">{{ userName() }}</span>
     <button mat-button (click)="logout()">
