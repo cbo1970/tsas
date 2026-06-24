@@ -2,7 +2,9 @@ package com.cas.tsas.ai.infrastructure.llm;
 
 import com.cas.tsas.ai.application.dto.MatchAnalysisResult;
 import com.cas.tsas.ai.application.dto.MatchMetadata;
+import com.cas.tsas.ai.application.dto.OpponentPreparationResult;
 import com.cas.tsas.ai.application.port.out.LlmClientPort;
+import com.cas.tsas.statistics.domain.model.HeadToHeadStatistics;
 import com.cas.tsas.statistics.domain.model.MatchStatistics;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,6 +40,15 @@ public class OpenAiLlmAdapter implements LlmClientPort {
                 .user(promptBuilder.userPrompt(stats, meta))
                 .call()
                 .entity(MatchAnalysisResult.class);
+    }
+
+    @Override
+    public OpponentPreparationResult generateOpponentPreparation(HeadToHeadStatistics h2h, MatchMetadata meta) {
+        return chatClient.prompt()
+                .system(promptBuilder.opponentPreparationSystemPrompt())
+                .user(promptBuilder.opponentPreparationUserPrompt(h2h, meta))
+                .call()
+                .entity(OpponentPreparationResult.class);
     }
 
     @Override

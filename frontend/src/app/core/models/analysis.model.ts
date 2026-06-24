@@ -19,3 +19,17 @@ export interface MatchAnalysis {
   generatedAt: string;
   errorMessage: string | null;
 }
+
+/** TEN-51 — KI-Vorbereitung gegen einen Gegner (Head-to-Head-basiert). */
+export interface OpponentPreparation {
+  ownPlayerId: string;
+  opponentId: string;
+  matchesPlayed: number;
+  opponentProfile: string;
+  tacticalObservations: string;
+  serveStrategy: string;
+  returnStrategy: string;
+  recommendations: AnalysisRecommendation[];
+  modelUsed: string;
+  generatedAt: string;
+}

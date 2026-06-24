@@ -91,6 +91,53 @@
       <div class="stat-label">Unforced Errors</div>
       <span class="val val-right">{{ s.player2.unforcedErrors }} ({{ pct(s.player2.unforcedErrorPercentage) }})</span>
     </div>
+
+    <!-- TEN-51 — KI-Vorbereitung -->
+    <div class="prep-actions">
+      <button mat-flat-button color="primary"
+              data-testid="btn-opp-prep"
+              [disabled]="preparing() || s.matchesPlayed < 1"
+              (click)="requestPreparation()">
+        @if (preparing()) {
+          <mat-progress-spinner mode="indeterminate" diameter="16" style="display:inline-block;vertical-align:middle;margin-right:8px;"></mat-progress-spinner>
+          KI denkt nach …
+        } @else {
+          KI-Vorbereitung gegen {{ playerName(player2Id()) }} anfordern
+        }
+      </button>
+    </div>
+
+    @if (prepError(); as msg) {
+      <div class="prep-error" data-testid="prep-error">{{ msg }}</div>
+    }
+
+    @if (preparation(); as prep) {
+      <div class="prep-card" data-testid="prep-card">
+        <h3>Profil {{ playerName(player2Id()) }}</h3>
+        <p>{{ prep.opponentProfile }}</p>
+
+        <h3>Beobachtungen aus dem Head-to-Head</h3>
+        <p>{{ prep.tacticalObservations }}</p>
+
+        <h3>Aufschlag-Strategie</h3>
+        <p>{{ prep.serveStrategy }}</p>
+
+        <h3>Return-Strategie</h3>
+        <p>{{ prep.returnStrategy }}</p>
+
+        <h3>Empfehlungen</h3>
+        <ul class="recos">
+          @for (r of prep.recommendations; track r.title) {
+            <li>
+              <div class="reco-title">{{ r.priority }}. {{ r.title }}</div>
+              <div class="reco-detail">{{ r.detail }}</div>
+            </li>
+          }
+        </ul>
+
+        <div class="prep-meta">Modell: {{ prep.modelUsed }} • Basis: {{ prep.matchesPlayed }} gemeinsame Matches</div>
+      </div>
+    }
   } @else {
     <div class="empty-hint" data-testid="empty-hint">Bitte zwei verschiedene Spieler auswählen.</div>
   }

@@ -18,6 +18,9 @@ class AiWebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(rateLimitInterceptor)
-                .addPathPatterns("/api/matches/*/analysis");
+                .addPathPatterns(
+                        "/api/matches/*/analysis",            // FA-11 — Postmortem (TEN-15)
+                        "/api/players/*/opponent-preparation/*" // FA-20 — KI-Vorbereitung (TEN-51)
+                );
     }
 }
