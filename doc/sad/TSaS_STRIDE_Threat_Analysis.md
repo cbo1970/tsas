@@ -58,8 +58,8 @@
 | I2 | **Geburtsdatum / Nationalität / Ranking** im `PlayerResponse`, kein Filter pro Abrufer (DSGVO). | Hoch | `PlayerController.java:62-78` |
 | I3 | ~~**`OPENAI_API_KEY` als Klartext-Env-Var**, kein Secret-Manager, kein Rotation-Konzept.~~ **PARTIAL (TEN-58)** im Prod-Overlay: `OPENAI_API_KEY` ist required ohne Default, wird über `.env`-Datei (mode 600) versorgt. Volle Secret-Manager-Integration (Vault / AWS Secrets / Docker Secrets via File-Mount + Spring `EnvironmentPostProcessor`) bleibt Folge-Ticket; Rotation aktuell manuell. | teilweise erledigt | `docker/compose.prod.yml`, `docker/.env.prod.example` |
 | I4 | **JWK-Fetch über HTTP** (`http://keycloak:8080/...`) — innerhalb Docker-Bridge vertretbar, aber HTTP als Default zementiert. | Mittel | `docker/compose.yml:50` |
-| I5 | **Keine globale `@ControllerAdvice`** für sanitisierte Fehler-Responses (Stack-Trace-Leak-Risiko). | Niedrig–Mittel | Default Spring |
-| I6 | `server.error.include-message/stacktrace` nicht explizit gesetzt. | Niedrig | `application*.yml` |
+| I5 | ~~**Keine globale `@ControllerAdvice`** für sanitisierte Fehler-Responses (Stack-Trace-Leak-Risiko).~~ **MITIGATED (TEN-61)** — `CommonExceptionHandler` (extends `ResponseEntityExceptionHandler`) fängt `ResponseStatusException`/`DataIntegrityViolationException`/`AccessDeniedException` + Catch-all `RuntimeException`/`Error`; alle Antworten als RFC 7807 ProblemDetail, generische Detail-Zeilen ohne SQL/Klassennamen. 7 Unit-Tests asserten konkret keine Leaks. | erledigt | `common-module/.../web/CommonExceptionHandler.java` |
+| I6 | ~~`server.error.include-message/stacktrace` nicht explizit gesetzt.~~ **MITIGATED (TEN-61)** — `application.yml`: `server.error.include-message=never`, `include-stacktrace=never`, `include-binding-errors=never`, `include-exception=false`. Sicherheitsnetz, falls Springs Whitelabel-Fallback je greift. | erledigt | `backend/app/src/main/resources/application.yml` |
 
 ### 2.5 D — Denial of Service
 
