@@ -1,0 +1,105 @@
+# Production overlay for compose.yml (TEN-58 / STRIDE T1, S3, S4, I3, D6).
+#
+# Usage:
+#   podman compose -f docker/compose.yml -f docker/compose.prod.yml up -d
+#
+# Required env vars (no defaults — `${VAR:?…}` fails the command if unset):
+#   DB_NAME, DB_USERNAME, DB_PASSWORD       — strong generated credentials
+#   KC_ADMIN_USERNAME, KC_ADMIN_PASSWORD    — Keycloak bootstrap admin
+#   KC_DB_NAME, KC_DB_USERNAME, KC_DB_PASSWORD  — Keycloak's own DB on the same postgres
+#   KC_HOSTNAME                              — public FQDN (e.g. tsas.example.com)
+#   KEYCLOAK_ISSUER_URI                     — https://${KC_HOSTNAME}/realms/tsas
+#   OPENAI_API_KEY                          — required for the AI postmortem (TEN-15)
+#   TLS_CERT_DIR                            — host path containing tls.crt + tls.key
+#
+# Required infrastructure NOT covered here:
+#   • A valid TLS certificate at ${TLS_CERT_DIR}/tls.{crt,key} (Let's Encrypt, ACME, Vault…).
+#   • A real SMTP provider for Keycloak (override KC_SMTP_HOST/AUTH/USER/PASSWORD).
+
+services:
+
+  db:
+    # No host-port mapping — Postgres only reachable via the internal compose network.
+    environment:
+      POSTGRES_DB:       ${DB_NAME:?DB_NAME required in prod}
+      POSTGRES_USER:     ${DB_USERNAME:?DB_USERNAME required in prod}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD required in prod}
+      # Consumed by the init script in db/init/ to bootstrap Keycloak's own DB.
+      KC_DB_NAME:     ${KC_DB_NAME:?KC_DB_NAME required in prod}
+      KC_DB_USERNAME: ${KC_DB_USERNAME:?KC_DB_USERNAME required in prod}
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD:?KC_DB_PASSWORD required in prod}
+    volumes:
+      # initdb.d scripts run once on a fresh data volume; idempotent on subsequent boots.
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    ports: !reset []
+
+  keycloak:
+    # Production mode: persistent backend, hostname validation, health endpoint.
+    command: >
+      start
+      --import-realm
+      --health-enabled=true
+      --hostname=${KC_HOSTNAME:?KC_HOSTNAME required in prod}
+      --proxy-headers=xforwarded
+      --http-enabled=true
+      --http-port=8080
+      --db=postgres
+      --db-url-host=db
+      --db-url-database=${KC_DB_NAME}
+      --db-username=${KC_DB_USERNAME}
+      --db-password=${KC_DB_PASSWORD}
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_ADMIN_USERNAME:?KC_ADMIN_USERNAME required in prod}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:?KC_ADMIN_PASSWORD required in prod}
+      KC_SMTP_HOST:         ${KC_SMTP_HOST:?KC_SMTP_HOST required in prod}
+      KC_SMTP_PORT:         ${KC_SMTP_PORT:?KC_SMTP_PORT required in prod}
+      KC_SMTP_FROM:         ${KC_SMTP_FROM:?KC_SMTP_FROM required in prod}
+      KC_SMTP_FROM_NAME:    ${KC_SMTP_FROM_NAME:-TSaS}
+      KC_SMTP_REPLY_TO:     ${KC_SMTP_REPLY_TO:-${KC_SMTP_FROM}}
+      KC_SMTP_ENVELOPE_FROM: ${KC_SMTP_ENVELOPE_FROM:-${KC_SMTP_FROM}}
+      KC_SMTP_STARTTLS:     ${KC_SMTP_STARTTLS:?KC_SMTP_STARTTLS required in prod}
+      KC_SMTP_SSL:          ${KC_SMTP_SSL:-false}
+      KC_SMTP_AUTH:         ${KC_SMTP_AUTH:?KC_SMTP_AUTH required in prod}
+      KC_SMTP_USER:         ${KC_SMTP_USER:?KC_SMTP_USER required in prod}
+      KC_SMTP_PASSWORD:     ${KC_SMTP_PASSWORD:?KC_SMTP_PASSWORD required in prod}
+      # Drop the legacy deprecation warnings — we use KC_BOOTSTRAP_ADMIN_*.
+      KEYCLOAK_ADMIN: ""
+      KEYCLOAK_ADMIN_PASSWORD: ""
+    # No more H2 — Keycloak persists to the postgres "keycloak" DB. Drop the dev-only
+    # volume mappings (H2 store, dev cert directory).
+    volumes: !override
+      - ./keycloak:/opt/keycloak/data/import:ro
+    ports: !reset []
+    expose:
+      - "8080"
+      - "9000"
+    depends_on:
+      db: { condition: service_healthy }
+
+  # No mailhog in prod — Keycloak talks to a real SMTP via KC_SMTP_*.
+  mailhog: !reset null
+
+  backend:
+    environment:
+      DB_URL:                jdbc:postgresql://db:5432/${DB_NAME}
+      DB_USERNAME:           ${DB_USERNAME}
+      DB_PASSWORD:           ${DB_PASSWORD}
+      KEYCLOAK_ISSUER_URI:   ${KEYCLOAK_ISSUER_URI:?KEYCLOAK_ISSUER_URI required in prod}
+      KEYCLOAK_JWK_SET_URI:  ${KEYCLOAK_JWK_SET_URI:-http://keycloak:8080/realms/tsas/protocol/openid-connect/certs}
+      OPENAI_API_KEY:        ${OPENAI_API_KEY:?OPENAI_API_KEY required in prod}
+      SPRING_PROFILES_ACTIVE: prod
+    # No host-port mapping — backend only reachable through the nginx reverse proxy.
+    ports: !reset []
+    expose:
+      - "8080"
+
+  frontend:
+    # Override the bundled dev nginx.conf with the TLS-terminating prod config.
+    # The conf file and the certificate directory are bind-mounted, so the same
+    # frontend image works in dev and prod.
+    volumes:
+      - ./frontend/nginx.prod.conf:/etc/nginx/conf.d/default.conf:ro
+      - ${TLS_CERT_DIR:?TLS_CERT_DIR required in prod (path containing tls.crt + tls.key)}:/etc/nginx/certs:ro
+    ports: !override
+      - "443:8443"
+      - "80:8080"

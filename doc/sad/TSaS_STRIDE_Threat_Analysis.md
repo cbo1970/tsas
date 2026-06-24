@@ -28,15 +28,15 @@
 |---|---|---|---|
 | S1 | ~~**Keine `aud`-Prüfung im JwtDecoder.** Nur `issuer` wird validiert.~~ **MITIGATED (TEN-56)** — `JwtClaimValidator("aud", a -> a != null && a.contains("tsas-frontend"))` ist via `DelegatingOAuth2TokenValidator` zusätzlich registriert; Erwartungs-Audience konfigurierbar über `tsas.security.expected-audience`. Keycloak-Realm hat den passenden `oidc-audience-mapper` auf dem `tsas-frontend`-Client. | erledigt | `auth-module/.../SecurityConfig.java`, `docker/keycloak/realm-export.json` |
 | S2 | **Self-Registration offen** (`registrationAllowed: true`), keine E-Mail-Verifizierung, kein Admin-Approval. | Hoch | `docker/keycloak/realm-export.json:3` |
-| S3 | **Keycloak-Admin `admin/admin`** als Default (`${KC_ADMIN_PASSWORD:-admin}`). | Kritisch (sobald exponiert) | `docker/compose.yml:26` |
-| S4 | **Postgres-Default-Creds `tsas/tsas/tsas`** hart kodiert; Port 5432 auf Host exponiert. | Hoch | `docker/db/compose.yaml:6-10` |
+| S3 | ~~**Keycloak-Admin `admin/admin`** als Default.~~ **MITIGATED (TEN-58)** im Prod-Overlay: `KC_BOOTSTRAP_ADMIN_USERNAME`/`KC_BOOTSTRAP_ADMIN_PASSWORD` sind `${VAR:?…}`-required, kein Default. Dev behält `admin/admin` für lokales Debugging. | erledigt (Prod-Overlay) | `docker/compose.prod.yml` |
+| S4 | ~~**Postgres-Default-Creds `tsas/tsas/tsas`** hart kodiert; Port 5432 auf Host exponiert.~~ **MITIGATED (TEN-58)** im Prod-Overlay: `DB_USERNAME`/`DB_PASSWORD` required (`${VAR:?…}`); kein Host-Port; Postgres nur im Compose-Netz. Dev behält Defaults; `docker/db/compose.yaml` exponiert 5432 weiterhin für lokalen `bootRun` (kein Prod-Pfad). | erledigt (Prod-Overlay) | `docker/compose.prod.yml`, `docker/db/init/` |
 | S5 | **Keine User-Bindung der Domänenobjekte.** `Player`/`Match`/`Point` haben keinen `owner`/`userId`. | Hoch | `PlayerController`, `MatchController` |
 
 ### 2.2 T — Tampering
 
 | # | Befund | Risiko | Quelle |
 |---|---|---|---|
-| T1 | **Keine TLS-Terminierung im Container-Deployment.** nginx auf `:80`, Backend auf `:8080` (HTTP). | Hoch (Prod) | `docker/frontend/nginx.conf:2`, `compose.yml:51-52` |
+| T1 | ~~**Keine TLS-Terminierung im Container-Deployment.** nginx auf `:80`, Backend auf `:8080` (HTTP).~~ **MITIGATED (TEN-58)** im Prod-Overlay: `docker/frontend/nginx.prod.conf` terminiert TLS auf Container-Port 8443 (Host 443) mit Mozilla-„intermediate"-Cipher-Profile + HSTS; Container-Port 8080 liefert nur HTTP-301-Redirects. Cert-Mount via `${TLS_CERT_DIR}`. | erledigt (Prod-Overlay) | `docker/compose.prod.yml`, `docker/frontend/nginx.prod.conf` |
 | T2 | **`PUT /api/matches/{id}/score`** lässt beliebige Score-Felder überschreiben, kein Owner-Check. | Hoch | `MatchController.java:120-138` |
 | T3 | **`POST /api/matches/{id}/end/walkover`** beendet Match beliebig, kein Owner-Check. | Mittel | `MatchController.java:146-150` |
 | T4 | **Postgres-Daten unverschlüsselt** im Bind-Mount `../volume/postgres`. | Mittel | `docker/db/compose.yaml:12` |
@@ -56,7 +56,7 @@
 |---|---|---|---|
 | I1 | **Vollständige Datenfreigabe quer über Nutzer.** `GET /api/players`, `GET /api/matches` liefern alle Daten an jeden Authentifizierten. | Kritisch | `PlayerController.java:69-78`, `MatchController.java:72-75` |
 | I2 | **Geburtsdatum / Nationalität / Ranking** im `PlayerResponse`, kein Filter pro Abrufer (DSGVO). | Hoch | `PlayerController.java:62-78` |
-| I3 | **`OPENAI_API_KEY` als Klartext-Env-Var**, kein Secret-Manager, kein Rotation-Konzept. | Mittel | `application.yml:30-33` |
+| I3 | ~~**`OPENAI_API_KEY` als Klartext-Env-Var**, kein Secret-Manager, kein Rotation-Konzept.~~ **PARTIAL (TEN-58)** im Prod-Overlay: `OPENAI_API_KEY` ist required ohne Default, wird über `.env`-Datei (mode 600) versorgt. Volle Secret-Manager-Integration (Vault / AWS Secrets / Docker Secrets via File-Mount + Spring `EnvironmentPostProcessor`) bleibt Folge-Ticket; Rotation aktuell manuell. | teilweise erledigt | `docker/compose.prod.yml`, `docker/.env.prod.example` |
 | I4 | **JWK-Fetch über HTTP** (`http://keycloak:8080/...`) — innerhalb Docker-Bridge vertretbar, aber HTTP als Default zementiert. | Mittel | `docker/compose.yml:50` |
 | I5 | **Keine globale `@ControllerAdvice`** für sanitisierte Fehler-Responses (Stack-Trace-Leak-Risiko). | Niedrig–Mittel | Default Spring |
 | I6 | `server.error.include-message/stacktrace` nicht explizit gesetzt. | Niedrig | `application*.yml` |
@@ -70,7 +70,7 @@
 | D3 | **Kein Request-Size-Limit**; `RecordPointRequest.remark` (Freitext) ungebremst. | Mittel | `RecordPointRequest` |
 | D4 | `POST /api/players` ohne Throttle / Duplicate-Check (DB-Bloat). | Mittel | `PlayerController.java:45-60` |
 | D5 | Container ohne `mem_limit`/`cpus`-Begrenzung. | Niedrig | beide compose-Files |
-| D6 | **Keycloak `start-dev`** mit H2-Volume — nicht produktionstauglich. | Hoch (Prod) | `docker/compose.yml:19` |
+| D6 | ~~**Keycloak `start-dev`** mit H2-Volume — nicht produktionstauglich.~~ **MITIGATED (TEN-58)** im Prod-Overlay: `start --db=postgres --db-url-host=db --db-url-database=${KC_DB_NAME}` mit eigener Keycloak-DB (Bootstrap via `docker/db/init/01-create-keycloak-db.sh`); `--hostname=${KC_HOSTNAME}` + `--proxy-headers=xforwarded` für TLS-Termination am Frontend. | erledigt (Prod-Overlay) | `docker/compose.prod.yml`, `docker/db/init/` |
 
 ### 2.6 E — Elevation of Privilege
 
