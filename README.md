@@ -152,6 +152,7 @@ podman compose -f docker/compose.yml up -d
 | Backend | `http://localhost:8080` |
 | Keycloak | `https://localhost:8443` (Admin: `https://localhost:8443/admin`) |
 | Keycloak HTTP (intern) | `http://localhost:18080` |
+| Mailhog (Dev-SMTP + UI) | `http://localhost:8025` |
 | PostgreSQL | nur im Docker-Netzwerk erreichbar (kein Host-Port) |
 
 Zum Stoppen:
@@ -170,3 +171,26 @@ DB_USERNAME=tsas
 DB_PASSWORD=geheimesPasswort
 KC_ADMIN_PASSWORD=adminPasswort
 ```
+
+#### Keycloak SMTP (E-Mail-Verifizierung — TEN-64)
+
+Der Keycloak-Realm hat `verifyEmail: true` und ist standardmäßig gegen den lokalen **Mailhog**-Container konfiguriert (UI auf `http://localhost:8025`). Für Prod-Deployments lassen sich die SMTP-Felder über folgende `.env`-Variablen überschreiben — die Platzhalter `${KC_SMTP_*:default}` im `realm-export.json` werden beim Realm-Import durch Keycloak ersetzt:
+
+```env
+# Beispiel: Sendgrid
+KC_SMTP_HOST=smtp.sendgrid.net
+KC_SMTP_PORT=587
+KC_SMTP_FROM=no-reply@tsas.app
+KC_SMTP_FROM_NAME=TSaS
+KC_SMTP_REPLY_TO=no-reply@tsas.app
+KC_SMTP_ENVELOPE_FROM=no-reply@tsas.app
+KC_SMTP_STARTTLS=true
+KC_SMTP_SSL=false
+KC_SMTP_AUTH=true
+KC_SMTP_USER=apikey
+KC_SMTP_PASSWORD=SG.xxxxxxxxxxxxxxxxxx
+```
+
+Ohne diese Variablen läuft der Stack mit Mailhog-Defaults — keine externe SMTP-Verbindung, alle Mails landen im Browser unter `http://localhost:8025`.
+
+> **Wichtig:** Der Realm-Import erfolgt nur, wenn das Keycloak-`keycloak_data`-Volume frisch ist (`IGNORE_EXISTING`-Strategie). Änderungen an den SMTP-Variablen greifen erst nach `podman compose down && podman volume rm docker_keycloak_data && podman compose up -d` oder per Admin-API-PATCH zur Laufzeit.
