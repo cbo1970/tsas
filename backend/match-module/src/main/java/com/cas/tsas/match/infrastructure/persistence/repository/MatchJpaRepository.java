@@ -28,4 +28,7 @@ public interface MatchJpaRepository extends JpaRepository<MatchJpaEntity, UUID> 
     @Query("SELECT m FROM MatchJpaEntity m WHERE (m.player1Id = :playerA AND m.player2Id = :playerB) "
             + "OR (m.player1Id = :playerB AND m.player2Id = :playerA)")
     List<MatchJpaEntity> findMatchesBetween(@Param("playerA") UUID playerA, @Param("playerB") UUID playerB);
+
+    /** Bulk-delete used by the DSGVO Art. 17 endpoint (TEN-66). Caller deletes child rows first. */
+    long deleteAllByOwnerId(UUID ownerId);
 }

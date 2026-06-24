@@ -100,4 +100,21 @@ export class ApiService {
   generateMatchAnalysis(matchId: string): Observable<MatchAnalysis> {
     return this.http.post<MatchAnalysis>(`${this.base}/matches/${matchId}/analysis`, {});
   }
+
+  // DSGVO (TEN-66) — Art. 17 + Art. 20
+  exportMyData(): Observable<unknown> {
+    return this.http.get<unknown>(`${this.base}/dataexport/export`);
+  }
+
+  deleteMyData(): Observable<DeletionSummary> {
+    return this.http.delete<DeletionSummary>(`${this.base}/dataexport`);
+  }
+}
+
+export interface DeletionSummary {
+  userId: string;
+  players: number;
+  matches: number;
+  points: number;
+  scores: number;
 }
