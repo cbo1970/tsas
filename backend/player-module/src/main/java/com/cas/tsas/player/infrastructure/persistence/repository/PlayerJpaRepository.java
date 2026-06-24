@@ -12,4 +12,7 @@ public interface PlayerJpaRepository extends JpaRepository<PlayerJpaEntity, UUID
     Optional<PlayerJpaEntity> findByIdAndOwnerId(UUID id, UUID ownerId);
 
     List<PlayerJpaEntity> findAllByOwnerId(UUID ownerId);
+
+    /** Bulk-delete used by the DSGVO Art. 17 endpoint (TEN-66). Caller is responsible for FK order. */
+    long deleteAllByOwnerId(UUID ownerId);
 }

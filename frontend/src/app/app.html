@@ -16,9 +16,24 @@
   }
   @if (userName()) {
     <span class="user-name">{{ userName() }}</span>
-    <button mat-button (click)="logout()">
-      <mat-icon>logout</mat-icon>
+    <button mat-icon-button [matMenuTriggerFor]="userMenu" data-cy="user-menu-trigger" aria-label="Benutzermenü">
+      <mat-icon>account_circle</mat-icon>
     </button>
+    <mat-menu #userMenu="matMenu">
+      <button mat-menu-item data-cy="export-my-data" (click)="exportMyData()">
+        <mat-icon>file_download</mat-icon>
+        <span>Daten exportieren</span>
+      </button>
+      <button mat-menu-item class="danger-item" data-cy="delete-my-data" (click)="deleteMyData()">
+        <mat-icon>delete_forever</mat-icon>
+        <span>Konto-Daten löschen</span>
+      </button>
+      <mat-divider />
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Abmelden</span>
+      </button>
+    </mat-menu>
   }
 </mat-toolbar>
 <main>
