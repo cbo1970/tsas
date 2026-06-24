@@ -7,8 +7,10 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AuthService } from './core/auth/auth.service';
 import { ApiService } from './core/services/api.service';
+import { LanguageService } from './core/i18n/language.service';
 
 @Component({
   selector: 'app-root',
@@ -16,7 +18,7 @@ import { ApiService } from './core/services/api.service';
   imports: [
     RouterOutlet, RouterLink, RouterLinkActive,
     MatToolbarModule, MatButtonModule, MatIconModule, MatChipsModule,
-    MatMenuModule, MatDividerModule, MatSnackBarModule,
+    MatMenuModule, MatDividerModule, MatSnackBarModule, TranslatePipe,
   ],
   templateUrl: './app.html',
   styles: [`
@@ -38,14 +40,31 @@ import { ApiService } from './core/services/api.service';
     }
     .danger-item { color: #c62828; }
     .danger-item mat-icon { color: #c62828; }
+    .flag { display: inline-block; margin-right: 6px; font-size: 18px; line-height: 1; }
   `]
 })
 export class App implements OnInit {
   protected readonly authService = inject(AuthService);
+  protected readonly language = inject(LanguageService);
   private readonly api = inject(ApiService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly translate = inject(TranslateService);
 
   protected userName = signal('');
+  protected readonly languages: ReadonlyArray<{ code: 'de'|'en'|'it'|'fr', label: string, flag: string }> = [
+    { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
+    { code: 'en', label: 'English', flag: '🇬🇧' },
+    { code: 'it', label: 'Italiano', flag: '🇮🇹' },
+    { code: 'fr', label: 'Français', flag: '🇫🇷' },
+  ];
+
+  protected currentFlag() {
+    return this.languages.find(l => l.code === this.language.current())?.flag ?? '🇩🇪';
+  }
+
+  protected switchLanguage(code: 'de'|'en'|'it'|'fr') {
+    this.language.setLanguage(code);
+  }
 
   ngOnInit() {
     this.authService.initialize().then(() => {
@@ -68,29 +87,23 @@ export class App implements OnInit {
         a.download = `tsas-export-${new Date().toISOString().slice(0, 10)}.json`;
         a.click();
         URL.revokeObjectURL(url);
-        this.snackBar.open('Datenexport heruntergeladen', 'OK', { duration: 3000 });
+        this.snackBar.open(this.translate.instant('app.toast.exportDone'), 'OK', { duration: 3000 });
       },
-      error: () => this.snackBar.open('Datenexport fehlgeschlagen', 'OK', { duration: 5000 }),
+      error: () => this.snackBar.open(this.translate.instant('app.toast.exportFailed'), 'OK', { duration: 5000 }),
     });
   }
 
   /** DSGVO Art. 17: löscht alle eigenen Aggregate nach Bestätigung (TEN-66). */
   protected deleteMyData() {
-    const confirmed = window.confirm(
-      'Achtung: Alle deine Daten (Spieler, Matches, Punkte, KI-Analysen) werden unwiderruflich gelöscht.\n\n' +
-      'Dein Keycloak-Konto bleibt bestehen — bei erneutem Login startest du mit einer leeren Datenbasis.\n\n' +
-      'Fortfahren?'
-    );
+    const confirmed = window.confirm(this.translate.instant('app.confirm.deleteData'));
     if (!confirmed) return;
     this.api.deleteMyData().subscribe({
-      next: (summary) => {
-        this.snackBar.open(
-          `Gelöscht: ${summary.players} Spieler, ${summary.matches} Matches, ${summary.points} Punkte`,
-          'OK', { duration: 6000 });
+      next: () => {
+        this.snackBar.open(this.translate.instant('app.toast.deleteDone'), 'OK', { duration: 6000 });
         // Hard reload — UI signals (Cache, Liste) sind sonst noch mit gelöschten Daten gefüllt.
         setTimeout(() => window.location.href = '/', 1500);
       },
-      error: () => this.snackBar.open('Löschung fehlgeschlagen', 'OK', { duration: 5000 }),
+      error: () => this.snackBar.open(this.translate.instant('app.toast.deleteFailed'), 'OK', { duration: 5000 }),
     });
   }
 }

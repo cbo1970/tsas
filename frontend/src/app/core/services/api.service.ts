@@ -115,6 +115,19 @@ export class ApiService {
   deleteMyData(): Observable<DeletionSummary> {
     return this.http.delete<DeletionSummary>(`${this.base}/dataexport`);
   }
+
+  // TEN-6 — User-Preferences (Sprache)
+  getUserPreference(): Observable<UserPreference> {
+    return this.http.get<UserPreference>(`${this.base}/user-preferences`);
+  }
+
+  updateUserPreference(language: string): Observable<UserPreference> {
+    return this.http.put<UserPreference>(`${this.base}/user-preferences`, { language });
+  }
+}
+
+export interface UserPreference {
+  language: string;
 }
 
 export interface DeletionSummary {

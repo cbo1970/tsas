@@ -19,7 +19,7 @@ public class FakeLlmClientAdapter implements LlmClientPort {
     public static final String MODEL_NAME = "fake-llm";
 
     @Override
-    public MatchAnalysisResult generateAnalysis(MatchStatistics stats, MatchMetadata meta) {
+    public MatchAnalysisResult generateAnalysis(MatchStatistics stats, MatchMetadata meta, String language) {
         return new MatchAnalysisResult(
                 "Schlüsselmomente (Fake): " + stats.totalPoints() + " Punkte gespielt",
                 "Stärken eigen (Fake)",
@@ -34,7 +34,7 @@ public class FakeLlmClientAdapter implements LlmClientPort {
     }
 
     @Override
-    public OpponentPreparationResult generateOpponentPreparation(HeadToHeadStatistics h2h, MatchMetadata meta) {
+    public OpponentPreparationResult generateOpponentPreparation(HeadToHeadStatistics h2h, MatchMetadata meta, String language) {
         String opponentName = meta.player2().fullName();
         return new OpponentPreparationResult(
                 "Profil " + opponentName + " (Fake): " + h2h.matchesPlayed() + " gemeinsame Matches.",

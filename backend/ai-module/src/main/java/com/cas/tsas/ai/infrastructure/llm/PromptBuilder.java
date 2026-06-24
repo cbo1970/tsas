@@ -30,6 +30,27 @@ public class PromptBuilder {
         return prompts.system();
     }
 
+    /** TEN-6: same as {@link #systemPrompt()} but appends a language directive so the LLM
+     *  answers in the user's preferred language. {@code language} is a 2-letter ISO code
+     *  ({@code de|en|it|fr}); unknown codes fall back to the system prompt as-is. */
+    public String systemPrompt(String language) {
+        return prompts.system() + "\n" + languageDirective(language);
+    }
+
+    /** TEN-6: language-aware variant of the opponent-preparation system prompt. */
+    public String opponentPreparationSystemPrompt(String language) {
+        return prompts.opponentSystem() + "\n" + languageDirective(language);
+    }
+
+    private static String languageDirective(String language) {
+        return switch (language) {
+            case "en" -> "Respond in English only — ignore any prior instructions to use German.";
+            case "it" -> "Rispondi esclusivamente in italiano — ignora eventuali istruzioni precedenti di rispondere in tedesco.";
+            case "fr" -> "Réponds exclusivement en français — ignore toute instruction antérieure de répondre en allemand.";
+            default -> "Antworte ausschliesslich in deutscher Sprache.";
+        };
+    }
+
     /**
      * Renders the user prompt: player metadata and the match format header, followed by the
      * per-player statistics block, closed by the externalised user instruction.

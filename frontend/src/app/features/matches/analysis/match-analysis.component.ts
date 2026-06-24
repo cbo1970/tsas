@@ -4,13 +4,14 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../../core/services/api.service';
 import { MatchAnalysis } from '../../../core/models/analysis.model';
 
 @Component({
   selector: 'app-match-analysis',
   standalone: true,
-  imports: [MatButtonModule, MatProgressSpinnerModule, DatePipe],
+  imports: [MatButtonModule, MatProgressSpinnerModule, DatePipe, TranslatePipe],
   templateUrl: './match-analysis.component.html',
   styles: [`
     :host { display: block; min-height: 100dvh; background: #0f172a; color: #eee; font-family: sans-serif; }

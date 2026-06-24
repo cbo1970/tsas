@@ -1,9 +1,9 @@
 <div class="page-container">
   <div class="page-header">
-    <h1>Spieler</h1>
+    <h1>{{ 'players.title' | translate }}</h1>
     <mat-form-field appearance="outline" class="search-field">
       <mat-icon matPrefix>search</mat-icon>
-      <input matInput placeholder="Suchen..." [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" />
+      <input matInput [attr.placeholder]="('common.loading' | translate)" [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" />
       @if (searchTerm()) {
         <button matSuffix mat-icon-button (click)="searchTerm.set('')">
           <mat-icon>close</mat-icon>
@@ -12,25 +12,24 @@
     </mat-form-field>
     <button mat-stroked-button data-testid="h2h-btn" (click)="goToHeadToHead()">
       <mat-icon>compare_arrows</mat-icon>
-      Head-to-Head
+      {{ 'h2h.title' | translate }}
     </button>
     <button mat-raised-button color="primary" (click)="openCreateDialog()">
       <mat-icon>add</mat-icon>
-      Neuer Spieler
+      {{ 'players.newPlayer' | translate }}
     </button>
   </div>
 
   @if (authService.isAdmin()) {
     <div class="admin-scope" data-cy="admin-scope">
       <mat-icon>shield</mat-icon>
-      <span>Ansicht</span>
+      <span>{{ 'players.title' | translate }}</span>
       <mat-button-toggle-group
         [value]="scope()"
         (change)="scope.set($event.value)"
-        aria-label="Sichtbarkeit der Spieler"
         hideSingleSelectionIndicator>
-        <mat-button-toggle value="mine" data-cy="scope-mine">Meine</mat-button-toggle>
-        <mat-button-toggle value="all" data-cy="scope-all">Alle Owner</mat-button-toggle>
+        <mat-button-toggle value="mine" data-cy="scope-mine">{{ 'players.scope.mine' | translate }}</mat-button-toggle>
+        <mat-button-toggle value="all" data-cy="scope-all">{{ 'players.scope.all' | translate }}</mat-button-toggle>
       </mat-button-toggle-group>
     </div>
   }
@@ -39,22 +38,22 @@
     <mat-card-content>
       <table mat-table [dataSource]="filteredPlayers()" matSort (matSortChange)="onSort($event)" class="full-width">
         <ng-container matColumnDef="firstName">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Vorname</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'players.form.firstName' | translate }}</th>
           <td mat-cell *matCellDef="let player">{{ player.firstName }}</td>
         </ng-container>
 
         <ng-container matColumnDef="lastName">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'players.table.name' | translate }}</th>
           <td mat-cell *matCellDef="let player">{{ player.lastName }}</td>
         </ng-container>
 
         <ng-container matColumnDef="ranking">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Ranking</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'players.table.ranking' | translate }}</th>
           <td mat-cell *matCellDef="let player">{{ player.ranking ?? '–' }}</td>
         </ng-container>
 
         <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef class="status-header">Laufende<br>Matches</th>
+          <th mat-header-cell *matHeaderCellDef class="status-header">{{ 'app.nav.newMatch' | translate }}</th>
           <td mat-cell *matCellDef="let player" class="status-cell">
             @if (player.activeMatchId) {
               <button mat-icon-button
@@ -97,7 +96,7 @@
 
       @if (filteredPlayers().length === 0) {
         <div class="empty-state">
-          <p>{{ searchTerm() ? 'Keine Spieler gefunden.' : 'Noch keine Spieler angelegt.' }}</p>
+          <p>{{ 'players.empty' | translate }}</p>
         </div>
       }
     </mat-card-content>

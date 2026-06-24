@@ -1,11 +1,11 @@
 <div class="page" data-testid="analysis-page">
 
-  <div class="title">Taktische Analyse</div>
+  <div class="title">{{ 'analysis.title' | translate }}</div>
   <div class="subtitle">{{ p1Name() }} vs {{ p2Name() }}</div>
 
   @if (hasResult()) {
     <div class="meta" data-testid="analysis-meta">
-      Erstellt {{ analysis()!.generatedAt | date:'dd.MM.yyyy HH:mm' }}
+      {{ 'analysis.generatedAt' | translate }}: {{ analysis()!.generatedAt | date:'dd.MM.yyyy HH:mm' }}
       @if (analysis()!.modelUsed) { · {{ analysis()!.modelUsed }} }
     </div>
   }
@@ -13,14 +13,14 @@
   @if (loading()) {
     <div class="centered" data-testid="loading-spinner">
       <mat-spinner [diameter]="40"></mat-spinner>
-      <div class="hint">Analyse wird geladen …</div>
+      <div class="hint">{{ 'common.loading' | translate }}</div>
     </div>
   } @else {
 
     @if (generating()) {
       <div class="centered" data-testid="generating-spinner">
         <mat-spinner [diameter]="48"></mat-spinner>
-        <div class="hint">Analyse wird generiert … Dies kann bis zu 60 Sekunden dauern.</div>
+        <div class="hint">{{ 'analysis.generating' | translate }}</div>
       </div>
     }
 
@@ -53,19 +53,16 @@
 
       <div class="actions">
         <button mat-stroked-button data-testid="regenerate-btn" (click)="generate()">
-          Neu generieren
+          {{ 'analysis.regenerate' | translate }}
         </button>
       </div>
     } @else if (!generating()) {
       <div class="centered" data-testid="empty-state">
         @if (!displayError()) {
-          <div class="hint">
-            Für dieses beendete Match kann eine KI-gestützte taktische Analyse
-            erstellt werden. Die Generierung kann bis zu 60 Sekunden dauern.
-          </div>
+          <div class="hint">{{ 'analysis.noAnalysis' | translate }}</div>
         }
         <button mat-flat-button color="primary" data-testid="generate-btn" (click)="generate()">
-          {{ analysis() ? 'Erneut versuchen' : 'Taktische Analyse generieren' }}
+          {{ 'analysis.generate' | translate }}
         </button>
       </div>
     }

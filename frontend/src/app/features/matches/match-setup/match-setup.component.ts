@@ -10,6 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { TranslatePipe } from '@ngx-translate/core';
 
 import { ApiService } from '../../../core/services/api.service';
 import { Player } from '../../../core/models/player.model';
@@ -27,7 +28,8 @@ import { Player } from '../../../core/models/player.model';
     MatButtonModule,
     MatSlideToggleModule,
     MatRadioModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    TranslatePipe
   ],
   templateUrl: './match-setup.component.html',
   styles: [`

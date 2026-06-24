@@ -1,7 +1,7 @@
 <div class="page">
   <div class="pickers">
     <mat-form-field appearance="outline">
-      <mat-label>Spieler 1</mat-label>
+      <mat-label>{{ 'h2h.selectPlayer1' | translate }}</mat-label>
       <mat-select data-testid="select-p1" panelClass="h2h-panel" [ngModel]="player1Id()" (ngModelChange)="player1Id.set($event); onSelect()">
         @for (p of players(); track p.id) {
           <mat-option [value]="p.id">{{ p.firstName }} {{ p.lastName }}</mat-option>
@@ -10,7 +10,7 @@
     </mat-form-field>
 
     <mat-form-field appearance="outline">
-      <mat-label>Spieler 2</mat-label>
+      <mat-label>{{ 'h2h.selectPlayer2' | translate }}</mat-label>
       <mat-select data-testid="select-p2" panelClass="h2h-panel" [ngModel]="player2Id()" (ngModelChange)="player2Id.set($event); onSelect()">
         @for (p of players(); track p.id) {
           <mat-option [value]="p.id">{{ p.firstName }} {{ p.lastName }}</mat-option>
@@ -22,73 +22,73 @@
   @if (stats(); as s) {
     <div class="player-row stat-grid">
       <span class="val val-left">{{ playerName(player1Id()) }}</span>
-      <div class="stat-label" data-testid="matches-played">{{ s.matchesPlayed }} Matches</div>
+      <div class="stat-label" data-testid="matches-played">{{ 'h2h.matchesPlayed' | translate: { count: s.matchesPlayed } }}</div>
       <span class="val val-right">{{ playerName(player2Id()) }}</span>
     </div>
 
-    <div class="section-title">Match-Bilanz</div>
+    <div class="section-title">{{ 'h2h.sectionMatchBalance' | translate }}</div>
     <div class="stat-grid">
       <span class="val val-left" data-testid="val-p1-matches">{{ s.player1.matchesWon }}:{{ s.player1.matchesLost }}</span>
-      <div><div class="stat-label">Siege : Niederlagen</div>
+      <div><div class="stat-label">{{ 'h2h.labels.winsLosses' | translate }}</div>
         <div class="bar"><div class="bar-p1" [style.flex]="s.player1.matchesWon || 1"></div><div class="bar-p2" [style.flex]="s.player2.matchesWon || 1"></div></div>
       </div>
       <span class="val val-right" data-testid="val-p2-matches">{{ s.player2.matchesWon }}:{{ s.player2.matchesLost }}</span>
 
       <span class="val val-left">{{ s.player1.setsWon }}:{{ s.player1.setsLost }}</span>
-      <div class="stat-label">Satzbilanz</div>
+      <div class="stat-label">{{ 'h2h.labels.setBalance' | translate }}</div>
       <span class="val val-right">{{ s.player2.setsWon }}:{{ s.player2.setsLost }}</span>
     </div>
 
-    <div class="section-title">Aufschlag</div>
+    <div class="section-title">{{ 'h2h.sectionServe' | translate }}</div>
     <div class="stat-grid">
       <span class="val val-left">{{ pct(s.player1.firstServePercentage) }}</span>
-      <div class="stat-label">1. Aufschlag %</div>
+      <div class="stat-label">{{ 'h2h.labels.firstServePct' | translate }}</div>
       <span class="val val-right">{{ pct(s.player2.firstServePercentage) }}</span>
 
       <span class="val val-left">{{ pct(s.player1.firstServeWonPercentage) }}</span>
-      <div class="stat-label">1. Aufschlag gewonnen %</div>
+      <div class="stat-label">{{ 'h2h.labels.firstServeWonPct' | translate }}</div>
       <span class="val val-right">{{ pct(s.player2.firstServeWonPercentage) }}</span>
 
       <span class="val val-left">{{ pct(s.player1.secondServeWonPercentage) }}</span>
-      <div class="stat-label">2. Aufschlag gewonnen %</div>
+      <div class="stat-label">{{ 'h2h.labels.secondServeWonPct' | translate }}</div>
       <span class="val val-right">{{ pct(s.player2.secondServeWonPercentage) }}</span>
 
       <span class="val val-left" data-testid="val-p1-aces">{{ s.player1.aces }}</span>
-      <div class="stat-label">Asse</div>
+      <div class="stat-label">{{ 'h2h.labels.aces' | translate }}</div>
       <span class="val val-right" data-testid="val-p2-aces">{{ s.player2.aces }}</span>
 
       <span class="val val-left">{{ s.player1.doubleFaults }}</span>
-      <div class="stat-label">Doppelfehler</div>
+      <div class="stat-label">{{ 'h2h.labels.doubleFaults' | translate }}</div>
       <span class="val val-right">{{ s.player2.doubleFaults }}</span>
     </div>
 
-    <div class="section-title">Return</div>
+    <div class="section-title">{{ 'h2h.sectionReturn' | translate }}</div>
     <div class="stat-grid">
       <span class="val val-left">{{ pct(s.player1.returnPointsWonFirstPercentage) }}</span>
-      <div class="stat-label">Return-Punkte 1. Aufschlag %</div>
+      <div class="stat-label">{{ 'h2h.labels.returnFirstPct' | translate }}</div>
       <span class="val val-right">{{ pct(s.player2.returnPointsWonFirstPercentage) }}</span>
 
       <span class="val val-left">{{ pct(s.player1.returnPointsWonSecondPercentage) }}</span>
-      <div class="stat-label">Return-Punkte 2. Aufschlag %</div>
+      <div class="stat-label">{{ 'h2h.labels.returnSecondPct' | translate }}</div>
       <span class="val val-right">{{ pct(s.player2.returnPointsWonSecondPercentage) }}</span>
 
       <span class="val val-left">{{ s.player1.breakPointsWon }}/{{ s.player1.breakPointsPlayed }}</span>
-      <div class="stat-label">Break Points</div>
+      <div class="stat-label">{{ 'h2h.labels.breakPoints' | translate }}</div>
       <span class="val val-right">{{ s.player2.breakPointsWon }}/{{ s.player2.breakPointsPlayed }}</span>
 
       <span class="val val-left">{{ pct(s.player1.returnGamesWonPercentage) }}</span>
-      <div class="stat-label">Return-Games gewonnen %</div>
+      <div class="stat-label">{{ 'h2h.labels.returnGamesWonPct' | translate }}</div>
       <span class="val val-right">{{ pct(s.player2.returnGamesWonPercentage) }}</span>
     </div>
 
-    <div class="section-title">Rallye</div>
+    <div class="section-title">{{ 'h2h.sectionRally' | translate }}</div>
     <div class="stat-grid">
       <span class="val val-left">{{ s.player1.winners }} ({{ pct(s.player1.winnersPercentage) }})</span>
-      <div class="stat-label">Winners</div>
+      <div class="stat-label">{{ 'h2h.labels.winners' | translate }}</div>
       <span class="val val-right">{{ s.player2.winners }} ({{ pct(s.player2.winnersPercentage) }})</span>
 
       <span class="val val-left">{{ s.player1.unforcedErrors }} ({{ pct(s.player1.unforcedErrorPercentage) }})</span>
-      <div class="stat-label">Unforced Errors</div>
+      <div class="stat-label">{{ 'h2h.labels.unforcedErrors' | translate }}</div>
       <span class="val val-right">{{ s.player2.unforcedErrors }} ({{ pct(s.player2.unforcedErrorPercentage) }})</span>
     </div>
 
@@ -100,9 +100,9 @@
               (click)="requestPreparation()">
         @if (preparing()) {
           <mat-progress-spinner mode="indeterminate" diameter="16" style="display:inline-block;vertical-align:middle;margin-right:8px;"></mat-progress-spinner>
-          KI denkt nach …
+          {{ 'h2h.preparation.thinking' | translate }}
         } @else {
-          KI-Vorbereitung gegen {{ playerName(player2Id()) }} anfordern
+          {{ 'h2h.preparation.button' | translate: { opponent: playerName(player2Id()) } }}
         }
       </button>
     </div>
@@ -113,19 +113,19 @@
 
     @if (preparation(); as prep) {
       <div class="prep-card" data-testid="prep-card">
-        <h3>Profil {{ playerName(player2Id()) }}</h3>
+        <h3>{{ 'h2h.preparation.sectionProfile' | translate: { opponent: playerName(player2Id()) } }}</h3>
         <p>{{ prep.opponentProfile }}</p>
 
-        <h3>Beobachtungen aus dem Head-to-Head</h3>
+        <h3>{{ 'h2h.preparation.sectionObservations' | translate }}</h3>
         <p>{{ prep.tacticalObservations }}</p>
 
-        <h3>Aufschlag-Strategie</h3>
+        <h3>{{ 'h2h.preparation.sectionServe' | translate }}</h3>
         <p>{{ prep.serveStrategy }}</p>
 
-        <h3>Return-Strategie</h3>
+        <h3>{{ 'h2h.preparation.sectionReturn' | translate }}</h3>
         <p>{{ prep.returnStrategy }}</p>
 
-        <h3>Empfehlungen</h3>
+        <h3>{{ 'h2h.preparation.sectionRecos' | translate }}</h3>
         <ul class="recos">
           @for (r of prep.recommendations; track r.title) {
             <li>
@@ -135,10 +135,10 @@
           }
         </ul>
 
-        <div class="prep-meta">Modell: {{ prep.modelUsed }} • Basis: {{ prep.matchesPlayed }} gemeinsame Matches</div>
+        <div class="prep-meta">{{ 'h2h.preparation.meta' | translate: { model: prep.modelUsed, matches: prep.matchesPlayed } }}</div>
       </div>
     }
   } @else {
-    <div class="empty-hint" data-testid="empty-hint">Bitte zwei verschiedene Spieler auswählen.</div>
+    <div class="empty-hint" data-testid="empty-hint">{{ 'h2h.emptyHint' | translate }}</div>
   }
 </div>
