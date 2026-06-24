@@ -1,0 +1,240 @@
+{
+  "app": {
+    "title": "TSaS – Tennis Score & Statistic",
+    "nav": {
+      "players": "Players",
+      "newMatch": "New match"
+    },
+    "menu": {
+      "exportData": "Export my data",
+      "deleteData": "Delete my account data",
+      "logout": "Sign out",
+      "ariaLabel": "User menu"
+    },
+    "language": {
+      "label": "Language",
+      "de": "German",
+      "en": "English",
+      "it": "Italian",
+      "fr": "French"
+    },
+    "confirm": {
+      "deleteData": "Are you sure you want to permanently delete all your data (players, matches, points, analyses)?"
+    },
+    "toast": {
+      "exportDone": "Export started — file is downloading.",
+      "exportFailed": "Export failed.",
+      "deleteDone": "Data deleted.",
+      "deleteFailed": "Deletion failed."
+    }
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "loading": "Loading …",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK"
+  },
+  "players": {
+    "title": "Players",
+    "newPlayer": "New player",
+    "edit": "Edit player",
+    "scope": {
+      "mine": "Mine",
+      "all": "All owners"
+    },
+    "table": {
+      "name": "Name",
+      "ranking": "Ranking",
+      "gender": "Gender",
+      "handedness": "Playing hand",
+      "backhand": "Backhand",
+      "owner": "Owner",
+      "actions": "Actions"
+    },
+    "form": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "gender": "Gender",
+      "ranking": "Ranking",
+      "handedness": "Playing hand",
+      "backhandType": "Backhand type",
+      "nationality": "Nationality",
+      "birthDate": "Date of birth"
+    },
+    "gender": {
+      "MALE": "Male",
+      "FEMALE": "Female"
+    },
+    "handedness": {
+      "RIGHT": "Right",
+      "LEFT": "Left"
+    },
+    "backhand": {
+      "ONE_HANDED": "One-handed",
+      "TWO_HANDED": "Two-handed"
+    },
+    "actions": {
+      "headToHead": "Head-to-head",
+      "deactivate": "Deactivate",
+      "deleteHard": "Delete permanently"
+    },
+    "empty": "No players yet.",
+    "emptySearch": "No players found.",
+    "search": "Search…",
+    "confirm": {
+      "delete": "Permanently delete player {{name}}?",
+      "deactivate": "Deactivate player {{name}}? Data is kept for match history."
+    },
+    "errors": {
+      "deletionBlocked": "Player is involved in at least one match — deletion not possible. Deactivate instead?"
+    }
+  },
+  "matchSetup": {
+    "title": "New match",
+    "player1": "Player 1",
+    "player2": "Player 2",
+    "setsToWin": "Sets to win",
+    "matchTiebreak": "Match tiebreak in deciding set",
+    "shortSet": "Short set (first to 4)",
+    "start": "Start match",
+    "errors": {
+      "samePlayer": "The two players must be different.",
+      "missingPlayer": "Please select both players."
+    }
+  },
+  "score": {
+    "title": "Score",
+    "currentSet": "Current set",
+    "set": "Set",
+    "tiebreak": "Tiebreak",
+    "matchTiebreak": "Match tiebreak",
+    "deuce": "Deuce",
+    "advantage": "Advantage {{player}}",
+    "serving": "Serving",
+    "switchServer": "Switch server",
+    "edit": "Edit score",
+    "end": "End match",
+    "endWalkover": "End by walkover",
+    "pointDialog": {
+      "title": "Point for {{player}}",
+      "pointType": "Point type",
+      "stroke": "Stroke",
+      "direction": "Direction",
+      "serveAttempt": "Serve",
+      "firstServe": "1st serve",
+      "secondServe": "2nd serve",
+      "remark": "Remark (optional)",
+      "save": "Record point"
+    },
+    "endDialog": {
+      "title": "End match",
+      "walkover": "Walkover (player retires)",
+      "winner": "Winner",
+      "confirmFinish": "Really end the match?",
+      "confirmWalkover": "Record walkover for {{player}}?"
+    },
+    "pointType": {
+      "WINNER": "Winner",
+      "UNFORCED_ERROR": "Unforced error",
+      "FORCED_ERROR": "Forced error",
+      "ACE": "Ace",
+      "DOUBLE_FAULT": "Double fault",
+      "NET": "Net",
+      "OUT_LONG": "Out (long)",
+      "OUT_WIDE": "Out (wide)"
+    },
+    "stroke": {
+      "FOREHAND": "Forehand",
+      "BACKHAND": "Backhand",
+      "SERVE": "Serve",
+      "VOLLEY": "Volley",
+      "OVERHEAD": "Overhead",
+      "DROPSHOT": "Drop shot",
+      "LOB": "Lob"
+    },
+    "direction": {
+      "CROSS_COURT": "Cross-court",
+      "DOWN_THE_LINE": "Down the line",
+      "DOWN_THE_MIDDLE": "Down the middle",
+      "T": "T",
+      "BODY": "Body"
+    }
+  },
+  "statistics": {
+    "title": "Statistics",
+    "totalPoints": "Total points",
+    "winnersCount": "Winners",
+    "unforcedErrorsCount": "Unforced errors",
+    "forcedErrorsCount": "Forced errors",
+    "acesCount": "Aces",
+    "doubleFaultsCount": "Double faults",
+    "firstServePct": "1st serve",
+    "secondServePct": "2nd serve",
+    "breakPoints": "Break points",
+    "strokeDistribution": "Stroke distribution",
+    "directionDistribution": "Direction distribution"
+  },
+  "h2h": {
+    "title": "Head-to-head",
+    "selectPlayer1": "Player 1",
+    "selectPlayer2": "Player 2",
+    "matchesPlayed": "{{count}} matches",
+    "matchesLabel": "matches",
+    "sectionMatchBalance": "Match balance",
+    "sectionServe": "Serve",
+    "sectionReturn": "Return",
+    "sectionRally": "Rally",
+    "labels": {
+      "winsLosses": "Wins : Losses",
+      "setBalance": "Sets balance",
+      "firstServePct": "1st serve %",
+      "firstServeWonPct": "1st serve won %",
+      "secondServeWonPct": "2nd serve won %",
+      "aces": "Aces",
+      "doubleFaults": "Double faults",
+      "returnFirstPct": "Return points 1st serve %",
+      "returnSecondPct": "Return points 2nd serve %",
+      "breakPoints": "Break points",
+      "returnGamesWonPct": "Return games won %",
+      "winners": "Winners",
+      "unforcedErrors": "Unforced errors"
+    },
+    "emptyHint": "Please pick two different players.",
+    "preparation": {
+      "button": "Request AI preparation against {{opponent}}",
+      "thinking": "AI is thinking …",
+      "sectionProfile": "Profile {{opponent}}",
+      "sectionObservations": "Observations from the head-to-head",
+      "sectionServe": "Serve strategy",
+      "sectionReturn": "Return strategy",
+      "sectionRecos": "Recommendations",
+      "meta": "Model: {{model}} • Based on {{matches}} shared matches"
+    }
+  },
+  "analysis": {
+    "title": "Match analysis",
+    "generate": "Generate AI analysis",
+    "regenerate": "Regenerate",
+    "generating": "Generating analysis …",
+    "keyMoments": "Key moments",
+    "ownStrengths": "Own strengths",
+    "ownWeaknesses": "Own weaknesses",
+    "opponentStrengths": "Opponent strengths",
+    "opponentWeaknesses": "Opponent weaknesses",
+    "recommendations": "Recommendations",
+    "model": "Model",
+    "generatedAt": "Generated at",
+    "noAnalysis": "No analysis available for this match yet.",
+    "errors": {
+      "matchNotCompleted": "Match has not been completed yet.",
+      "insufficientData": "Match has too few points for an analysis.",
+      "llmFailed": "The AI could not produce an analysis."
+    }
+  }
+}

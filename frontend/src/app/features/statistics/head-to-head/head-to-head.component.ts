@@ -5,6 +5,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../../core/services/api.service';
 import { Player } from '../../../core/models/player.model';
 import { HeadToHeadStatistics } from '../../../core/models/statistics.model';
@@ -13,7 +14,7 @@ import { OpponentPreparation } from '../../../core/models/analysis.model';
 @Component({
   selector: 'app-head-to-head',
   standalone: true,
-  imports: [MatFormFieldModule, MatSelectModule, MatButtonModule, MatProgressSpinnerModule, FormsModule],
+  imports: [MatFormFieldModule, MatSelectModule, MatButtonModule, MatProgressSpinnerModule, FormsModule, TranslatePipe],
   templateUrl: './head-to-head.component.html',
   styles: [`
     :host { display: block; min-height: 100dvh; background: linear-gradient(160deg, #103A6B 0%, #2D72B8 100%); color: #eee; font-family: sans-serif; }

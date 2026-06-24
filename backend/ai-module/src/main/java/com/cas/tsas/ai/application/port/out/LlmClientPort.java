@@ -8,7 +8,14 @@ import com.cas.tsas.statistics.domain.model.MatchStatistics;
 
 public interface LlmClientPort {
 
-    MatchAnalysisResult generateAnalysis(MatchStatistics stats, MatchMetadata meta);
+    /** Default-Variante (Deutsch). Bleibt für Tests und Backward-Compat erhalten. */
+    default MatchAnalysisResult generateAnalysis(MatchStatistics stats, MatchMetadata meta) {
+        return generateAnalysis(stats, meta, "de");
+    }
+
+    /** TEN-6: gleicher Aufruf wie {@link #generateAnalysis(MatchStatistics, MatchMetadata)}, aber
+     *  mit explizitem Sprachcode (de|en|it|fr) — der LLM antwortet in dieser Sprache. */
+    MatchAnalysisResult generateAnalysis(MatchStatistics stats, MatchMetadata meta, String language);
 
     /**
      * TEN-51: generiert eine taktische Vorbereitung gegen den Gegner. {@code meta.player1} ist
@@ -16,7 +23,12 @@ public interface LlmClientPort {
      * dürfen für diesen Use-Case mit beliebigen Werten gesetzt sein — sie werden im Prompt
      * nicht verwendet, da noch kein konkretes Match existiert.
      */
-    OpponentPreparationResult generateOpponentPreparation(HeadToHeadStatistics h2h, MatchMetadata meta);
+    default OpponentPreparationResult generateOpponentPreparation(HeadToHeadStatistics h2h, MatchMetadata meta) {
+        return generateOpponentPreparation(h2h, meta, "de");
+    }
+
+    /** TEN-6: Sprachvariante von {@link #generateOpponentPreparation(HeadToHeadStatistics, MatchMetadata)}. */
+    OpponentPreparationResult generateOpponentPreparation(HeadToHeadStatistics h2h, MatchMetadata meta, String language);
 
     String modelName();
 }

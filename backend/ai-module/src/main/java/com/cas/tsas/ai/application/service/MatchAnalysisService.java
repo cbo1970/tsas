@@ -7,6 +7,7 @@ import com.cas.tsas.ai.application.port.in.GetMatchAnalysisUseCase;
 import com.cas.tsas.ai.application.port.out.LlmClientPort;
 import com.cas.tsas.ai.application.port.out.LoadMatchAnalysisPort;
 import com.cas.tsas.ai.application.port.out.SaveMatchAnalysisPort;
+import com.cas.tsas.ai.application.port.out.UserLanguagePort;
 import com.cas.tsas.ai.domain.exception.AnalysisGenerationException;
 import com.cas.tsas.ai.domain.exception.InsufficientMatchDataException;
 import com.cas.tsas.ai.domain.exception.MatchNotCompletedException;
@@ -40,6 +41,7 @@ public class MatchAnalysisService implements GenerateMatchAnalysisUseCase, GetMa
     private final LlmClientPort llmClient;
     private final SaveMatchAnalysisPort savePort;
     private final LoadMatchAnalysisPort loadPort;
+    private final UserLanguagePort userLanguagePort;
     private final int minPointsForAnalysis;
 
     public MatchAnalysisService(GetMatchUseCase getMatchUseCase,
@@ -48,6 +50,7 @@ public class MatchAnalysisService implements GenerateMatchAnalysisUseCase, GetMa
                                 LlmClientPort llmClient,
                                 SaveMatchAnalysisPort savePort,
                                 LoadMatchAnalysisPort loadPort,
+                                UserLanguagePort userLanguagePort,
                                 @Value("${tsas.ai.min-points-for-analysis:10}") int minPointsForAnalysis) {
         this.getMatchUseCase = getMatchUseCase;
         this.loadPlayerPort = loadPlayerPort;
@@ -55,6 +58,7 @@ public class MatchAnalysisService implements GenerateMatchAnalysisUseCase, GetMa
         this.llmClient = llmClient;
         this.savePort = savePort;
         this.loadPort = loadPort;
+        this.userLanguagePort = userLanguagePort;
         this.minPointsForAnalysis = minPointsForAnalysis;
     }
 
@@ -84,7 +88,7 @@ public class MatchAnalysisService implements GenerateMatchAnalysisUseCase, GetMa
         MatchMetadata meta = buildMetadata(match);
 
         try {
-            MatchAnalysisResult result = llmClient.generateAnalysis(stats, meta);
+            MatchAnalysisResult result = llmClient.generateAnalysis(stats, meta, userLanguagePort.currentLanguage());
             return savePort.save(buildSuccess(matchId, result));
         } catch (RuntimeException ex) {
             savePort.save(buildFailure(matchId, ex));

@@ -4,6 +4,7 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { MatchAnalysis } from '../../../core/models/analysis.model';
+import { testTranslateProviders } from '../../../core/i18n/test-providers';
 
 const MOCK_ANALYSIS: MatchAnalysis = {
   matchId: 'match-1',
@@ -41,6 +42,7 @@ function mount(extraProviders: any[] = []) {
       provideRouter([]),
       provideHttpClient(),
       provideAnimationsAsync(),
+      ...testTranslateProviders,
       { provide: ActivatedRoute, useValue: activatedRouteStub },
       ...extraProviders,
     ],

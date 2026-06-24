@@ -57,7 +57,7 @@ class MatchAnalysisServiceTest {
         savePort = Mockito.mock(SaveMatchAnalysisPort.class);
         loadPort = Mockito.mock(LoadMatchAnalysisPort.class);
         service = new MatchAnalysisService(getMatchUseCase, loadPlayerPort,
-                statisticsUseCase, llm, savePort, loadPort, 10);
+                statisticsUseCase, llm, savePort, loadPort, () -> "de", 10);
 
         matchId = UUID.randomUUID();
         p1Id = UUID.randomUUID();
@@ -136,10 +136,10 @@ class MatchAnalysisServiceTest {
 
         LlmClientPort failing = Mockito.mock(LlmClientPort.class);
         when(failing.modelName()).thenReturn("failing-llm");
-        when(failing.generateAnalysis(any(), any())).thenThrow(new RuntimeException("boom"));
+        when(failing.generateAnalysis(any(), any(), any())).thenThrow(new RuntimeException("boom"));
 
         MatchAnalysisService failingService = new MatchAnalysisService(getMatchUseCase,
-                loadPlayerPort, statisticsUseCase, failing, savePort, loadPort, 10);
+                loadPlayerPort, statisticsUseCase, failing, savePort, loadPort, () -> "de", 10);
 
         assertThatThrownBy(() -> failingService.generate(matchId))
                 .isInstanceOf(AnalysisGenerationException.class)

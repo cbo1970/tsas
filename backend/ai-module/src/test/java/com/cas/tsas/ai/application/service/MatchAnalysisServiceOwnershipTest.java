@@ -42,7 +42,7 @@ class MatchAnalysisServiceOwnershipTest {
         savePort = Mockito.mock(SaveMatchAnalysisPort.class);
         loadPort = Mockito.mock(LoadMatchAnalysisPort.class);
         service = new MatchAnalysisService(getMatchUseCase, loadPlayerPort,
-                statisticsUseCase, llm, savePort, loadPort, 10);
+                statisticsUseCase, llm, savePort, loadPort, () -> "de", 10);
     }
 
     @Test

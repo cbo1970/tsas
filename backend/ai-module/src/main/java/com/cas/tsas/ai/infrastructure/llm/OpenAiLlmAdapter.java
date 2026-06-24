@@ -34,18 +34,18 @@ public class OpenAiLlmAdapter implements LlmClientPort {
     }
 
     @Override
-    public MatchAnalysisResult generateAnalysis(MatchStatistics stats, MatchMetadata meta) {
+    public MatchAnalysisResult generateAnalysis(MatchStatistics stats, MatchMetadata meta, String language) {
         return chatClient.prompt()
-                .system(promptBuilder.systemPrompt())
+                .system(promptBuilder.systemPrompt(language))
                 .user(promptBuilder.userPrompt(stats, meta))
                 .call()
                 .entity(MatchAnalysisResult.class);
     }
 
     @Override
-    public OpponentPreparationResult generateOpponentPreparation(HeadToHeadStatistics h2h, MatchMetadata meta) {
+    public OpponentPreparationResult generateOpponentPreparation(HeadToHeadStatistics h2h, MatchMetadata meta, String language) {
         return chatClient.prompt()
-                .system(promptBuilder.opponentPreparationSystemPrompt())
+                .system(promptBuilder.opponentPreparationSystemPrompt(language))
                 .user(promptBuilder.opponentPreparationUserPrompt(h2h, meta))
                 .call()
                 .entity(OpponentPreparationResult.class);

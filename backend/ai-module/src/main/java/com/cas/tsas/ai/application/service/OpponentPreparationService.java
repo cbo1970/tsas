@@ -4,6 +4,7 @@ import com.cas.tsas.ai.application.dto.MatchMetadata;
 import com.cas.tsas.ai.application.dto.OpponentPreparationResult;
 import com.cas.tsas.ai.application.port.in.GenerateOpponentPreparationUseCase;
 import com.cas.tsas.ai.application.port.out.LlmClientPort;
+import com.cas.tsas.ai.application.port.out.UserLanguagePort;
 import com.cas.tsas.ai.domain.exception.AnalysisGenerationException;
 import com.cas.tsas.ai.domain.exception.InsufficientHeadToHeadDataException;
 import com.cas.tsas.ai.domain.model.OpponentPreparation;
@@ -38,15 +39,18 @@ public class OpponentPreparationService implements GenerateOpponentPreparationUs
     private final ComputeHeadToHeadStatisticsUseCase headToHeadUseCase;
     private final LlmClientPort llmClient;
     private final CurrentUserProvider currentUserProvider;
+    private final UserLanguagePort userLanguagePort;
 
     public OpponentPreparationService(LoadPlayerPort loadPlayerPort,
                                       ComputeHeadToHeadStatisticsUseCase headToHeadUseCase,
                                       LlmClientPort llmClient,
-                                      CurrentUserProvider currentUserProvider) {
+                                      CurrentUserProvider currentUserProvider,
+                                      UserLanguagePort userLanguagePort) {
         this.loadPlayerPort = loadPlayerPort;
         this.headToHeadUseCase = headToHeadUseCase;
         this.llmClient = llmClient;
         this.currentUserProvider = currentUserProvider;
+        this.userLanguagePort = userLanguagePort;
     }
 
     @Override
@@ -77,7 +81,7 @@ public class OpponentPreparationService implements GenerateOpponentPreparationUs
 
         OpponentPreparationResult result;
         try {
-            result = llmClient.generateOpponentPreparation(h2h, meta);
+            result = llmClient.generateOpponentPreparation(h2h, meta, userLanguagePort.currentLanguage());
         } catch (RuntimeException ex) {
             LOG.warn("LLM call failed for opponent preparation own={} opponent={}: {}",
                     ownPlayerId, opponentId, ex.toString());

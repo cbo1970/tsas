@@ -14,6 +14,7 @@ import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { Player, CreatePlayerRequest } from '../../core/models/player.model';
@@ -37,7 +38,8 @@ export type Scope = 'mine' | 'all';
     MatFormFieldModule,
     MatInputModule,
     MatTooltipModule,
-    MatButtonToggleModule
+    MatButtonToggleModule,
+    TranslatePipe
   ],
   templateUrl: './players.component.html',
   styles: [`

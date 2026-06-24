@@ -5,6 +5,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { Player } from '../../../core/models/player.model';
 import { HeadToHeadStatistics } from '../../../core/models/statistics.model';
+import { testTranslateProviders } from '../../../core/i18n/test-providers';
 
 const PLAYERS: Player[] = [
   { id: 'a', ownerId: 'owner-1', firstName: 'Roger', lastName: 'Federer', gender: 'MALE', handedness: 'RIGHT', backhandType: 'ONE_HANDED', active: true },
@@ -43,6 +44,7 @@ function mount(player1: string | null = null, player2: string | null = null) {
       provideRouter([]),
       provideHttpClient(),
       provideAnimationsAsync(),
+      ...testTranslateProviders,
       { provide: ActivatedRoute, useValue: routeStub(player1, player2) },
     ],
   });

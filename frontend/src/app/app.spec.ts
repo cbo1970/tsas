@@ -3,6 +3,8 @@ import { signal, computed } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { App } from './app';
 import { AuthService } from './core/auth/auth.service';
+import { provideHttpClient } from '@angular/common/http';
+import { testTranslateProviders } from './core/i18n/test-providers';
 
 const mockAuthService: Partial<AuthService> = {
   initialize: () => Promise.resolve(true),
@@ -21,6 +23,8 @@ describe('App', () => {
       imports: [App],
       providers: [
         provideRouter([]),
+        provideHttpClient(),
+        ...testTranslateProviders,
         { provide: AuthService, useValue: mockAuthService },
       ],
     }).compileComponents();
@@ -35,6 +39,8 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.app-title')?.textContent).toContain('TSaS');
+    // Ohne Loader liefert ngx-translate den Key zurück — wir prüfen nur, dass das Element
+    // gerendert wird und der Title-Slot über `translate`-Pipe an `app.title` bindet.
+    expect(compiled.querySelector('.app-title')?.textContent?.trim()).toBe('app.title');
   });
 });

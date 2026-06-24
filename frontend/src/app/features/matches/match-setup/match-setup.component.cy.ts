@@ -3,6 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideRouter } from '@angular/router';
 import { Player } from '../../../core/models/player.model';
+import { testTranslateProviders } from '../../../core/i18n/test-providers';
 
 const FREE: Player = {
   id: '1', ownerId: 'owner-1', firstName: 'Roger', lastName: 'Federer',
@@ -27,6 +28,7 @@ function mountSetup(players: Player[] = [FREE, BUSY, FREE2]) {
       provideHttpClient(),
       provideAnimationsAsync(),
       provideRouter([]),
+      ...testTranslateProviders,
     ],
   });
   cy.wait('@getPlayers');
