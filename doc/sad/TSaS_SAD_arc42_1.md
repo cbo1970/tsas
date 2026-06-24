@@ -405,7 +405,18 @@ Die Datenpersistenz erfolgt über Spring Data JPA / Hibernate mit PostgreSQL. Je
 
 ### 8.3 Fehlerbehandlung
 
-Die Fehlerbehandlung erfolgt deklarativ über `@RestControllerAdvice`. Querschnittliche Fälle liegen zentral im `common-module` (`CommonExceptionHandler`): fachliche Zustandskonflikte (Basisklasse `ConflictException`) → HTTP 409, Bean-Validation-Fehler (`MethodArgumentNotValidException`) → HTTP 400 mit Feld-Details, ungültige Argumente (z. B. unbekannter Enum-Wert) → HTTP 400. Modulspezifische Domain-Exceptions werden in den jeweiligen Advices abgebildet: `GlobalExceptionHandler` (Player/Match „nicht gefunden" → 404) und `AiExceptionHandler` (`InsufficientMatchDataException` → 422, `AnalysisGenerationException` → 502). Technische Fehler ergeben HTTP 5xx.
+Die Fehlerbehandlung erfolgt deklarativ über `@RestControllerAdvice`. Querschnittliche Fälle liegen zentral im `common-module` (`CommonExceptionHandler`, `@Order(LOWEST_PRECEDENCE)`): fachliche Zustandskonflikte (Basisklasse `ConflictException`) → HTTP 409, Bean-Validation-Fehler (`MethodArgumentNotValidException`) → HTTP 400 mit Feld-Details, ungültige Argumente (z. B. unbekannter Enum-Wert) → HTTP 400. Modulspezifische Domain-Exceptions werden in den jeweiligen Advices abgebildet: `GlobalExceptionHandler` (Player/Match „nicht gefunden" → 404) und `AiExceptionHandler` (`InsufficientMatchDataException` → 422, `AnalysisGenerationException` → 502). Technische Fehler ergeben HTTP 5xx.
+
+**Catch-all + Sanitization (TEN-61 / STRIDE I5+I6).** Der `CommonExceptionHandler` fängt zusätzlich vier breite Klassen ab und sorgt dafür, dass keine internen Details (Klassenpfade, SQL-Schnipsel, Stack-Traces) in die Antwort lecken:
+
+| Exception | Status | Detail in der Response |
+|---|---|---|
+| `ResponseStatusException` | aus der Exception | Reason (falls gesetzt) oder Standard-Phrase |
+| `DataIntegrityViolationException` | 409 | Generisch („Datenkonflikt: eine Datenbank-Constraint wurde verletzt …"); Original-SQL/Schema wird intern via WARN geloggt |
+| `AccessDeniedException` | 403 | „Zugriff verweigert." (Original-Message nicht durchgereicht) |
+| `Exception` (Catch-all) | 500 | „Ein interner Fehler ist aufgetreten. …"; Original mit vollem Stack-Trace via ERROR geloggt |
+
+Ergänzend setzen die `server.error.include-*: never`/`false`-Properties in `application.yml` Springs Whitelabel-Fallback auf still — falls das Catch-all je umgangen wird, bleibt die Response trotzdem sanitisiert. Unit-Tests in `CommonExceptionHandlerTest` (7 Pfade) asserten konkret, dass weder SQL noch UUIDs noch Klassennamen in der `detail`-Zeile auftauchen.
 
 Das Antwortformat folgt **RFC 7807** über Springs `ProblemDetail` (Felder `type`, `title`, `status`, `detail`, ggf. zusätzliche Properties wie `errors`) — der Spring-native Standard, der das früher geplante Ad-hoc-Format `{error-code, message, timestamp}` ablöst.
 Die ProblemDetail-Schemas (400, 404, 409, 422, 502) werden mit der OpenAPI-Spec via springdoc automatisch publiziert und sind unter `/v3/api-docs` einsehbar.

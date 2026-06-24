@@ -1,3 +1,14 @@
+server:
+  error:
+    # TEN-61 / STRIDE I5+I6 — Default-Error-Response soll keine internen Details leaken.
+    # Der globale @RestControllerAdvice (CommonExceptionHandler) liefert RFC 7807
+    # ProblemDetail; falls Spring's Whitelabel-Fallback je greift, bleiben Message und
+    # Stack-Trace versteckt.
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+    include-exception: false
+
 spring:
   application:
     name: tsas-backend
