@@ -5,7 +5,11 @@ server:
 
 spring:
   jpa:
-    show-sql: true
+    # `show-sql: true` routet jede Query über System.out und damit als INFO ins Logback —
+    # rauschte die Konsole bei jedem Page-Wechsel zu. Stattdessen `false`: Hibernate
+    # loggt SQL nur, wenn der Logger `org.hibernate.SQL` auf DEBUG gestellt ist
+    # (siehe `logging.level` unten — bei Bedarf temporär einkommentieren).
+    show-sql: false
 
   security:
     oauth2:
@@ -16,6 +20,10 @@ spring:
 logging:
   pattern:
     console: "%d{HH:mm:ss.SSS} %-5level [%X{correlationId:-}] %logger{36} - %msg%n"
+  # Auf DEBUG stellen, wenn man die SQL-Statements + Bind-Parameter sehen will.
+  # level:
+  #   org.hibernate.SQL: DEBUG
+  #   org.hibernate.orm.jdbc.bind: TRACE
 
 tsas:
   cors:
