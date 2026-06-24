@@ -9,16 +9,18 @@
   "editUsernameAllowed": false,
   "verifyEmail": true,
   "smtpServer": {
-    "host": "mailhog",
-    "port": "1025",
-    "from": "noreply@tsas.local",
-    "fromDisplayName": "TSaS",
-    "replyTo": "noreply@tsas.local",
+    "host":           "${KC_SMTP_HOST:mailhog}",
+    "port":           "${KC_SMTP_PORT:1025}",
+    "from":           "${KC_SMTP_FROM:noreply@tsas.local}",
+    "fromDisplayName":"${KC_SMTP_FROM_NAME:TSaS}",
+    "replyTo":        "${KC_SMTP_REPLY_TO:noreply@tsas.local}",
     "replyToDisplayName": "TSaS",
-    "envelopeFrom": "noreply@tsas.local",
-    "starttls": "false",
-    "ssl": "false",
-    "auth": "false"
+    "envelopeFrom":   "${KC_SMTP_ENVELOPE_FROM:noreply@tsas.local}",
+    "starttls":       "${KC_SMTP_STARTTLS:false}",
+    "ssl":            "${KC_SMTP_SSL:false}",
+    "auth":           "${KC_SMTP_AUTH:false}",
+    "user":           "${KC_SMTP_USER:}",
+    "password":       "${KC_SMTP_PASSWORD:}"
   },
   "roles": {
     "realm": [
