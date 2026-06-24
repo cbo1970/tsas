@@ -85,6 +85,8 @@
       "deleteHard": "Endgültig löschen"
     },
     "empty": "Noch keine Spieler angelegt.",
+    "emptySearch": "Keine Spieler gefunden.",
+    "search": "Suchen…",
     "confirm": {
       "delete": "Spieler {{name}} endgültig löschen?",
       "deactivate": "Spieler {{name}} deaktivieren? Daten bleiben für die Match-Historie erhalten."
@@ -183,6 +185,7 @@
     "selectPlayer1": "Spieler 1",
     "selectPlayer2": "Spieler 2",
     "matchesPlayed": "{{count}} Matches",
+    "matchesLabel": "Matches",
     "sectionMatchBalance": "Match-Bilanz",
     "sectionServe": "Aufschlag",
     "sectionReturn": "Return",

@@ -3,7 +3,7 @@
     <h1>{{ 'players.title' | translate }}</h1>
     <mat-form-field appearance="outline" class="search-field">
       <mat-icon matPrefix>search</mat-icon>
-      <input matInput [attr.placeholder]="('common.loading' | translate)" [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" />
+      <input matInput [attr.placeholder]="('players.search' | translate)" [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" />
       @if (searchTerm()) {
         <button matSuffix mat-icon-button (click)="searchTerm.set('')">
           <mat-icon>close</mat-icon>
@@ -96,7 +96,7 @@
 
       @if (filteredPlayers().length === 0) {
         <div class="empty-state">
-          <p>{{ 'players.empty' | translate }}</p>
+          <p>{{ (searchTerm() ? 'players.emptySearch' : 'players.empty') | translate }}</p>
         </div>
       }
     </mat-card-content>

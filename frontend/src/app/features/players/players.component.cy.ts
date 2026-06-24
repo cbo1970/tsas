@@ -5,6 +5,7 @@ import { computed, signal } from '@angular/core';
 import { Player } from '../../core/models/player.model';
 import { Router, provideRouter } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { testTranslateProviders } from '../../core/i18n/test-providers';
 
 function makeAuthMock(opts: { isAdmin?: boolean; userId?: string | null } = {}) {
   const isAdminSig = signal(opts.isAdmin ?? false);
@@ -50,6 +51,7 @@ function mountPlayers(
       provideRouter([]),
       provideHttpClient(),
       provideAnimationsAsync(),
+      ...testTranslateProviders,
       { provide: AuthService, useValue: authMock },
       ...extraProviders,
     ],
@@ -63,7 +65,8 @@ describe('PlayersComponent', () => {
     beforeEach(() => mountPlayers());
 
     it('renders the page heading', () => {
-      cy.contains('h1', 'Spieler').should('be.visible');
+      // ngx-translate ohne Loader liefert den Key zurück; in echter Laufzeit „Spieler" / „Players" / …
+      cy.contains('h1', 'players.title').should('be.visible');
     });
 
     it('shows all players in the table', () => {
@@ -73,8 +76,8 @@ describe('PlayersComponent', () => {
       cy.contains('Muster').should('be.visible');
     });
 
-    it('shows "Neuer Spieler" button', () => {
-      cy.contains('button', 'Neuer Spieler').should('be.visible');
+    it('shows "newPlayer" button (i18n key in test runner without loader)', () => {
+      cy.contains('button', 'players.newPlayer').should('be.visible');
     });
 
     it('shows delete button for deletable players', () => {
@@ -90,29 +93,29 @@ describe('PlayersComponent', () => {
     beforeEach(() => mountPlayers());
 
     it('filters players by first name', () => {
-      cy.get('input[placeholder="Suchen..."]').type('Roger');
+      cy.get('input[placeholder="players.search"]').type('Roger');
       cy.contains('td', 'Roger').should('be.visible');
       cy.contains('td', 'Nadal').should('not.exist');
     });
 
     it('filters players by last name', () => {
-      cy.get('input[placeholder="Suchen..."]').type('Fed');
+      cy.get('input[placeholder="players.search"]').type('Fed');
       cy.contains('td', 'Federer').should('be.visible');
       cy.contains('td', 'Nadal').should('not.exist');
     });
 
-    it('shows "Keine Spieler gefunden." when search has no match', () => {
-      cy.get('input[placeholder="Suchen..."]').type('xyzzzz');
-      cy.contains('Keine Spieler gefunden.').should('be.visible');
+    it('shows search-empty message when search has no match', () => {
+      cy.get('input[placeholder="players.search"]').type('xyzzzz');
+      cy.contains('players.emptySearch').should('be.visible');
     });
 
     it('shows clear button while search term is active', () => {
-      cy.get('input[placeholder="Suchen..."]').type('Roger');
+      cy.get('input[placeholder="players.search"]').type('Roger');
       cy.get('button[matSuffix]').should('exist');
     });
 
     it('clears search and restores list after clicking clear', () => {
-      cy.get('input[placeholder="Suchen..."]').type('Roger');
+      cy.get('input[placeholder="players.search"]').type('Roger');
       cy.contains('td', 'Nadal').should('not.exist');
       cy.get('button[matSuffix]').click();
       cy.contains('td', 'Nadal').should('be.visible');
@@ -120,9 +123,9 @@ describe('PlayersComponent', () => {
   });
 
   describe('empty state', () => {
-    it('shows "Noch keine Spieler angelegt." when list is empty', () => {
+    it('shows empty-state hint when list is empty', () => {
       mountPlayers([]);
-      cy.contains('Noch keine Spieler angelegt.').should('be.visible');
+      cy.contains('players.empty').should('be.visible');
     });
   });
 

@@ -22,7 +22,7 @@
   @if (stats(); as s) {
     <div class="player-row stat-grid">
       <span class="val val-left">{{ playerName(player1Id()) }}</span>
-      <div class="stat-label" data-testid="matches-played">{{ 'h2h.matchesPlayed' | translate: { count: s.matchesPlayed } }}</div>
+      <div class="stat-label" data-testid="matches-played">{{ s.matchesPlayed }} {{ 'h2h.matchesLabel' | translate }}</div>
       <span class="val val-right">{{ playerName(player2Id()) }}</span>
     </div>
 
