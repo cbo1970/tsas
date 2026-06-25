@@ -39,6 +39,19 @@ Nach den ersten Schritten und einem zu 70 % fertigen SAD habe ich dann mit dem C
 - Nachträgliche «Refactorings» an der Architektur dauern sehr lange und benötigen viele Tokens. Deshalb bin ich der Überzeugung, dass eine sehr solide Vorarbeit von Architekt, UX- und Frontend-Designer essenziell wichtig ist. Die Eckpfeiler der Applikation wie BE-Architektur, FE und System-Architektur müssen klar in einem Dokument festgehalten sein und von jedem Mitarbeiter als Erstes von seinem Claude CLI gelesen werden. Ich gehe sogar so weit, dass das `CLAUDE.md` zu einem zentralen Bestandteil für den Architekten wird, damit ein Team von Entwicklern gleichwertigen Code erzeugen kann. Dazu gehört auch ein DoD (Definition of Done).
 - Tasks/Tickets müssen mit einem Template erstellt werden und benötigen wesentlich mehr Sorgfalt, als wenn nur Menschen am Code arbeiten. Auch hier kann die AI beim Erstellen helfen.
 
+## Konkrete Beispiele: AI-Vorschläge akzeptiert, korrigiert, verworfen
+
+Drei Situationen aus dem Projekt zeigen, wie ich mit den Vorschlägen der AI umgegangen bin – jeweils belegt mit dem zugehörigen Commit.
+
+**Akzeptiert – strukturierter LLM-Output statt selbstgebautem Parser.**
+Für die KI-Match-Analyse schlug Claude vor, die Antwort des LLM nicht als Text zu parsen, sondern über Spring AI direkt in ein typisiertes Java-Objekt zu mappen (`ChatClient … .entity(MatchAnalysisResult.class)`). Diesen Vorschlag habe ich unverändert übernommen, weil er den fragilen String-Parser komplett überflüssig macht und die Antwortstruktur erzwingt. Begründet in ADR-10. → Commit `e02ee0b` (`OpenAiLlmAdapter.java`).
+
+**Korrigiert – NullPointer in der Statistik-Berechnung.**
+Der von der AI generierte `MatchStatisticsService` iterierte über alle Punkte und griff dabei auf `pointType` zu. Die später eingeführten «Quick-Points» (schnelle Punkterfassung ohne Attribut) haben aber keinen `pointType` – das führte zu einer NullPointerException. Ich habe den Vorschlag korrigiert (Guard-Klausel: solche Punkte zählen nur zum Punktestand und überspringen die Attribution) und einen Regressionstest ergänzt. → Commit `9e35106` (+6 Zeilen Service, +17 Zeilen Test).
+
+**Verworfen – Mermaid/PlantUML-Diagramme.**
+Anfangs hat die AI die Architektur-Diagramme als Mermaid bzw. PlantUML direkt im Markdown erzeugt. Das fand ich – wie oben beschrieben – unübersichtlich und schlecht pflegbar. Diesen Ansatz habe ich verworfen und alle Diagramme auf draw.io umgestellt, inklusive Löschen der `.puml`-Quellen. → Commit `02dc699`.
+
 ## Fazit
 
 AI wird aus der Softwareentwicklung wohl nicht mehr wegzudenken sein und in kurzer Zeit so selbstverständlich genutzt werden wie heute eine IDE mit Code-Completion.
