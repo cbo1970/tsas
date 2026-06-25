@@ -12,7 +12,7 @@ import {
 } from '../models/match.model';
 import { RecordPointRequest } from '../models/point.model';
 import { MatchStatistics, HeadToHeadStatistics } from '../models/statistics.model';
-import { MatchAnalysis, OpponentPreparation } from '../models/analysis.model';
+import { MatchAnalysis, OpponentPreparation, RecommendationReviewStatus } from '../models/analysis.model';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -99,6 +99,15 @@ export class ApiService {
 
   generateMatchAnalysis(matchId: string): Observable<MatchAnalysis> {
     return this.http.post<MatchAnalysis>(`${this.base}/matches/${matchId}/analysis`, {});
+  }
+
+  reviewRecommendation(
+    matchId: string,
+    index: number,
+    body: { status: RecommendationReviewStatus; note: string | null },
+  ): Observable<MatchAnalysis> {
+    return this.http.patch<MatchAnalysis>(
+      `${this.base}/matches/${matchId}/analysis/recommendations/${index}`, body);
   }
 
   // TEN-51 — KI-Vorbereitung gegen einen Gegner (Head-to-Head-basiert).

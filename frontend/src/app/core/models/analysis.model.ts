@@ -1,9 +1,14 @@
 export type AnalysisStatus = 'PENDING' | 'COMPLETED' | 'FAILED';
 
+export type RecommendationReviewStatus = 'OPEN' | 'ACCEPTED' | 'REJECTED';
+
 export interface AnalysisRecommendation {
   priority: number;
   title: string;
   detail: string;
+  status: RecommendationReviewStatus;
+  reviewNote: string | null;
+  reviewedAt: string | null;
 }
 
 export interface MatchAnalysis {
