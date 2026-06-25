@@ -1,6 +1,8 @@
 package com.cas.tsas.ai;
 
 import com.cas.tsas.AbstractIntegrationTest;
+import com.cas.tsas.auth.domain.Role;
+import com.cas.tsas.auth.testsupport.JwtTestSupport;
 import com.cas.tsas.match.application.port.out.SavePointPort;
 import com.cas.tsas.match.domain.model.Direction;
 import com.cas.tsas.match.domain.model.Match;
@@ -17,11 +19,13 @@ import com.cas.tsas.player.infrastructure.persistence.repository.PlayerJpaReposi
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -88,6 +92,83 @@ class MatchAnalysisControllerIT extends AbstractIntegrationTest {
         UUID matchId = createMatch(MatchStatus.COMPLETED, 3);
         mockMvc.perform(post("/api/matches/{id}/analysis", matchId))
                 .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void patch_reviewsRecommendation_thenGetReflectsStatusAndNote() throws Exception {
+        UUID matchId = createMatch(MatchStatus.COMPLETED, 15);
+        mockMvc.perform(post("/api/matches/{id}/analysis", matchId)).andExpect(status().isCreated());
+
+        mockMvc.perform(patch("/api/matches/{id}/analysis/recommendations/{i}", matchId, 0)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"ACCEPTED\",\"note\":\"passt\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.recommendations[0].status").value("ACCEPTED"))
+                .andExpect(jsonPath("$.recommendations[0].reviewNote").value("passt"))
+                .andExpect(jsonPath("$.recommendations[0].reviewedAt").exists());
+
+        mockMvc.perform(get("/api/matches/{id}/analysis", matchId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.recommendations[0].status").value("ACCEPTED"));
+    }
+
+    @Test
+    void patch_returns400ForInvalidStatus() throws Exception {
+        UUID matchId = createMatch(MatchStatus.COMPLETED, 15);
+        mockMvc.perform(post("/api/matches/{id}/analysis", matchId)).andExpect(status().isCreated());
+
+        mockMvc.perform(patch("/api/matches/{id}/analysis/recommendations/{i}", matchId, 0)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"MAYBE\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void patch_returns400ForTooLongNote() throws Exception {
+        UUID matchId = createMatch(MatchStatus.COMPLETED, 15);
+        mockMvc.perform(post("/api/matches/{id}/analysis", matchId)).andExpect(status().isCreated());
+
+        String longNote = "x".repeat(501);
+        mockMvc.perform(patch("/api/matches/{id}/analysis/recommendations/{i}", matchId, 0)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"REJECTED\",\"note\":\"" + longNote + "\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void patch_returns404ForIndexOutOfRange() throws Exception {
+        UUID matchId = createMatch(MatchStatus.COMPLETED, 15);
+        mockMvc.perform(post("/api/matches/{id}/analysis", matchId)).andExpect(status().isCreated());
+
+        mockMvc.perform(patch("/api/matches/{id}/analysis/recommendations/{i}", matchId, 99)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"ACCEPTED\"}"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void patch_returns404WhenNoAnalysisExists() throws Exception {
+        UUID matchId = createMatch(MatchStatus.COMPLETED, 15);
+        // Kein POST /analysis -> es existiert keine Analyse -> 404.
+        // (Der 409-Pfad "Analyse nicht COMPLETED" ist im Service-Unit-Test (Task 3) abgedeckt,
+        //  da ein persistierter nicht-COMPLETED-Datensatz über die API nicht trivial erzeugbar ist.)
+        mockMvc.perform(patch("/api/matches/{id}/analysis/recommendations/{i}", matchId, 0)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"ACCEPTED\"}"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void patch_returns404ForCrossTenantMatch() throws Exception {
+        UUID matchId = createMatch(MatchStatus.COMPLETED, 15);
+        mockMvc.perform(post("/api/matches/{id}/analysis", matchId)).andExpect(status().isCreated());
+
+        UUID otherUser = UUID.randomUUID();
+        mockMvc.perform(patch("/api/matches/{id}/analysis/recommendations/{i}", matchId, 0)
+                        .with(JwtTestSupport.withUser(otherUser, Role.COACH))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"ACCEPTED\"}"))
+                .andExpect(status().isNotFound());
     }
 
     private UUID createMatch(MatchStatus status, int pointCount) {

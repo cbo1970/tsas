@@ -25,7 +25,7 @@ public record MatchAnalysisResponse(
         List<RecommendationResponse> recs = a.getRecommendations() == null
                 ? List.of()
                 : a.getRecommendations().stream()
-                        .map(r -> new RecommendationResponse(r.priority(), r.title(), r.detail()))
+                        .map(RecommendationResponse::from)
                         .toList();
         return new MatchAnalysisResponse(
                 a.getMatchId(),

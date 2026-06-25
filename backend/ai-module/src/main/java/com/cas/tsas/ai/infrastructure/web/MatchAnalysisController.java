@@ -2,12 +2,17 @@ package com.cas.tsas.ai.infrastructure.web;
 
 import com.cas.tsas.ai.application.port.in.GenerateMatchAnalysisUseCase;
 import com.cas.tsas.ai.application.port.in.GetMatchAnalysisUseCase;
+import com.cas.tsas.ai.application.port.in.ReviewRecommendationUseCase;
 import com.cas.tsas.ai.infrastructure.web.dto.MatchAnalysisResponse;
+import com.cas.tsas.ai.infrastructure.web.dto.ReviewRecommendationRequest;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -23,11 +28,14 @@ public class MatchAnalysisController {
 
     private final GenerateMatchAnalysisUseCase generateUseCase;
     private final GetMatchAnalysisUseCase getUseCase;
+    private final ReviewRecommendationUseCase reviewUseCase;
 
     public MatchAnalysisController(GenerateMatchAnalysisUseCase generateUseCase,
-                                   GetMatchAnalysisUseCase getUseCase) {
+                                   GetMatchAnalysisUseCase getUseCase,
+                                   ReviewRecommendationUseCase reviewUseCase) {
         this.generateUseCase = generateUseCase;
         this.getUseCase = getUseCase;
+        this.reviewUseCase = reviewUseCase;
     }
 
     @PostMapping
@@ -45,5 +53,13 @@ public class MatchAnalysisController {
                 .map(MatchAnalysisResponse::from)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "No analysis for match " + matchId));
+    }
+
+    @PatchMapping("/recommendations/{index}")
+    public MatchAnalysisResponse reviewRecommendation(@PathVariable UUID matchId,
+                                                      @PathVariable int index,
+                                                      @Valid @RequestBody ReviewRecommendationRequest request) {
+        return MatchAnalysisResponse.from(
+                reviewUseCase.review(matchId, index, request.status(), request.note()));
     }
 }
