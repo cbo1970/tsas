@@ -227,7 +227,7 @@ class PlayerValidationIT extends AbstractIntegrationTest {
 
 > Notes:
 > - `AbstractIntegrationTest` setzt einen Default-JWT (`DEFAULT_USER`, COACH) via `defaultRequest(...)` aus TEN-55, daher ist hier kein `JwtTestSupport.withUser(...)` nötig.
-> - `validPlayerBody()` enthält bewusst die `@NotNull` Enum-Felder (Gender, Handedness, BackhandType), damit die 400er ausschließlich aus dem Größenlimit kommen.
+> - `validPlayerBody()` enthält bewusst die `@NotNull` Enum-Felder (Gender, Handedness, BackhandType), damit die 400er ausschliesslich aus dem Grössenlimit kommen.
 
 - [ ] **Step 2: Run the IT**
 
@@ -476,7 +476,7 @@ class RecordPointValidationIT extends AbstractIntegrationTest {
 ```
 
 > Notes:
-> - `pointType=WINNER`, `strokeType=FOREHAND`, `direction=LONG` sind gültige Werte aus `PointType`, `StrokeType`, `Direction`. Falls Enum-Konstanten anders heißen, beim Implementieren anpassen — verifizieren mit:
+> - `pointType=WINNER`, `strokeType=FOREHAND`, `direction=LONG` sind gültige Werte aus `PointType`, `StrokeType`, `Direction`. Falls Enum-Konstanten anders heissen, beim Implementieren anpassen — verifizieren mit:
 >   ```
 >   grep -E "^\s+[A-Z_]+," backend/match-module/src/main/java/com/cas/tsas/match/domain/model/PointType.java backend/match-module/src/main/java/com/cas/tsas/match/domain/model/StrokeType.java backend/match-module/src/main/java/com/cas/tsas/match/domain/model/Direction.java
 >   ```

@@ -1935,7 +1935,7 @@ public class PromptBuilder {
         return """
                Du bist ein erfahrener Tennis-Coach.
                Analysiere die übergebenen Match-Statistiken und liefere eine strukturierte taktische Auswertung.
-               Antworte ausschließlich in deutscher Sprache.
+               Antworte ausschliesslich in deutscher Sprache.
                Halte dich strikt an das vorgegebene JSON-Schema. Liefere 3 bis 5 priorisierte Empfehlungen.
                """;
     }
@@ -2048,7 +2048,7 @@ public class AiModuleConfig {
     }
 }
 ```
-Der `OpenAiLlmAdapter` ist mit `@Component` registriert. Damit er **nur außerhalb von `test`** geladen wird, ergänze die Annotation am Adapter:
+Der `OpenAiLlmAdapter` ist mit `@Component` registriert. Damit er **nur ausserhalb von `test`** geladen wird, ergänze die Annotation am Adapter:
 ```java
 @Component
 @org.springframework.context.annotation.Profile("!test")
@@ -2137,7 +2137,7 @@ class OpenAiLlmAdapterTest {
 ```bash
 cd backend && JAVA_HOME=/opt/java/jdk-25.0.1 ./gradlew :ai-module:test
 ```
-Falls Test fehlschlägt wegen verändertem Spring-AI-Verhalten (z.B. wenn der Starter-Name in der finalen 1.0.x-Version anders heißt) — Versionen via `./gradlew :ai-module:dependencies | grep spring-ai` prüfen und anpassen. Erwartetes Endresultat: PASS.
+Falls Test fehlschlägt wegen verändertem Spring-AI-Verhalten (z.B. wenn der Starter-Name in der finalen 1.0.x-Version anders heisst) — Versionen via `./gradlew :ai-module:dependencies | grep spring-ai` prüfen und anpassen. Erwartetes Endresultat: PASS.
 
 - [ ] **Step 9: Commit**
 
@@ -2377,7 +2377,7 @@ class MatchAnalysisControllerIT {
     }
 }
 ```
-**Hinweis Implementierungsdetail:** Der "wenig Punkte"-Test ist im Bestand etwas tricky, weil das Match-Setup ein vollständiges Beenden nur via Walkover ohne Punkte zulässt. Falls die obige `endMatchWalkover`-API anders heißt, prüfen unter `match-module/.../EndMatchUseCase.java`. Notfalls den Test umstellen: einen direkt-persistierten Match-Datensatz mit Status COMPLETED und ohne Points einfügen (über `MatchPersistenceAdapter`).
+**Hinweis Implementierungsdetail:** Der "wenig Punkte"-Test ist im Bestand etwas tricky, weil das Match-Setup ein vollständiges Beenden nur via Walkover ohne Punkte zulässt. Falls die obige `endMatchWalkover`-API anders heisst, prüfen unter `match-module/.../EndMatchUseCase.java`. Notfalls den Test umstellen: einen direkt-persistierten Match-Datensatz mit Status COMPLETED und ohne Points einfügen (über `MatchPersistenceAdapter`).
 
 - [ ] **Step 4: Test ausführen — Erwartung: läuft grün (alle App-Beans schon vorhanden)**
 
@@ -2424,7 +2424,7 @@ Entscheidungen:
   Async erst beim Live-Coaching nötig.
 - Statistiken werden nicht persistiert — pro Aufruf neu aus Points berechnet
   (vernachlässigbar bei <500 Points).
-- API-Key ausschließlich aus Env-Var `OPENAI_API_KEY`.
+- API-Key ausschliesslich aus Env-Var `OPENAI_API_KEY`.
 ```
 
 - [ ] **Step 2: Roadmap-Eintrag ergänzen**

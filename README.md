@@ -176,7 +176,7 @@ KC_ADMIN_PASSWORD=adminPasswort
 
 #### Keycloak SMTP (E-Mail-Verifizierung — TEN-64)
 
-Der Keycloak-Realm hat `verifyEmail: true` und ist standardmäßig gegen den lokalen **Mailhog**-Container konfiguriert (UI auf `http://localhost:8025`). Für Prod-Deployments lassen sich die SMTP-Felder über folgende `.env`-Variablen überschreiben — die Platzhalter `${KC_SMTP_*:default}` im `realm-export.json` werden beim Realm-Import durch Keycloak ersetzt:
+Der Keycloak-Realm hat `verifyEmail: true` und ist standardmässig gegen den lokalen **Mailhog**-Container konfiguriert (UI auf `http://localhost:8025`). Für Prod-Deployments lassen sich die SMTP-Felder über folgende `.env`-Variablen überschreiben — die Platzhalter `${KC_SMTP_*:default}` im `realm-export.json` werden beim Realm-Import durch Keycloak ersetzt:
 
 ```env
 # Beispiel: Sendgrid

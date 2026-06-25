@@ -187,7 +187,7 @@ public interface LlmClientPort {
 
 ### Prompt-Strategie (PromptBuilder)
 
-- **System-Prompt (deutsch):** „Du bist ein erfahrener Tennis-Coach. Analysiere die Match-Statistiken und liefere eine strukturierte taktische Auswertung. Antworte ausschließlich in deutscher Sprache. Halte dich strikt an das vorgegebene JSON-Schema."
+- **System-Prompt (deutsch):** „Du bist ein erfahrener Tennis-Coach. Analysiere die Match-Statistiken und liefere eine strukturierte taktische Auswertung. Antworte ausschliesslich in deutscher Sprache. Halte dich strikt an das vorgegebene JSON-Schema."
 - **User-Prompt:** strukturierte Darstellung von `MatchStatistics` + `MatchMetadata` + Erläuterung der vier Felder + Vorgabe für 3–5 priorisierte Empfehlungen.
 - Keine Few-Shot-Examples im ersten Wurf — bei schwankender Qualität später ergänzen.
 
@@ -297,7 +297,7 @@ tsas:
 
 **`application-test.yml`:** `tsas.ai.enabled: false` + Bean-Profil `test` aktiviert `FakeLlmClientAdapter` (deterministisches Stub-Result) statt `OpenAiLlmAdapter`.
 
-**API-Key:** ausschließlich aus Env-Var `OPENAI_API_KEY`. Niemals in Repo oder `.local`-Files committen.
+**API-Key:** ausschliesslich aus Env-Var `OPENAI_API_KEY`. Niemals in Repo oder `.local`-Files committen.
 
 ---
 

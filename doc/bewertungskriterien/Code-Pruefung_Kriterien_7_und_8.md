@@ -19,7 +19,7 @@ Namen; Dokumentation an nicht-trivialen Stellen; Modulgrenzen im Code konsistent
 
 | Anker | Beleg |
 |---|---|
-| Schichtentrennung (domain/application/infrastructure) | Konsequent in allen 6 Modulen. Domänenmodelle sind reine POJOs/Records ohne Framework-Annotationen, z. B. `match/domain/model/Match.java` (Kommentar „Pure POJO — no framework dependencies"), `statistics/domain/model/MatchStatistics.java` (record), `ai/domain/model/Recommendation.java` (record). JPA-Annotationen ausschließlich in `infrastructure/persistence/entity/*JpaEntity.java`. |
+| Schichtentrennung (domain/application/infrastructure) | Konsequent in allen 6 Modulen. Domänenmodelle sind reine POJOs/Records ohne Framework-Annotationen, z. B. `match/domain/model/Match.java` (Kommentar „Pure POJO — no framework dependencies"), `statistics/domain/model/MatchStatistics.java` (record), `ai/domain/model/Recommendation.java` (record). JPA-Annotationen ausschliesslich in `infrastructure/persistence/entity/*JpaEntity.java`. |
 | Ports & Adapters | Input-Ports (`application/port/in/*UseCase`) und Output-Ports (`application/port/out/*Port`) als Interfaces; Adapter implementieren Output-Ports (`*PersistenceAdapter`, `OpenAiLlmAdapter implements LlmClientPort`). |
 | Keine zyklischen Abhängigkeiten | Modulgraph azyklisch und gerichtet: `app → alle`, `ai → common/match/player/statistics`, `statistics → common/match`, `match → player`. Bestätigt über `build.gradle.kts` jedes Moduls. |
 | Sprechende Namen | Packages und Klassen durchgängig selbsterklärend (`ScoringService`, `ComputeMatchStatisticsUseCase`, `LoadPlayerPort`, `MatchAnalysisPersistenceAdapter`). |
@@ -29,12 +29,12 @@ Namen; Dokumentation an nicht-trivialen Stellen; Modulgrenzen im Code konsistent
 
 | # | Lücke | Beleg / Ort |
 |---|---|---|
-| 7.1 | **JavaDoc fehlt an nicht-trivialen Stellen weitgehend.** Im gesamten Code existiert genau **ein** JavaDoc-Block außerhalb von `ScoringService` (in `ai/infrastructure/config/AiModuleConfig.java`). Es gibt **keine** `package-info.java`. | `find . -name package-info.java` → leer. |
+| 7.1 | **JavaDoc fehlt an nicht-trivialen Stellen weitgehend.** Im gesamten Code existiert genau **ein** JavaDoc-Block ausserhalb von `ScoringService` (in `ai/infrastructure/config/AiModuleConfig.java`). Es gibt **keine** `package-info.java`. | `find . -name package-info.java` → leer. |
 | 7.2 | Komplexe Statistik-Attribution **ohne Erläuterung**: Logik, wann ein Punkt `WINNER`/`ACE` dem einen vs. `UNFORCED_ERROR` dem anderen Spieler zugerechnet wird. | `statistics/domain/PointAttribution.java` (`attributingPlayer()`), `statistics/application/service/MatchStatisticsService.java` (`compute()` + innere `Accumulator`-Klasse) — kein JavaDoc. |
 | 7.3 | Break-Point-Berechnung und Score-Fortschreibung **undokumentiert**. | `match/application/service/MatchService.java` `calculateIsBreakPoint()` und `recordPoint()`. |
 | 7.4 | Zentrale LLM-Prompting-Logik **ohne jede Doku** (System-/User-Prompt, JSON-Strukturanweisung). | `ai/infrastructure/llm/PromptBuilder.java` (`systemPrompt()`, `userPrompt()`). |
 | 7.5 | **Modulgrenzen weichen vom Entwurf ab:** Der SAD (§5.2) führt ein eigenständiges **`scoring-module`** als Baustein; im Code existiert es nicht — Scoring ist als `ScoringService` + `MatchScore` in `match-module` realisiert. | SAD `doc/sad/TSaS_SAD_arc42_1.md` Z. 204; `settings.gradle.kts` (6 statt 7 fachlicher Module). |
-| 7.6 | **Modulkommunikation nicht „ausschließlich über Application-Layer-Interfaces"** (RB-T06). Ports werden zwar genutzt, aber **Domänenmodelle werden modulübergreifend direkt importiert** — d. h. eine Domänenschicht hängt an der Domänenschicht eines Fremdmoduls. | `statistics/domain/PointAttribution.java` importiert `match.domain.model.Point`; `ai`-Service importiert `match.domain.model.Match`, `player.domain.model.Player`, `statistics.domain.model.*`. Kein Anti-Corruption-/DTO-Layer; `common-module` (Shared Kernel) wird dafür nicht genutzt. |
+| 7.6 | **Modulkommunikation nicht „ausschliesslich über Application-Layer-Interfaces"** (RB-T06). Ports werden zwar genutzt, aber **Domänenmodelle werden modulübergreifend direkt importiert** — d. h. eine Domänenschicht hängt an der Domänenschicht eines Fremdmoduls. | `statistics/domain/PointAttribution.java` importiert `match.domain.model.Point`; `ai`-Service importiert `match.domain.model.Match`, `player.domain.model.Player`, `statistics.domain.model.*`. Kein Anti-Corruption-/DTO-Layer; `common-module` (Shared Kernel) wird dafür nicht genutzt. |
 | 7.7 | **Keine automatische Durchsetzung der Modul-/Schichtgrenzen** (kein ArchUnit o. ä.). Konsistenz beruht allein auf Compile-Zeit-Abhängigkeiten und Disziplin. | `grep -rn ArchUnit` → leer. |
 | 7.8 | Domänen-Setter ohne Invarianten — Lesbarkeit/Verantwortlichkeit leidet (Domain schützt seine Regeln nicht). | `match/domain/model/MatchScore.java` 18 Setter ohne Validierung (z. B. `setPointsPlayer1` erlaubt negative Werte); `Point.setWinner(int)` ohne Wertebereich {1,2}. |
 
@@ -42,7 +42,7 @@ Namen; Dokumentation an nicht-trivialen Stellen; Modulgrenzen im Code konsistent
 höchste Stufe; **Dokumentation an nicht-trivialen Stellen ist aber lückenhaft (7.1–7.4)** und
 die **Modulgrenzen sind nicht vollständig konsistent zum Entwurf (7.5–7.6)**. Damit ist der
 Anker der Stufe „vollständig" nicht voll erfüllt → aktuell **Stufe „überwiegend/mehrheitlich
-(4 P.)"** („Modulstruktur erkennbar; einzelne Verstöße; Dokumentation lückenhaft").
+(4 P.)"** („Modulstruktur erkennbar; einzelne Verstösse; Dokumentation lückenhaft").
 **Für 7 P. fehlt:** flächendeckende Doku der Kernlogik + Auflösung der Entwurfsabweichungen
 (scoring-module, modulübergreifende Domain-Importe).
 

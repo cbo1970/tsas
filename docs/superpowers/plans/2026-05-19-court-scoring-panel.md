@@ -743,7 +743,7 @@ npm start
 
 1. `https://localhost:4200` öffnen, einloggen
 2. Match öffnen → Score-Screen
-3. Verifizieren: blauer Tennisplatz mit weißen Linien sichtbar (Außenfeld dunkelblau, Infield heller)
+3. Verifizieren: blauer Tennisplatz mit weissen Linien sichtbar (Aussenfeld dunkelblau, Infield heller)
 4. Doppelfeld-Linien sichtbar: Singles-Seitenlinien (horizontal oben/unten), Service-Linien (vertikal je Hälfte), Center-Servicelinie (horizontal, Netz bis Servicelinie)
 5. Beide Spieler-Panels im Feld — gleich hell, kein Dimming
 6. Erste Kachel → Aufschlag setzen, 🎾 im Score-Streifen

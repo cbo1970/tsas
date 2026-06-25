@@ -87,7 +87,7 @@ H2-/Postgres-kompatibel (`ALTER COLUMN ... SET NOT NULL`). Backfill-Owner ist do
 |---|---|
 | `findAll()` | filtert nach `ownerId = currentUser.id` (Admin: kein Filter) |
 | `findById(id)` | lädt; wenn `ownerId ≠ currentUser.id` und kein Admin → wirft `NotFoundException` → **404** |
-| `getScore(matchId)`, `findActiveMatchIdsByPlayerIds(...)` | erben Owner-Check des umschließenden Aggregats |
+| `getScore(matchId)`, `findActiveMatchIdsByPlayerIds(...)` | erben Owner-Check des umschliessenden Aggregats |
 
 ### 5.2 Writes
 

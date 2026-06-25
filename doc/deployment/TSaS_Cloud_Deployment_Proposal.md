@@ -43,7 +43,7 @@ Internet ─▶ Cloud Firewall ─▶ Load Balancer (TLS) ─▶ Traefik (Revers
 
 | Komponente | Technologie | Zweck |
 |---|---|---|
-| **Cloud Firewall** | Hetzner Cloud Firewall (stateful) | Erlaubt eingehend nur **443/80** (Welt) und **22/SSH** (nur Admin-IP-Range). Alles andere – insbesondere PostgreSQL – ist von außen unerreichbar. |
+| **Cloud Firewall** | Hetzner Cloud Firewall (stateful) | Erlaubt eingehend nur **443/80** (Welt) und **22/SSH** (nur Admin-IP-Range). Alles andere – insbesondere PostgreSQL – ist von aussen unerreichbar. |
 | **Load Balancer / Application Gateway** | Hetzner Managed Load Balancer (`lb11`) | Öffentlicher Eintrittspunkt, **TLS-Terminierung**, Health Checks, Verteilung auf App-Targets. Übernimmt die „Application Gateway"-Rolle. |
 | **Reverse Proxy** | **Traefik** (Container) | TLS (Let's Encrypt, EU-ACME), Host-/Pfad-Routing: `/ → frontend`, `/api → backend`, `auth.<domain> → keycloak`. Security-Header, Rate-Limiting. |
 | **Frontend** | Nginx + Angular-SPA (Container) | Auslieferung der statischen SPA-Artefakte. |
@@ -59,9 +59,9 @@ Internet ─▶ Cloud Firewall ─▶ Load Balancer (TLS) ─▶ Traefik (Revers
 ## 4. Netzwerk & Sicherheit
 
 - **Zwei Zonen:** öffentlich (LB) ↔ **privates Netz `10.0.0.0/16`** (App-VM, DB-VM, Keycloak). Nur der Load Balancer und SSH haben öffentliche Erreichbarkeit; die DB hat **keine** öffentliche IP.
-- **Firewall-Regeln (eingehend):** `443` und `80` (→ Redirect auf 443) aus dem Internet auf die App-Targets; `22` nur aus der Admin-IP-Range; interner Traffic (Backend↔DB :5432, Backend↔Keycloak) ausschließlich über das private Netz.
+- **Firewall-Regeln (eingehend):** `443` und `80` (→ Redirect auf 443) aus dem Internet auf die App-Targets; `22` nur aus der Admin-IP-Range; interner Traffic (Backend↔DB :5432, Backend↔Keycloak) ausschliesslich über das private Netz.
 - **TLS:** Browser↔LB und LB↔Traefik via HTTPS; intern über das private Netz. Erfüllt NFA-02 (TLS ≥ 1.2).
-- **DSGVO / Datenresidenz:** Compute, DB, Backups, Identitätsdaten und Logs liegen ausschließlich in EU-Rechenzentren eines EU-Anbieters.
+- **DSGVO / Datenresidenz:** Compute, DB, Backups, Identitätsdaten und Logs liegen ausschliesslich in EU-Rechenzentren eines EU-Anbieters.
 - **Härtung:** SSH nur per Key, `fail2ban`, automatische OS-Security-Updates, Docker-Rootless wo möglich.
 
 ## 5. Datenfluss (Request-Pfad)
@@ -125,14 +125,14 @@ Die bestehenden GitHub-Actions-Workflows werden um einen Deploy-Schritt ergänzt
 
 - **Backup:** täglicher `pg_dump` (verschlüsselt, age/SOPS-Key) + wöchentliche Volume-Snapshots → EU-Object-Storage. RPO ≤ 24 h, RTO ≤ 30 min (NFA-04).
 - **Verfügbarkeit (95 %):** Single-VM-Setup genügt der Zielvorgabe. Für höhere Verfügbarkeit: zweite App-VM als LB-Target (Keycloak/Backend sind zustandslos bzgl. DB) und Managed-DB mit HA.
-- **Skalierung:** vertikal (größerer Servertyp) reicht für ≤ 100 Nutzer; horizontal über zusätzliche App-Targets am Load Balancer möglich.
+- **Skalierung:** vertikal (grösserer Servertyp) reicht für ≤ 100 Nutzer; horizontal über zusätzliche App-Targets am Load Balancer möglich.
 
 ## 9. Mapping zum bestehenden `docker/compose.yml`
 
 | Compose-Service | Im Cloud-Betrieb |
 |---|---|
 | `frontend` (Nginx+SPA) | Container auf App-VM, hinter Traefik |
-| `backend` (Spring Boot) | Container auf App-VM, nur privates Netz nach außen |
+| `backend` (Spring Boot) | Container auf App-VM, nur privates Netz nach aussen |
 | `keycloak` | Container auf App-VM, über Traefik unter `auth.<domain>` |
 | `db` (PostgreSQL) | Eigene DB-VM im privaten Netz **oder** Managed-EU-PostgreSQL |
 | *(neu)* `traefik` | Reverse Proxy / TLS / Routing |

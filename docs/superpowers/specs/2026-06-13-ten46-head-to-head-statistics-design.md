@@ -31,7 +31,7 @@ Verworfene Alternativen:
 - **Per-Match-Service wiederverwenden und summieren** — falsch für Prozentwerte; berechnet zudem
   nicht die FA-08-Kennzahlen (Serve-Won%, Return%, Return-Games%).
 - **SQL-Aggregation** — Over-Engineering: die Match-Anzahl *pro Paar* ist klein (die 500 aus QZ-04
-  ist die *Gesamt*-DB-Größe), und Tennislogik würde in SQL zerstreut.
+  ist die *Gesamt*-DB-Grösse), und Tennislogik würde in SQL zerstreut.
 
 ## 1. Modul-Verdrahtung & Datenzugriff
 
