@@ -54,6 +54,12 @@ public abstract class AbstractIntegrationTest {
         // endpoint. MatchAnalysisRateLimitIT tightens via @TestPropertySource.
         registry.add("tsas.ai.rate-limit.per-day", () -> "1000");
         registry.add("tsas.ai.rate-limit.per-minute", () -> "100");
+        // Force the deterministic FakeLlmClientAdapter regardless of the host environment.
+        // application.yml binds spring.ai.openai.api-key to ${OPENAI_API_KEY:}, so a developer
+        // who exports a real OPENAI_API_KEY would otherwise activate OpenAiLlmAdapter and make
+        // integration tests hit the live OpenAI API (breaking the modelUsed=fake-llm assertions).
+        // This high-precedence override pins the key empty for every integration test.
+        registry.add("spring.ai.openai.api-key", () -> "");
     }
 
     @Autowired
