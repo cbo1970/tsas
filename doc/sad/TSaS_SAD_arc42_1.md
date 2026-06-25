@@ -428,10 +428,26 @@ Strukturiertes Logging via SLF4J/Logback im JSON-Format. Spring Boot Actuator st
 
 ### 8.5 Testkonzept
 
-- **Unit Tests (Backend):** JUnit 5 (Jupiter) für Domänenlogik und Services; Mockito für das Mocking von Ports und externen Abhängigkeiten.
+Die Teststrategie folgt der Testpyramide: viele schnelle Unit-Tests auf der Domänen-/Service-Ebene, eine schmalere Schicht von Integrations-/API-Tests gegen den realen Stack, plus Frontend-Komponententests.
+
+- **Unit Tests (Backend):** JUnit 5 (Jupiter) für Domänenlogik und Services; Mockito für das Mocking von Ports und externen Abhängigkeiten. Hier liegt die fachliche Kernlogik (Scoring, Punkt-Attribution, Use-Case-Vorbedingungen) — schnell, ohne Spring-Context.
 - **Integrations-/API-Tests (Backend):** Spring Boot Test mit Testcontainers (PostgreSQL) und MockMvc (`AbstractIntegrationTest`); die JWT-Validierung wird via Spring Security Test gemockt — kein laufendes Keycloak nötig.
 - **Coverage-Gate (Backend):** JaCoCo, modulübergreifend aggregiert. Die `*IT`-Integrationstests liegen im `app`-Modul, decken aber Klassen aller Module ab — per-Modul-Reports würden unterzählen. Die Root-Tasks `jacocoRootReport` (Report) und `jacocoRootCoverageVerification` (Gate) kombinieren die `test.exec`-Daten aller Module gegen alle `main`-Sources. Das Gate ist in `check` eingehängt und bricht den Build unter **85 % Line / 70 % Branch** (aktueller Stand ~95 % / ~80 %). Schwellen in `backend/build.gradle.kts` (`violationRules`).
 - **Frontend-Tests:** Vitest (`@angular/build:unit-test`-Builder, `*.spec.ts`) für Unit-Tests sowie Cypress Component Testing (`*.cy.ts`) für Komponenten-/Integrationstests mit gemockten HTTP-Calls (`cy.intercept`).
+
+#### 8.5.1 Begründung der Test-Ebenen und Werkzeuge
+
+- **Warum echtes PostgreSQL (Testcontainers) statt H2 in den Integrationstests.** Die `*IT`-Tests starten einen `PostgreSQLContainer("postgres:16-alpine")` (`AbstractIntegrationTest`) statt einer In-Memory-H2. Grund: Persistenz- und Schema-Verhalten ist PostgreSQL-spezifisch und soll *gegen dieselbe Engine wie in Produktion* verifiziert werden — die Flyway-Migrationen V1–V9 laufen real durch (inkl. nativem `UUID`-Typ, `CHECK`-Constraint auf `user_preferences.language`, `ON DELETE CASCADE` bei `match_analysis` und der `NOT NULL`-Härtung aus V8). H2 im PostgreSQL-Kompatibilitätsmodus weicht bei genau diesen Punkten (Typ-Koerzierung, Constraint-Durchsetzung, DDL) ab und gäbe falsche Sicherheit. Das schnelle H2-Profil bleibt der lokalen Entwicklung vorbehalten (`local`/`test`, `ddl-auto` ≠ `validate`); die IT-Schicht schliesst die Lücke zwischen Test und Produktion.
+- **Warum WireMock für den LLM-Adapter.** `OpenAiLlmAdapterTest` stubbt den OpenAI-HTTP-Endpoint via WireMock und prüft so den realen Serialisierungs-/Deserialisierungs-Pfad des Spring-AI-`ChatClient` (Request-Aufbau, strukturiertes JSON → `record`) **deterministisch, offline und ohne API-Kosten/Quota** — ohne je die echte OpenAI-API zu rufen.
+- **Warum das aggregierte Coverage-Gate (85 %/70 %).** Qualität wird durchgesetzt statt empfohlen; die Schwellen liegen knapp unter dem Ist-Stand (~95 %/~80 %), fangen also Regressionen, ohne bei kleinen Schwankungen zu brechen (Detail-Begründung siehe ADR-11).
+
+#### 8.5.2 Tests der KI-Anteile (Nichtdeterminismus, Guardrails, Fehlerpfade)
+
+Die KI-Anteile sind wegen Nichtdeterminismus, externer Abhängigkeit und Kosten gesondert abgesichert:
+
+- **Nichtdeterminismus eliminieren.** Auf Adapter-Ebene fixiert der WireMock-Stub die LLM-Antwort (`OpenAiLlmAdapterTest`); auf Service-/IT-Ebene ersetzt der deterministische `FakeLlmClientAdapter` (aktiv via `@ConditionalOnMissingBean`, ohne API-Key) den Provider vollständig — die IT belegen das über `modelUsed = fake-llm`. So sind KI-Pfade reproduzierbar testbar, ohne dass eine generative Antwort das Ergebnis verwackelt.
+- **Guardrails verifizieren.** `MatchAnalysisServiceTest` prüft die fachlichen Vorbedingungen explizit: `generate_throwsWhenMatchNotCompleted` (Match muss `COMPLETED` sein) und `generate_throwsWhenTooFewPoints` (Mindestpunktzahl). Die Kosten-Guardrail (Rate-Limit) ist separat in `MatchAnalysisRateLimitIT` abgedeckt (vgl. §7.1.3 / TEN-64).
+- **Fehlerpfade abdecken.** `generate_persistsFailedAnalysisAndRethrowsOnLlmError` belegt: ein LLM-Ausfall persistiert einen `FAILED`-Datensatz **und** propagiert den Fehler (→ HTTP 502). `MatchAnalysisControllerIT` prüft die HTTP-Abbildung end-to-end gegen echtes PostgreSQL (409 nicht beendet, 422 zu wenige Punkte, 404 unbekannt/cross-tenant).
 
 ### 8.6 Continuous Integration / Build-Gate
 
@@ -539,7 +555,7 @@ Das Gate (`jacocoRootCoverageVerification`, in `check` eingehängt) verlangt **8
 
 ### 10.2 Nicht-funktionale Anforderungen (SMART)
 
-Siehe Kapitel 1.2 Qualitätsziele für die übergreifenden SMART-Qualitätsziele (QZ-01 bis QZ-05). Ergänzende Anforderungen:
+Siehe Kapitel 1.2 Qualitätsziele für die übergreifenden SMART-Qualitätsziele (QZ-01 bis QZ-06). Ergänzende Anforderungen:
 
 | ID | Qualitätsmerkmal | SMART-Beschreibung |
 |----|-----------------|-------------------|
@@ -548,15 +564,30 @@ Siehe Kapitel 1.2 Qualitätsziele für die übergreifenden SMART-Qualitätsziele
 | NFA-03 | **Portabilität** | Die Applikation muss auf jeder Plattform lauffähig sein, die Docker Engine 24.0+ und Docker Compose v2.0+ unterstützt (Linux x86_64, macOS mit Apple Silicon via Rosetta 2, Windows mit WSL2). Der Start der gesamten Umgebung (`docker compose up`) muss ohne manuelle Konfigurationsschritte möglich sein und innerhalb von 5 Minuten (bei erstmaligem Ausführen inklusive Image-Download) eine vollständig betriebsbereite Instanz liefern. Die Anforderung gilt als erfüllt, wenn das Setup auf mindestens zwei der genannten Plattformen erfolgreich verifiziert wurde. |
 | NFA-04 | **Wiederherstellbarkeit** | Die PostgreSQL-Datenbank muss täglich automatisch gesichert werden (via `pg_dump`, komprimiert, gespeichert ausserhalb des Datenbank-Containers). Der maximal tolerable Datenverlust (RPO) beträgt 24 Stunden. Eine vollständige Wiederherstellung aus dem letzten erfolgreichen Backup muss innerhalb von 30 Minuten abgeschlossen sein (RTO = 30 min). Die Wiederherstellungsprozedur muss schriftlich dokumentiert und vor dem ersten Produktivbetrieb mindestens einmal erfolgreich getestet und protokolliert worden sein. |
 
+### 10.3 Abnahmekriterien je Kernfunktion
+
+Für jede Kernfunktion ist ein abnahmefähiges Kriterium im Schema *Gegeben / Wenn / Dann* definiert und auf die detaillierte funktionale Anforderung (FA, §10.1) sowie das zugehörige Qualitätsziel bzw. die NFR (QZ §1.2 / NFA §10.2) zurückverlinkt. Ein Kriterium gilt als **erfüllt**, wenn der zugehörige automatisierte Test grün ist (Modul-Tests + `*IT` gegen echtes PostgreSQL, siehe §8.5–8.7).
+
+| Kernfunktion | Abnahmekriterium (Gegeben / Wenn / Dann) | FA | QZ/NFA |
+|---|---|---|---|
+| **Authentifizierung & Registrierung** | *Gegeben* ein Client, *wenn* ein geschützter Endpunkt (≠ `/health`) ohne gültiges OAuth2-Bearer-Token aufgerufen wird, *dann* antwortet das API mit **HTTP 401**; mit gültigem Token mit **HTTP 200**. Self-Registrierung mit gültigen Pflichtfeldern führt zu einem authentifizierten Konto, doppelte E-Mail/Username → 409. | FA-01, FA-02 | QZ-05 |
+| **Spieler verwalten (CRUD/Suche)** | *Gegeben* ein authentifizierter Nutzer, *wenn* er via `POST /api/players` einen Spieler mit allen Pflichtfeldern anlegt, *dann* **HTTP 201** mit generierter UUID; fehlende Pflichtfelder → **400** mit Feld-Detail; Suche ganz ohne Parameter → **400**; hartes Löschen eines an einem Match beteiligten Spielers → **409** (stattdessen Soft-Delete via `deactivate`). | FA-03, FA-04, FA-12, FA-13 | QZ-03 (Write ≤ 250 ms), NFA-01 (Read ≤ 500 ms) |
+| **Match anlegen & verwalten** | *Gegeben* zwei existierende Spieler, *wenn* `POST /api/matches` mit gültigem Format aufgerufen wird, *dann* **HTTP 201** mit Status `IN_PROGRESS`; unbekannte Spieler-ID → **404**. End/Walkover/Score-Korrektur/Aufschläger setzen Status und Sieger regelkonform (**200**); Aktionen auf bereits abgeschlossenem Match bzw. ungültige Werte → **409/400**. | FA-05, FA-14, FA-15, FA-16 | QZ-03 |
+| **Punkterfassung & Scoring** | *Gegeben* ein laufendes Match (`IN_PROGRESS`), *wenn* `POST /api/matches/{id}/points` mit gültigem Punkt erfasst wird, *dann* **HTTP 201** mit dem nach **ITF-Regelwerk** korrekt berechneten Spielstand (Punkte 0/15/30/40/Vorteil, Games, Sätze, Tie-Break, Short Set); ungültiger Enum-Wert oder fehlendes Pflichtfeld → **400**. | FA-06, FA-07 | QZ-03 (≤ 250 ms bei 100 Nutzern) |
+| **Statistik (Head-to-Head & Match)** | *Gegeben* gemeinsame abgeschlossene Matches, *wenn* `GET /api/statistics/head-to-head` bzw. `GET /api/matches/{id}/statistics` aufgerufen wird, *dann* **HTTP 200** mit den definierten Aufschlag-, Return-, Rallye- und Bilanz-Kennzahlen je Spieler; unbekannte Spieler-/Match-ID → **404**. | FA-08, FA-17 | QZ-04 (≤ 60 s bei ≥ 500 Matches) |
+| **KI-Analyse & Gegner-Vorbereitung** | *Gegeben* ein `COMPLETED`-Match mit ≥ 10 Punkten (bzw. ≥ 1 gemeinsames Match), *wenn* `POST /api/matches/{id}/analysis` (bzw. `…/opponent-preparation/…`) aufgerufen wird, *dann* **HTTP 200** mit den strukturierten Textfeldern + 3–5 priorisierten Empfehlungen; Vorbedingungen/Fehler korrekt abgebildet: **409** (nicht beendet), **422** (zu wenige Punkte / kein gemeinsames Match), **429** (Rate-Limit), **502** (LLM-Fehler, `FAILED`-Datensatz persistiert). | FA-11, FA-20 | QZ-06 (≤ 60 s; Re-Read < 250 ms) |
+
+Die **funktionalen** Kriterien (Statuscodes, Validierung, Scoring-Korrektheit, KI-Vorbedingungen) sind durchgängig durch automatisierte Tests abgedeckt (§8.7). Die **Antwortzeit**-Kriterien (QZ-03/04/06, NFA-01) sind als Design-Ziele je FA spezifiziert; ihr formaler Nachweis erfolgt über den NFA-01-Lasttest (k6/JMeter) und ist noch durchzuführen (vgl. §12).
+
 ---
 
 ## 11. Datenmodell
 
-Das relationale Datenmodell bildet die Kernentitäten der Tennismatch-Dokumentation ab. Die folgende Abbildung zeigt das vollständige Datenbankmodell:
+Das relationale Datenmodell bildet die Kernentitäten der Tennismatch-Dokumentation ab. Es ist **rein relational (PostgreSQL)** — eine **Vektor-Datenbank kommt bewusst nicht zum Einsatz**: Der KI-Analyse-Input ist strukturierte Numerik (Match-Statistiken + Spieler-Metadaten) statt eines Text-Korpus, passt in einen einzelnen Prompt-Context und benötigt daher keine Embedding-/Retrieval-Schicht (ausführliche Begründung in **ADR-10**, §9; für V2 wird die Entscheidung neu bewertet). Die folgende Abbildung zeigt das Datenbankmodell:
 
 ![TSaS – Datenmodell](diagrams/TSaS_Datenmodell.svg)
 
-*Quelle: [`diagrams/TSaS_Datenmodell.drawio`](diagrams/TSaS_Datenmodell.drawio). Authoritatives Schema: Flyway-Migrationen V1–V5.*
+*Quelle: [`diagrams/TSaS_Datenmodell.drawio`](diagrams/TSaS_Datenmodell.drawio). Authoritatives Schema: Flyway-Migrationen **V1–V9**. Das eingebettete Diagramm stellt die fachlichen Kernentitäten dar; die querschnittlichen Spalten aus V6–V9 (`owner_id`, Audit-Spalten) und die Tabelle `user_preferences` sind in §11.1 beschrieben.*
 
 ### 11.1 Entitätenübersicht
 
@@ -567,6 +598,9 @@ Das relationale Datenmodell bildet die Kernentitäten der Tennismatch-Dokumentat
 | `match_scores` | Aktueller Spielstand eines Matches (1:1 zu `matches`, UNIQUE `match_id`): Punkte/Games/Sätze beider Spieler, Einstand-/Vorteil-Flags, laufender Satz (`current_set`), Aufschläger (`serving_player`, FA-16), Ace-Zähler sowie `is_done` mit `winner`. |
 | `points` | Einzelne Punkte (1:n zu `matches`): Satz-/Spiel-/Punktnummer, Gewinner, Punkt-/Schlag-/Richtungstyp, Aufschläger, Break-Point-Flag, Aufschlagversuch (1./2. Aufschlag), Bemerkung, Zeitstempel. |
 | `match_analysis` | KI-generierte taktische Analyse (1:1 zu `matches`, UNIQUE `match_id`, `ON DELETE CASCADE`): Status (PENDING/COMPLETED/FAILED), fünf Analyse-Textfelder, JSON-serialisierte Empfehlungsliste, verwendetes LLM-Modell, Generierungszeit, Fehlermeldung bei FAILED. |
+| `user_preferences` | Pro-Nutzer-Spracheinstellung (V9, FA-21). Primärschlüssel ist die Keycloak-`sub`-UUID (`user_id`, 1:1 zum Nutzer, keine Surrogate-ID); `language` (`VARCHAR(2)`, Default `de`, `CHECK`-Constraint auf `de/en/it/fr`), `updated_at`. Keine Fremdschlüssel-Beziehung zu den fachlichen Tabellen — die Verknüpfung läuft über die Identität aus dem JWT. |
+
+**Querschnittliche Spalten (Migrationen V6–V9).** Über die Kernentitäten hinweg wurden ergänzt: `owner_id` auf `players` und `matches` (V6 — Owner-Bindung/RBAC, TEN-55, je mit Index `idx_*_owner`) sowie die Audit-Spalten `created_at`/`created_by`/`updated_at`/`updated_by` auf `players`, `matches` und `points` (V7 — Spring-Data-Auditing, TEN-59; bewusst nullable, da Flyway-Migrationen und Jobs ohne Auth-Context schreiben dürfen). V8 hat zudem die `NOT NULL`-Constraints der primitiven `match_scores`-Spalten nachgezogen (entdeckt beim DSGVO-Datenexport, TEN-66). Diese Spalten dienen Mandanten-Trennung und Nachvollziehbarkeit und sind im ER-Diagramm bewusst nicht einzeln dargestellt.
 
 > Sätze und Statistiken werden **nicht eigenständig persistiert**: Der Satzstand ist Teil von `match_scores`, aggregierte Statistiken (Head-to-Head, Match-Statistik) werden zur Laufzeit aus `points` berechnet. Es gibt daher keine `match_set`- oder `match_stats`-Tabelle.
 
