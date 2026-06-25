@@ -4,15 +4,21 @@ import com.cas.tsas.ai.application.dto.MatchAnalysisResult;
 import com.cas.tsas.ai.application.dto.MatchMetadata;
 import com.cas.tsas.ai.application.port.in.GenerateMatchAnalysisUseCase;
 import com.cas.tsas.ai.application.port.in.GetMatchAnalysisUseCase;
+import com.cas.tsas.ai.application.port.in.ReviewRecommendationUseCase;
 import com.cas.tsas.ai.application.port.out.LlmClientPort;
 import com.cas.tsas.ai.application.port.out.LoadMatchAnalysisPort;
 import com.cas.tsas.ai.application.port.out.SaveMatchAnalysisPort;
 import com.cas.tsas.ai.application.port.out.UserLanguagePort;
 import com.cas.tsas.ai.domain.exception.AnalysisGenerationException;
+import com.cas.tsas.ai.domain.exception.AnalysisNotReviewableException;
 import com.cas.tsas.ai.domain.exception.InsufficientMatchDataException;
+import com.cas.tsas.ai.domain.exception.MatchAnalysisNotFoundException;
 import com.cas.tsas.ai.domain.exception.MatchNotCompletedException;
+import com.cas.tsas.ai.domain.exception.RecommendationNotFoundException;
 import com.cas.tsas.ai.domain.model.AnalysisStatus;
 import com.cas.tsas.ai.domain.model.MatchAnalysis;
+import com.cas.tsas.ai.domain.model.Recommendation;
+import com.cas.tsas.ai.domain.model.RecommendationStatus;
 import com.cas.tsas.match.application.port.in.GetMatchUseCase;
 import com.cas.tsas.match.domain.model.Match;
 import com.cas.tsas.match.domain.model.MatchStatus;
@@ -25,6 +31,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,7 +41,8 @@ import java.util.UUID;
  * delegates to an {@link LlmClientPort} to produce the analysis and persists the result.
  */
 @Service
-public class MatchAnalysisService implements GenerateMatchAnalysisUseCase, GetMatchAnalysisUseCase {
+public class MatchAnalysisService implements GenerateMatchAnalysisUseCase, GetMatchAnalysisUseCase,
+        ReviewRecommendationUseCase {
 
     private final GetMatchUseCase getMatchUseCase;
     private final LoadPlayerPort loadPlayerPort;
@@ -99,6 +108,32 @@ public class MatchAnalysisService implements GenerateMatchAnalysisUseCase, GetMa
     @Override
     public Optional<MatchAnalysis> findByMatchId(UUID matchId) {
         return loadPort.loadByMatchId(matchId);
+    }
+
+    @Override
+    public MatchAnalysis review(UUID matchId, int recommendationIndex,
+                                RecommendationStatus status, String note) {
+        // Owner-/Existenz-Check: wirft MatchNotFoundException (→404) bei unbekannt/fremd.
+        getMatchUseCase.findById(matchId);
+
+        MatchAnalysis analysis = loadPort.loadByMatchId(matchId)
+                .orElseThrow(() -> new MatchAnalysisNotFoundException(matchId));
+
+        if (analysis.getStatus() != AnalysisStatus.COMPLETED) {
+            throw new AnalysisNotReviewableException(matchId);
+        }
+
+        List<Recommendation> recs = analysis.getRecommendations();
+        if (recs == null || recommendationIndex < 0 || recommendationIndex >= recs.size()) {
+            throw new RecommendationNotFoundException(matchId, recommendationIndex);
+        }
+
+        List<Recommendation> updated = new ArrayList<>(recs);
+        updated.set(recommendationIndex,
+                recs.get(recommendationIndex).withReview(status, note, Instant.now()));
+        analysis.setRecommendations(updated);
+
+        return savePort.save(analysis);
     }
 
     /** Maps a successful LLM result into a COMPLETED {@link MatchAnalysis}. */
