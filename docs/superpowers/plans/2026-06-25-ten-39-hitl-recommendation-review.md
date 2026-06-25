@@ -571,11 +571,11 @@ und folgende Testmethoden in die Klasse einfügen:
     }
 
     @Test
-    void patch_returns409WhenAnalysisNotCompleted() throws Exception {
+    void patch_returns404WhenNoAnalysisExists() throws Exception {
         UUID matchId = createMatch(MatchStatus.COMPLETED, 15);
-        // keine Analyse generiert -> es gibt keine COMPLETED-Analyse -> 404, daher:
-        // Szenario "nicht COMPLETED" wird über einen FAILED-Datensatz nicht trivial erzeugbar;
-        // stattdessen index-review ohne Analyse prüft 404:
+        // Kein POST /analysis -> es existiert keine Analyse -> 404.
+        // (Der 409-Pfad "Analyse nicht COMPLETED" ist im Service-Unit-Test (Task 3) abgedeckt,
+        //  da ein persistierter nicht-COMPLETED-Datensatz über die API nicht trivial erzeugbar ist.)
         mockMvc.perform(patch("/api/matches/{id}/analysis/recommendations/{i}", matchId, 0)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"ACCEPTED\"}"))
