@@ -85,7 +85,7 @@
 
 ---
 
-## 3. Priorisierte Top-5 Sofortmaßnahmen
+## 3. Priorisierte Top-5 Sofortmassnahmen
 
 1. **Owner-Bindung & RBAC einführen** (E1, I1, T2, S5) — `created_by` (sub-Claim) auf `Player`, `Match`, `Point`; Use-Cases filtern per User; optional Keycloak-Rolle `COACH`/`ADMIN` + `JwtAuthenticationConverter`. → **[TEN-55](https://linear.app/tennis-score-and-statistic/issue/TEN-55)**
 2. **JWT-Audience prüfen** (S1) — `JwtClaimValidator("aud", ...)` zusätzlich registrieren. → **[TEN-56](https://linear.app/tennis-score-and-statistic/issue/TEN-56)**

@@ -31,7 +31,7 @@ Der bisherige Punkt-Erfassungs-Dialog (`RecordPointDialogComponent`) und die Ten
 - **Score-Streifen** (oben, fixiert): Punkte, Games, Sätze beider Spieler; „Score korrigieren"- und „Match beenden"-Actions.
 - **Zwei Spieler-Panels** (links/rechts, `flex: 1`): symmetrisch aufgebaut, durch einen 1px-Divider getrennt.
 - **Aufschläger** ist visuell hervorgehoben: Panel-Header in Blau (`#64b5f6`), Kacheln heller.
-- **Dark Theme**: Hintergrund `#0d1b2a`, Kacheln `rgba(255,255,255,.08)`, Text weiß/gedimmt — passend zum bestehenden Score-Screen.
+- **Dark Theme**: Hintergrund `#0d1b2a`, Kacheln `rgba(255,255,255,.08)`, Text weiss/gedimmt — passend zum bestehenden Score-Screen.
 - **Tennisplatz-Visualisierung** entfällt im Querformat vollständig.
 
 ---

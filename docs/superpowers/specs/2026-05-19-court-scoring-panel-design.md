@@ -16,7 +16,7 @@ Der bisherige `ScoreComponent` (dunkles Panel-Layout ohne Tennisfeld) wird durch
 │  ←  │   🎾 Müller   0  :  0   Meier   │  ✏️   ⏹              │  ← Score-Streifen
 ├──────────────────────────────────────────────────────────────────┤
 │                                                                  │
-│  ░░░░░░░░░░░░░░░░░░░▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░░  │  ← Außenfeld
+│  ░░░░░░░░░░░░░░░░░░░▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░░  │  ← Aussenfeld
 │  ░░ ┌────────────┬─┊─┬────────────┐  ░░  (Doppelfeld-Linien)  │
 │  ░░ │  MÜLLER   │ │ │  MEIER    │  ░░                          │
 │  ░░ │ [🏆][😓][💨]│ │ │[🏆][😓][💨]│  ░░  ← Tile-Grid im Feld  │
@@ -35,20 +35,20 @@ Der bisherige `ScoreComponent` (dunkles Panel-Layout ohne Tennisfeld) wird durch
 
 | Element | Farbe |
 |---|---|
-| Außenfeld | `#1a5276` (dunkles Blau) |
+| Aussenfeld | `#1a5276` (dunkles Blau) |
 | Spielfeld (Infield) | `#1565c0` (helles Blau) |
 | Court-Linien | `white`, 2px |
 | Score-Streifen | `rgba(0,0,0,.82)` |
 | Spieler-Tiles (aktiv) | `rgba(255,255,255,.15)` |
 | Active Pill | `#1565c0` (Blau) |
-| Schrift | weiß / `rgba(255,255,255,.6)` |
+| Schrift | weiss / `rgba(255,255,255,.6)` |
 
 ---
 
 ## Court-Linien (Doppelfeld, Vogelperspektive)
 
-- **Außenrahmen**: Doppelfeld-Außenlinien
-- **Singles-Seitenlinien**: ~50px von der Außenlinie nach innen (beide Seiten)
+- **Aussenrahmen**: Doppelfeld-Aussenlinien
+- **Singles-Seitenlinien**: ~50px von der Aussenlinie nach innen (beide Seiten)
 - **Netz-Mittellinie**: vertikale Linie in der Platzmitte (3px, volle Höhe)
 - **Aufschlag-Querlinien**: horizontale Linien auf ~50% der Feldhöhe (eine pro Hälfte)
 - **Aufschlag-Mittellinien**: vertikale Linien in der Mitte jeder Aufschlagbox
@@ -57,13 +57,13 @@ Der bisherige `ScoreComponent` (dunkles Panel-Layout ohne Tennisfeld) wird durch
 
 ## Spieler-Panels (innerhalb des Feldes)
 
-Beide Panels liegen absolut positioniert über dem Court-Feld. **Kein Opacity-Unterschied** zwischen den Spielern — beide Panels sind immer gleich sichtbar. Der Aufschläger wird ausschließlich durch das 🎾-Icon neben dem Namen gekennzeichnet (im Score-Streifen oben und im Panel-Header).
+Beide Panels liegen absolut positioniert über dem Court-Feld. **Kein Opacity-Unterschied** zwischen den Spielern — beide Panels sind immer gleich sichtbar. Der Aufschläger wird ausschliesslich durch das 🎾-Icon neben dem Namen gekennzeichnet (im Score-Streifen oben und im Panel-Header).
 
 ### Panel-Aufbau (identisch für beide Spieler)
 
 ```
 ┌──────────────────────────────────┐
-│ [🎾] SPIELERNAME                 │  ← Name (blau wenn Aufschläger, sonst weiß)
+│ [🎾] SPIELERNAME                 │  ← Name (blau wenn Aufschläger, sonst weiss)
 │ ┌──┬──┬──┐                       │
 │ │🏆│😓│💨│  Punkttyp-Grid        │
 │ ├──┼──┼──┤  (3×3, 8 Kacheln)    │
@@ -78,7 +78,7 @@ Beide Panels liegen absolut positioniert über dem Court-Feld. **Kein Opacity-Un
 
 - Tile-Hintergrund: `rgba(255,255,255,.15)` — gleich für beide Spieler
 - Panel-Hintergrund: kein eigener Hintergrund — Tiles direkt auf dem Court
-- Aufschläger-Indikator: 🎾 vor dem Namen (Name in `#90caf9`), ohne Aufschlag weiß/gedimmt
+- Aufschläger-Indikator: 🎾 vor dem Namen (Name in `#90caf9`), ohne Aufschlag weiss/gedimmt
 
 ---
 

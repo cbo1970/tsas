@@ -377,7 +377,7 @@ Expected: alle Tests grün. Falls `IT`-Tests rot mit Hibernate-Fehlern à la "No
 Häufige Fix-Patterns:
 - `@GeneratedValue(strategy = GenerationType.AUTO)` → explizit `IDENTITY` (Postgres serial) oder `SEQUENCE` (mit definierter Sequence)
 - Bei `@GeneratedValue` ohne Strategie: explizit `IDENTITY` setzen, sonst Default-Drift
-- Hibernate-7 erzwingt evtl. naming-strategy-Verhalten — falls Spalten anders heißen als erwartet, in `application.yml` festnageln:
+- Hibernate-7 erzwingt evtl. naming-strategy-Verhalten — falls Spalten anders heissen als erwartet, in `application.yml` festnageln:
   ```yaml
   spring:
     jpa:
@@ -612,11 +612,11 @@ EOF
 )"
 ```
 
-`MEMORY.md` lebt außerhalb des Repos — kein Git-Commit dafür. Speicher-Update reicht.
+`MEMORY.md` lebt ausserhalb des Repos — kein Git-Commit dafür. Speicher-Update reicht.
 
 ---
 
-## Task 11: Push, PR, TEN-5 schließen
+## Task 11: Push, PR, TEN-5 schliessen
 
 **Files:** keine
 

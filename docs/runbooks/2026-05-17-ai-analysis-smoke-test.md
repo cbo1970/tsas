@@ -218,4 +218,4 @@ Backend läuft dann unter `https://localhost:8080` und erfordert JWT. Im Fronten
 - [ ] Fake-Adapter aktiv ohne API-Key
 - [ ] 502 + persistierter FAILED-Datensatz bei ungültigem Key
 
-Ergebnis als Kommentar an [TEN-15](https://linear.app/tennis-score-and-statistic/issue/TEN-15) anhängen, dann TEN-25 schließen.
+Ergebnis als Kommentar an [TEN-15](https://linear.app/tennis-score-and-statistic/issue/TEN-15) anhängen, dann TEN-25 schliessen.

@@ -14,7 +14,7 @@ Die heutigen Request-DTOs validieren teilweise, aber nicht durchgängig:
 
 | DTO | Lücke |
 |---|---|
-| `CreatePlayerRequest`, `UpdatePlayerRequest` | Kein `@Size`-Limit auf String-Feldern → ein Angreifer kann beliebig große Strings posten (DSGVO-Spam, DB-Bloat) |
+| `CreatePlayerRequest`, `UpdatePlayerRequest` | Kein `@Size`-Limit auf String-Feldern → ein Angreifer kann beliebig grosse Strings posten (DSGVO-Spam, DB-Bloat) |
 | `RecordPointRequest` | `pointType`, `strokeType`, `direction` als roher `String`; Controller ruft `Enum.valueOf(...)` auf → bei ungültigem Wert wird **500** zurückgegeben (`IllegalArgumentException` bubbelt) statt **400** |
 | `RecordPointRequest.remark` | Validiert mit `@Length(max=500)` (Hibernate-Validator-spezifisch); inkonsistent mit den anderen DTOs die `@NotBlank`/`@NotNull` (Jakarta) verwenden |
 
@@ -28,7 +28,7 @@ Alle Request-DTOs lehnen ungültige Eingaben mit **HTTP 400** ab, **ohne 500-Fal
 
 | # | Entscheidung | Begründung |
 |---|---|---|
-| D1 | Typisierte Enums (`PointType`, `StrokeType`, `Direction`) in `RecordPointRequest`, kein eigener `@ValidEnum`-Constraint. | Jackson deserialisiert Enums direkt; bei ungültigem Wert wird `HttpMessageNotReadableException` geworfen → Spring Boot 4 liefert standardmäßig 400. Spart Custom-Code. |
+| D1 | Typisierte Enums (`PointType`, `StrokeType`, `Direction`) in `RecordPointRequest`, kein eigener `@ValidEnum`-Constraint. | Jackson deserialisiert Enums direkt; bei ungültigem Wert wird `HttpMessageNotReadableException` geworfen → Spring Boot 4 liefert standardmässig 400. Spart Custom-Code. |
 | D2 | `@Size`-Grenzen: firstName/lastName 100, ranking 50, nationality 64, remark 500. | Übliche Defaults; firstName/lastName generös genug für Doppelnamen mit Hyphen; nationality deckt vollständige Ländernamen in beliebiger Sprache. |
 | D3 | `@Length(max=500)` durch `@Size(max=500)` ersetzen. | Konsistenz: Jakarta-Bean-Validation statt Hibernate-Validator-spezifischer Annotation. |
 | D4 | Kein eigenes `@ControllerAdvice` für Validierungsfehler in diesem PR. | TEN-61 deckt die problem+json-Formatierung global ab. Default-Verhalten von Spring Boot 4 (`MethodArgumentNotValidException` → 400) reicht für TEN-60. |
