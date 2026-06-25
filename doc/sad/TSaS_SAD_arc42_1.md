@@ -692,7 +692,7 @@ Drei Bereiche wurden im Projektverlauf bewusst **nicht an die KI delegiert** —
 
 ### 14.4 Human-in-the-Loop (umgesetzt, TEN-39)
 
-**Human-in-the-Loop (umgesetzt, TEN-39).** Die KI trifft keine endgültigen Entscheidungen: Generierte Empfehlungen einer Match-Analyse sind Vorschläge im Status `OPEN`; der Coach nimmt sie bewusst an oder verwirft sie (mit Begründung). Damit ist HITL nicht nur Prozess, sondern als Feature im Domänenmodell (`Recommendation.status`) und im UI verankert — passend zu Bewertungskriterium 16.
+Die KI trifft keine endgültigen Entscheidungen: Generierte Empfehlungen einer Match-Analyse sind Vorschläge im Status `OPEN`; der Coach nimmt sie bewusst an oder verwirft sie (mit Begründung). Damit ist HITL nicht nur Prozess, sondern als Feature im Domänenmodell (`Recommendation.status`) und im UI verankert — passend zu Bewertungskriterium 16.
 
 ### 14.5 Übertrag auf die künftige Arbeitsweise
 
