@@ -40,11 +40,35 @@
         @if (recommendations().length) {
           <div class="rec-heading">Empfehlungen</div>
           @for (rec of recommendations(); track rec.priority) {
-            <div class="rec" data-testid="recommendation">
+            <div class="rec" data-testid="recommendation" [attr.data-status]="rec.status">
               <div class="rec-prio">{{ rec.priority }}</div>
               <div class="rec-body">
                 <div class="rec-title">{{ rec.title }}</div>
                 @if (rec.detail) { <div class="rec-detail">{{ rec.detail }}</div> }
+                @if (rec.status === 'REJECTED' && rec.reviewNote) {
+                  <div class="rec-note">{{ rec.reviewNote }}</div>
+                }
+                <div class="rec-review">
+                  <button mat-button data-testid="accept-btn"
+                          [disabled]="rec.status === 'ACCEPTED'"
+                          (click)="review(rec.originalIndex, 'ACCEPTED')">
+                    {{ 'analysis.review.accept' | translate }}
+                  </button>
+                  <button mat-button data-testid="reject-btn"
+                          [disabled]="rec.status === 'REJECTED'"
+                          (click)="review(rec.originalIndex, 'REJECTED')">
+                    {{ 'analysis.review.reject' | translate }}
+                  </button>
+                  @if (rec.status !== 'OPEN') {
+                    <button mat-button data-testid="reset-btn"
+                            (click)="review(rec.originalIndex, 'OPEN')">
+                      {{ 'analysis.review.reset' | translate }}
+                    </button>
+                  }
+                  <input matInput class="rec-note-input" data-testid="note-input"
+                         [placeholder]="'analysis.review.notePlaceholder' | translate"
+                         (input)="setNoteDraft(rec.originalIndex, $any($event.target).value)" />
+                </div>
               </div>
             </div>
           }

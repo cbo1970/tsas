@@ -231,6 +231,12 @@
     "model": "Modell",
     "generatedAt": "Erzeugt am",
     "noAnalysis": "Noch keine Analyse für dieses Match vorhanden.",
+    "review": {
+      "accept": "Annehmen",
+      "reject": "Verwerfen",
+      "reset": "Zurücksetzen",
+      "notePlaceholder": "Begründung (optional)"
+    },
     "errors": {
       "matchNotCompleted": "Match ist noch nicht abgeschlossen.",
       "insufficientData": "Match hat zu wenige Punkte für eine Analyse.",

@@ -15,8 +15,8 @@ const MOCK_ANALYSIS: MatchAnalysis = {
   opponentStrengths: 'Sehr gute Beinarbeit.',
   opponentWeaknesses: 'Schwache zweite Aufschläge.',
   recommendations: [
-    { priority: 2, title: 'Rückhand stabilisieren', detail: 'Mehr Slice einsetzen.' },
-    { priority: 1, title: 'Zweite Aufschläge angreifen', detail: 'Früh am Netz Druck machen.' },
+    { priority: 2, title: 'Rückhand stabilisieren', detail: 'Mehr Slice einsetzen.', status: 'OPEN' as const, reviewNote: null, reviewedAt: null },
+    { priority: 1, title: 'Zweite Aufschläge angreifen', detail: 'Früh am Netz Druck machen.', status: 'OPEN' as const, reviewNote: null, reviewedAt: null },
   ],
   modelUsed: 'gpt-4-turbo',
   generatedAt: '2026-06-09T14:32:45.123Z',
@@ -158,5 +158,28 @@ describe('MatchAnalysisComponent', () => {
     cy.wait('@getAnalysis');
     cy.get('[data-testid="back-btn"]').click();
     cy.get('@routerNavigate').should('have.been.calledWith', ['/players']);
+  });
+
+  it('sends a PATCH and reflects ACCEPTED when accepting a recommendation', () => {
+    const analysis = {
+      matchId: 'm1', status: 'COMPLETED',
+      keyMoments: 'k', ownStrengths: '', ownWeaknesses: '',
+      opponentStrengths: '', opponentWeaknesses: '',
+      recommendations: [
+        { priority: 1, title: 'Serve wide', detail: 'd', status: 'OPEN', reviewNote: null, reviewedAt: null },
+      ],
+      modelUsed: 'fake-llm', generatedAt: '2026-06-25T10:00:00Z', errorMessage: null,
+    };
+    cy.intercept('GET', '**/api/matches/*/analysis', analysis).as('get');
+    cy.intercept('PATCH', '**/api/matches/*/analysis/recommendations/0', {
+      ...analysis,
+      recommendations: [{ ...analysis.recommendations[0], status: 'ACCEPTED', reviewedAt: '2026-06-25T11:00:00Z' }],
+    }).as('review');
+
+    mount();
+    cy.wait('@get');
+    cy.get('[data-testid="accept-btn"]').first().click();
+    cy.wait('@review').its('request.body').should('deep.include', { status: 'ACCEPTED' });
+    cy.get('[data-testid="recommendation"]').first().should('have.attr', 'data-status', 'ACCEPTED');
   });
 });

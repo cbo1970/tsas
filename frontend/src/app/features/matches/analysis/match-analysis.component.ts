@@ -6,12 +6,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../../core/services/api.service';
-import { MatchAnalysis } from '../../../core/models/analysis.model';
+import { MatchAnalysis, RecommendationReviewStatus } from '../../../core/models/analysis.model';
+import { MatInputModule } from '@angular/material/input';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-match-analysis',
   standalone: true,
-  imports: [MatButtonModule, MatProgressSpinnerModule, DatePipe, TranslatePipe],
+  imports: [MatButtonModule, MatProgressSpinnerModule, MatInputModule, FormsModule, DatePipe, TranslatePipe],
   templateUrl: './match-analysis.component.html',
   styles: [`
     :host { display: block; min-height: 100dvh; background: #0f172a; color: #eee; font-family: sans-serif; }
@@ -30,6 +32,12 @@ import { MatchAnalysis } from '../../../core/models/analysis.model';
     .rec-body { flex: 1; }
     .rec-title { font-size: 14px; font-weight: 600; color: #f1f5f9; }
     .rec-detail { font-size: 13px; color: #cbd5e1; line-height: 1.4; margin-top: 2px; white-space: pre-wrap; }
+    .rec[data-status="ACCEPTED"] { border-left: 3px solid #22c55e; }
+    .rec[data-status="REJECTED"] { opacity: .55; }
+    .rec[data-status="REJECTED"] .rec-title { text-decoration: line-through; }
+    .rec-note { font-size: 12px; color: #fca5a5; margin-top: 4px; font-style: italic; }
+    .rec-review { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
+    .rec-note-input { background: #0f172a; color: #e2e8f0; border: 1px solid #334155; border-radius: 6px; padding: 4px 8px; font-size: 12px; flex: 1 1 140px; }
     .error-box { background: #422; border: 1px solid #7f1d1d; border-radius: 10px; padding: 14px; color: #fecaca; font-size: 14px; text-align: center; margin-bottom: 14px; }
     .actions { text-align: center; margin: 18px 0; }
     .back-row { text-align: center; margin-top: 20px; }
@@ -67,7 +75,10 @@ export class MatchAnalysisComponent implements OnInit {
 
   readonly recommendations = computed(() => {
     const a = this.analysis();
-    return a ? [...a.recommendations].sort((x, y) => x.priority - y.priority) : [];
+    if (!a) return [];
+    return a.recommendations
+      .map((rec, originalIndex) => ({ ...rec, originalIndex }))
+      .sort((x, y) => x.priority - y.priority);
   });
 
   /** Either a request error, or a persisted analysis that failed to generate. */
@@ -76,6 +87,20 @@ export class MatchAnalysisComponent implements OnInit {
     const a = this.analysis();
     return a?.status === 'FAILED' ? (a.errorMessage ?? 'Analyse fehlgeschlagen.') : null;
   });
+
+  noteDraft = signal<Record<number, string>>({});
+
+  setNoteDraft(index: number, value: string) {
+    this.noteDraft.update(m => ({ ...m, [index]: value }));
+  }
+
+  review(index: number, status: RecommendationReviewStatus) {
+    const note = this.noteDraft()[index] ?? null;
+    this.api.reviewRecommendation(this.matchId, index, { status, note }).subscribe({
+      next: a => this.analysis.set(a),
+      error: (err: HttpErrorResponse) => this.error.set(this.messageFor(err)),
+    });
+  }
 
   ngOnInit() {
     this.matchId = this.route.snapshot.paramMap.get('id') ?? '';
