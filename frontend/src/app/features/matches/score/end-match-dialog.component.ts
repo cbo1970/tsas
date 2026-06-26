@@ -26,7 +26,7 @@ export interface EndMatchDialogResult {
   ],
   templateUrl: './end-match-dialog.component.html',
   styles: [`
-    .hint { margin: 0 0 16px; color: #555; }
+    .hint { margin: 0 0 16px; color: var(--text-muted); }
     .radio-group { display: flex; flex-direction: column; gap: 12px; }
   `]
 })
