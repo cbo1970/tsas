@@ -10,6 +10,7 @@ import { ScoreComponent } from './score.component';
 import { ApiService } from '../../../core/services/api.service';
 import { MatchWithScore } from '../../../core/models/match.model';
 import { PointType, StrokeType } from '../../../core/models/point.model';
+import { testTranslateProviders } from '../../../core/i18n/test-providers';
 
 const MOCK_SCORE = {
   matchId: 'match-1',
@@ -40,6 +41,8 @@ describe('ScoreComponent — inline scoring', () => {
     mockApi = {
       getMatch: vi.fn().mockReturnValue(of(MOCK_MATCH)),
       getPlayer: vi.fn().mockReturnValue(of({ id: 'p1', firstName: 'Anna', lastName: 'Müller' })),
+      // embedded PlayerNotesComponent fires this on init (rendered even inside a collapsed <details>)
+      getPlayerNotes: vi.fn().mockReturnValue(of([])),
       recordPoint: vi.fn(),
       setServingPlayer1: vi.fn(),
       setServingPlayer2: vi.fn(),
@@ -58,6 +61,7 @@ describe('ScoreComponent — inline scoring', () => {
         { provide: MatSnackBar,    useValue: mockSnackBar },
         { provide: Router,         useValue: mockRouter },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'match-1' } } } },
+        ...testTranslateProviders,
       ],
     }).compileComponents();
 
