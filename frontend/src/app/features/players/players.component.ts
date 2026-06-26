@@ -45,12 +45,13 @@ export type Scope = 'mine' | 'all';
   styles: [`
     .page-container { padding: 24px; max-width: 900px; margin: 0 auto; }
     .page-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
-    .page-header h1 { margin: 0; font-size: 28px; }
+    .page-header h1 { margin: 0; font-size: 28px; font-weight: 700; color: var(--text); }
     .search-field { flex: 1; min-width: 150px; margin-bottom: -1.25em; }
     .page-header button { flex-shrink: 0; }
     .full-width { width: 100%; }
     .empty-state { text-align: center; padding: 48px; color: var(--text-muted); }
-    table { border-radius: 8px; overflow: hidden; }
+    table { border-radius: 8px; overflow: hidden; border: 1px solid var(--text); }
+    .mat-mdc-header-cell { font-weight: 700; color: var(--text); }
     .status-header { width: 48px; white-space: normal; text-align: center; line-height: 1.2; }
     @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.25); opacity: 0.7; } }
     .tennis-ball { font-size: 20px; line-height: 1; display: inline-block; animation: pulse 2s ease-in-out infinite; }
