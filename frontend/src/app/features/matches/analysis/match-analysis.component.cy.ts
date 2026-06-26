@@ -50,6 +50,16 @@ function mount(extraProviders: any[] = []) {
 }
 
 describe('MatchAnalysisComponent', () => {
+  beforeEach(() => {
+    // The embedded PlayerNotesComponent fires these on init; stub them to keep tests stable.
+    cy.intercept('GET', '**/api/matches/match-1', {
+      id: 'match-1', player1Id: 'p1', player2Id: 'p2', status: 'IN_PROGRESS', score: {},
+    }).as('getMatchForNotes');
+    cy.intercept('GET', '**/api/players/p1', { id: 'p1', firstName: 'Spieler', lastName: '1' }).as('getP1');
+    cy.intercept('GET', '**/api/players/p2', { id: 'p2', firstName: 'Spieler', lastName: '2' }).as('getP2');
+    cy.intercept('GET', '**/api/matches/*/notes', []).as('notes');
+  });
+
   it('renders player names from query params', () => {
     cy.intercept('GET', '**/api/matches/match-1/analysis', { statusCode: 404, body: {} }).as('getAnalysis');
     mount();

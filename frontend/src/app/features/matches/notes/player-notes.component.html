@@ -1,0 +1,19 @@
+<div class="notes" data-testid="player-notes">
+  @for (slot of slots(); track slot.playerId; let i = $index) {
+    <div class="slot">
+      <span class="slot-label">{{ slot.name }}</span>
+      <span class="slot-role">{{ slot.roleKey | translate }}</span>
+      <textarea
+        [attr.data-testid]="'note-input-' + i"
+        [ngModel]="slot.note"
+        (ngModelChange)="onModel(i, $event)"
+        (blur)="save(i)"
+        maxlength="2000"
+        [placeholder]="'playerNotes.placeholder' | translate"></textarea>
+      <button type="button" [attr.data-testid]="'note-save-' + i" (click)="save(i)" [disabled]="slot.saving">
+        {{ 'playerNotes.save' | translate }}
+      </button>
+      <span class="saved-hint">@if (slot.saved) { {{ 'playerNotes.saved' | translate }} }</span>
+    </div>
+  }
+</div>

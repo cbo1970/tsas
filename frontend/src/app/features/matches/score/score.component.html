@@ -197,6 +197,16 @@
       </div>
     }
 
+    <!-- ── Coach Notes ── -->
+    <details class="coach-notes" style="padding: 8px 12px; background: rgba(0,0,0,.3); border-top: 1px solid rgba(255,255,255,.1);">
+      <summary style="cursor: pointer; font-size: 12px; font-weight: 700; letter-spacing: .04em; color: rgba(255,255,255,.7); padding: 4px 0;">
+        {{ 'playerNotes.title' | translate }}
+      </summary>
+      @if (matchData(); as m) {
+        <app-player-notes [matchId]="m.id" />
+      }
+    </details>
+
     <!-- ── Winner overlay (completed match) ── -->
     @if (matchData()!.score.isDone) {
       <div class="winner-overlay">
