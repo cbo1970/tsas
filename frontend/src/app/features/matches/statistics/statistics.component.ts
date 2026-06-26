@@ -17,17 +17,17 @@ import { MatchStatistics } from '../../../core/models/statistics.model';
     .player-name { text-align: center; font-weight: 700; font-size: 15px; color: var(--text); }
     .set-scores { margin-bottom: 12px; }
     .set-row { display: grid; grid-template-columns: 1fr 48px 1fr; align-items: center; gap: 4px; margin-bottom: 4px; }
-    .set-label { text-align: center; font-size: 10px; color: var(--text-muted); }
+    .set-label { text-align: center; font-size: 10px; color: var(--text); font-weight: 600; }
     .badge { text-align: center; }
-    .badge span { display: inline-block; border-radius: 4px; padding: 3px 14px; font-size: 14px; font-weight: 600; background: var(--surface-muted); color: var(--text-muted); }
+    .badge span { display: inline-block; border-radius: 4px; padding: 3px 14px; font-size: 14px; font-weight: 600; background: var(--border); color: var(--text); }
     .badge.winner span { background: var(--brand); color: #fff; }
-    .divider { border-top: 1px solid var(--border); margin: 10px 0; }
+    .divider { border-top: 1px solid var(--text); margin: 10px 0; }
     .stat-grid { display: grid; grid-template-columns: 48px 1fr 48px; gap: 3px 6px; align-items: center; }
     .val { font-size: 13px; font-weight: 600; }
     .val-left { text-align: right; color: var(--brand-strong); }
     .val-right { text-align: left; padding-left: 4px; color: var(--text-subtle); }
     .val-right.leading { color: var(--text); font-weight: 700; }
-    .stat-label { font-size: 10px; color: #64748b; text-align: center; margin-bottom: 1px; }
+    .stat-label { font-size: 10px; color: var(--text); font-weight: 700; text-align: center; margin-bottom: 1px; }
     .bar { display: flex; height: 4px; border-radius: 2px; overflow: hidden; margin-top: 1px; background: var(--surface-muted); }
     .bar-p1 { background: var(--brand); }
     .bar-p2 { background: var(--text-subtle); }
