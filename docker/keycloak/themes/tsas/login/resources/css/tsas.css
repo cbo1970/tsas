@@ -1,0 +1,82 @@
+/* TSaS Login-Theme — „Daylight · Hard Court"
+   Marken-Overrides auf dem Keycloak-Standard-Login. Selektoren bewusst breit
+   (alte + neue PatternFly-Klassen), damit der blaue Primaer-Button und der helle
+   Hintergrund unabhaengig von der genauen Keycloak-/PatternFly-Version greifen. */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --tsas-brand: #2563EB;
+  --tsas-brand-strong: #1D4ED8;
+  --tsas-surface-bg: #F8FAFC;
+  --tsas-text: #0F172A;
+}
+
+html,
+body,
+body.login-pf,
+.login-pf body,
+#kc-container,
+.pf-c-page,
+.pf-v5-c-page {
+  font-family: 'Inter', system-ui, -apple-system, 'Helvetica Neue', sans-serif;
+}
+
+/* Heller, neutraler Hintergrund statt des Keycloak-Defaults */
+body.login-pf,
+.login-pf body,
+.login-pf-page,
+#kc-body-wrapper {
+  background: var(--tsas-surface-bg);
+}
+
+/* Realm-Name/Header + Titel in der Marken-Textfarbe (keycloak.v2 setzt den
+   Header sonst hell -> auf hellem Hintergrund unsichtbar) */
+#kc-header,
+#kc-header-wrapper {
+  color: var(--tsas-text) !important;
+}
+#kc-page-title,
+.pf-c-title,
+.pf-v5-c-title {
+  color: var(--tsas-text);
+}
+
+/* Primaer-Button (Anmelden / Registrieren) in Hard-Court-Blau */
+#kc-login,
+input[type="submit"],
+.btn-primary,
+.pf-c-button.pf-m-primary,
+.pf-v5-c-button.pf-m-primary {
+  background-color: var(--tsas-brand) !important;
+  border-color: var(--tsas-brand) !important;
+  color: #fff !important;
+}
+
+#kc-login:hover,
+input[type="submit"]:hover,
+.btn-primary:hover,
+.pf-c-button.pf-m-primary:hover,
+.pf-v5-c-button.pf-m-primary:hover {
+  background-color: var(--tsas-brand-strong) !important;
+  border-color: var(--tsas-brand-strong) !important;
+}
+
+/* Links in der Markenfarbe */
+a,
+#kc-registration a,
+#kc-info-wrapper a,
+.pf-c-button.pf-m-link,
+.pf-v5-c-button.pf-m-link {
+  color: var(--tsas-brand);
+}
+
+/* Fokus-Rahmen der Eingabefelder in Blau */
+input:focus,
+.pf-c-form-control:focus,
+.pf-v5-c-form-control:focus,
+.pf-v5-c-form-control:focus-within {
+  border-color: var(--tsas-brand) !important;
+  box-shadow: 0 0 0 1px var(--tsas-brand) !important;
+  outline-color: var(--tsas-brand) !important;
+}
