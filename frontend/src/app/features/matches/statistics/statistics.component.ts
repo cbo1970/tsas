@@ -1,9 +1,9 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { NgClass } from '@angular/common';
 import { ApiService } from '../../../core/services/api.service';
-import { MatchStatistics } from '../../../core/models/statistics.model';
+import { MatchStatistics, PlayerStatistics } from '../../../core/models/statistics.model';
 
 @Component({
   selector: 'app-statistics',
@@ -34,6 +34,9 @@ import { MatchStatistics } from '../../../core/models/statistics.model';
     .bar-err { background: var(--danger); }
     .bar-good { background: var(--success); }
     .back-row { text-align: center; margin-top: 20px; }
+    .set-tabs { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 4px 0 12px; }
+    .set-tab { background: #fff; border: 1px solid var(--text); color: var(--text); border-radius: var(--radius-pill); padding: 4px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .set-tab.active { background: var(--brand); border-color: var(--brand); color: #fff; }
   `],
 })
 export class StatisticsComponent implements OnInit {
@@ -45,6 +48,26 @@ export class StatisticsComponent implements OnInit {
   setScores = signal<{ p1: number; p2: number }[]>([]);
   p1Name    = signal('Spieler 1');
   p2Name    = signal('Spieler 2');
+
+  selectedView = signal<'total' | number>('total');
+
+  readonly sets = computed(() => this.stats()?.sets ?? []);
+
+  /** The player stats currently shown in the grid: the total, or the selected set. */
+  readonly activeStats = computed<{ p1: PlayerStatistics; p2: PlayerStatistics } | null>(() => {
+    const s = this.stats();
+    if (!s) return null;
+    const v = this.selectedView();
+    if (v !== 'total') {
+      const set = (s.sets ?? []).find(x => x.setNumber === v);
+      if (set) return { p1: set.player1, p2: set.player2 };
+    }
+    return { p1: s.player1, p2: s.player2 };
+  });
+
+  selectView(view: 'total' | number): void {
+    this.selectedView.set(view);
+  }
 
   private matchId = '';
 

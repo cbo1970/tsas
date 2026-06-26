@@ -12,11 +12,19 @@ export interface PlayerStatistics {
   forehandPercentage: number;
 }
 
+export interface SetStatistics {
+  setNumber: number;
+  player1: PlayerStatistics;
+  player2: PlayerStatistics;
+  totalPoints: number;
+}
+
 export interface MatchStatistics {
   matchId: string;
   player1: PlayerStatistics;
   player2: PlayerStatistics;
   totalPoints: number;
+  sets?: SetStatistics[];
 }
 
 export interface HeadToHeadPlayerStats {

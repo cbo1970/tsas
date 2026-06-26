@@ -5,6 +5,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { MatchStatistics } from '../../../core/models/statistics.model';
 
+
 const MOCK_STATS: MatchStatistics = {
   matchId: 'match-1',
   totalPoints: 30,
@@ -22,6 +23,18 @@ const MOCK_STATS: MatchStatistics = {
   },
 };
 
+const MOCK_STATS_WITH_SETS: MatchStatistics = {
+  ...MOCK_STATS,
+  sets: [
+    { setNumber: 1, totalPoints: 12,
+      player1: { ...MOCK_STATS.player1, aces: 2 },
+      player2: { ...MOCK_STATS.player2, aces: 0 } },
+    { setNumber: 2, totalPoints: 18,
+      player1: { ...MOCK_STATS.player1, aces: 1 },
+      player2: { ...MOCK_STATS.player2, aces: 1 } },
+  ],
+};
+
 const activatedRouteStub = {
   snapshot: {
     paramMap: { get: (key: string) => key === 'id' ? 'match-1' : null },
@@ -35,6 +48,20 @@ const activatedRouteStub = {
     },
   },
 };
+
+function mountStatsWithSets(extraProviders: any[] = []) {
+  cy.intercept('GET', '**/api/matches/match-1/statistics', MOCK_STATS_WITH_SETS).as('getStats');
+  cy.mount(StatisticsComponent, {
+    providers: [
+      provideRouter([]),
+      provideHttpClient(),
+      provideAnimationsAsync(),
+      { provide: ActivatedRoute, useValue: activatedRouteStub },
+      ...extraProviders,
+    ],
+  });
+  cy.wait('@getStats');
+}
 
 function mountStats(extraProviders: any[] = []) {
   cy.intercept('GET', '**/api/matches/match-1/statistics', MOCK_STATS).as('getStats');
@@ -107,5 +134,29 @@ describe('StatisticsComponent', () => {
     cy.get('@routerNavigate').should('have.been.calledWith',
       ['/matches', 'match-1', 'analysis'],
       { queryParams: { p1: 'Müller', p2: 'Meier' } });
+  });
+
+  it('renders a Gesamt tab plus one tab per set', () => {
+    mountStatsWithSets();
+    cy.get('[data-testid="set-tab-total"]').should('exist');
+    cy.get('[data-testid="set-tab-1"]').should('exist');
+    cy.get('[data-testid="set-tab-2"]').should('exist');
+  });
+
+  it('defaults to Gesamt and switches stats per set on click', () => {
+    mountStatsWithSets();
+    // total aces = 3 (from MOCK_STATS)
+    cy.get('[data-testid="val-p1-aces"]').should('contain', '3');
+    cy.get('[data-testid="set-tab-1"]').click();
+    cy.get('[data-testid="val-p1-aces"]').should('contain', '2');
+    cy.get('[data-testid="set-tab-2"]').click();
+    cy.get('[data-testid="val-p1-aces"]').should('contain', '1');
+    cy.get('[data-testid="set-tab-total"]').click();
+    cy.get('[data-testid="val-p1-aces"]').should('contain', '3');
+  });
+
+  it('shows no set tabs when the response has no sets', () => {
+    mountStats(); // MOCK_STATS has no sets
+    cy.get('[data-testid="set-tab-total"]').should('not.exist');
   });
 });
