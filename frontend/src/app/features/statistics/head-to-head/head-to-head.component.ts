@@ -21,15 +21,15 @@ import { OpponentPreparation } from '../../../core/models/analysis.model';
     .page { max-width: 520px; margin: 0 auto; padding: 16px; }
     .pickers { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
     .empty-hint { text-align: center; color: var(--text-muted); padding: 32px; }
-    .section-title { font-size: 12px; color: var(--brand-strong); text-transform: uppercase; letter-spacing: .05em; margin: 16px 0 8px; }
-    .divider { border-top: 1px solid var(--border); margin: 10px 0; }
+    .section-title { font-size: 12px; color: var(--text); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin: 16px 0 8px; }
+    .divider { border-top: 1px solid var(--text); margin: 10px 0; }
     .stat-grid { display: grid; grid-template-columns: 64px 1fr 64px; gap: 3px 6px; align-items: center; }
     .val { font-size: 13px; font-weight: 600; }
     .val-left { text-align: right; color: var(--brand-strong); }
     .val-right { text-align: left; padding-left: 4px; color: var(--text-subtle); }
     .val-right.leading { color: var(--text); font-weight: 700; }
     .player-row .val { color: var(--text); }
-    .stat-label { font-size: 10px; color: var(--text-muted); text-align: center; }
+    .stat-label { font-size: 10px; color: var(--text); font-weight: 700; text-align: center; }
     .bar { display: flex; height: 4px; border-radius: 2px; overflow: hidden; margin-top: 1px; background: var(--surface-muted); }
     .bar-p1 { background: var(--brand); }
     .bar-p2 { background: var(--text-subtle); }
@@ -37,7 +37,7 @@ import { OpponentPreparation } from '../../../core/models/analysis.model';
     .prep-actions button { background: var(--brand); color: #fff; }
     .prep-actions button[disabled] { opacity: 0.5; }
     .prep-card { background: var(--surface-card); border: 1px solid var(--brand-border); box-shadow: var(--shadow-card); border-radius: 8px; padding: 14px 16px; margin-top: 12px; }
-    .prep-card h3 { font-size: 14px; color: var(--brand-strong); text-transform: uppercase; letter-spacing: .05em; margin: 12px 0 4px; }
+    .prep-card h3 { font-size: 14px; color: var(--text); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin: 12px 0 4px; }
     .prep-card h3:first-child { margin-top: 0; }
     .prep-card p { font-size: 13px; line-height: 1.45; color: var(--text); margin: 0 0 8px; white-space: pre-wrap; }
     .prep-card .recos { list-style: none; padding: 0; margin: 6px 0 0; }
