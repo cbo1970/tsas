@@ -38,6 +38,20 @@
       { "name": "ADMIN", "description": "Full access across all owners" }
     ]
   },
+  "users": [
+    {
+      "username": "coach",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "coach@tsas.local",
+      "firstName": "Dev",
+      "lastName": "Coach",
+      "credentials": [
+        { "type": "password", "value": "coach", "temporary": false }
+      ],
+      "realmRoles": ["COACH"]
+    }
+  ],
   "accessTokenLifespan": 900,
   "ssoSessionMaxLifespan": 2592000,
   "clients": [
