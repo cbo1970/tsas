@@ -126,8 +126,26 @@ public class PromptBuilder {
         sb.append("\n");
         appendH2hPlayer(sb, "Gegner (kumuliert)", h2h.player2());
 
+        appendOpponentNotes(sb, m.opponentNotes());
+
         sb.append("\n").append(prompts.opponentUserInstruction());
         return sb.toString();
+    }
+
+    /**
+     * TEN-68: appends the coach's past free-text observations about this opponent (newest first,
+     * already capped by the caller). Skips the block when there are none.
+     */
+    private void appendOpponentNotes(StringBuilder sb, java.util.List<String> opponentNotes) {
+        if (opponentNotes == null || opponentNotes.isEmpty()) {
+            return;
+        }
+        sb.append("\nFrühere Coach-Beobachtungen zu diesem Gegner (neueste zuerst):\n");
+        for (String note : opponentNotes) {
+            if (note != null && !note.isBlank()) {
+                sb.append("- ").append(note.trim()).append("\n");
+            }
+        }
     }
 
     /** Block per Spieler mit den Head-to-Head-Kennzahlen aus FA-08 (kumuliert). */
