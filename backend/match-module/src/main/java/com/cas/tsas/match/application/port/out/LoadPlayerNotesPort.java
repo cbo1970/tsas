@@ -10,6 +10,6 @@ public interface LoadPlayerNotesPort {
     /** The 0–2 notes of the given match. */
     List<MatchPlayerNote> findByMatch(UUID matchId);
 
-    /** Notes about one player across matches, newest first, capped at {@code limit}. */
+    /** Notes about one player across <em>completed</em> matches, newest first, capped at {@code limit}. */
     List<MatchPlayerNote> findAboutPlayer(UUID playerId, int limit);
 }

@@ -56,7 +56,7 @@ public class MatchPlayerNotePersistenceAdapter
     @Override
     @Transactional(readOnly = true)
     public List<MatchPlayerNote> findAboutPlayer(UUID playerId, int limit) {
-        return repository.findByPlayerIdOrderByUpdatedAtDesc(playerId, PageRequest.of(0, limit))
+        return repository.findAboutPlayerInCompletedMatches(playerId, PageRequest.of(0, limit))
                 .stream().map(mapper::toDomain).toList();
     }
 }

@@ -11,10 +11,11 @@ public interface GetPlayerNotesUseCase {
     List<MatchPlayerNote> forMatch(UUID matchId);
 
     /**
-     * Notes about one player across matches, newest first, capped at {@code limit}.
-     * NOT owner-scoped — callers must have verified the player belongs to the current user
-     * (opponent preparation does so via {@code findByIdAndOwner}). A player is owner-bound, so
-     * its notes are inherently the owner's.
+     * Notes about one player across <em>completed</em> matches, newest first, capped at {@code limit}.
+     * In-progress matches are excluded, so the source matches the Head-to-Head statistics (which also
+     * count only completed matches). NOT owner-scoped — callers must have verified the player belongs
+     * to the current user (opponent preparation does so via {@code findByIdAndOwner}). A player is
+     * owner-bound, so its notes are inherently the owner's.
      */
     List<MatchPlayerNote> aboutPlayer(UUID playerId, int limit);
 }

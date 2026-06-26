@@ -63,6 +63,10 @@ class MatchPlayerNotePersistenceAdapterIT extends AbstractIntegrationTest {
     }
 
     private UUID persistMatch(UUID p1, UUID p2) {
+        return persistMatch(p1, p2, com.cas.tsas.match.domain.model.MatchStatus.IN_PROGRESS);
+    }
+
+    private UUID persistMatch(UUID p1, UUID p2, com.cas.tsas.match.domain.model.MatchStatus status) {
         MatchJpaEntity m = new MatchJpaEntity();
         m.setOwnerId(DEFAULT_USER);
         m.setPlayer1Id(p1);
@@ -70,7 +74,7 @@ class MatchPlayerNotePersistenceAdapterIT extends AbstractIntegrationTest {
         m.setSetsToWin(2);
         m.setMatchTiebreak(false);
         m.setShortSet(false);
-        m.setStatus(com.cas.tsas.match.domain.model.MatchStatus.IN_PROGRESS);
+        m.setStatus(status);
         return matchRepository.save(m).getId();
     }
 
@@ -102,11 +106,28 @@ class MatchPlayerNotePersistenceAdapterIT extends AbstractIntegrationTest {
     }
 
     @Test
-    void findAboutPlayer_returns_newest_first_capped_at_limit() {
-        // second match so the opponent (player2Id) has two notes about them
-        UUID match2 = persistMatch(persistPlayer("A", "B"), player2Id);
-        savePort.upsert(matchId, player2Id, "alt");
-        savePort.upsert(match2, player2Id, "neu");
+    void findAboutPlayer_includes_only_completed_matches_newest_first() {
+        var done = com.cas.tsas.match.domain.model.MatchStatus.COMPLETED;
+        // Two COMPLETED matches with a note about the opponent (player2Id) ...
+        UUID done1 = persistMatch(player1Id, player2Id, done);
+        UUID done2 = persistMatch(persistPlayer("A", "B"), player2Id, done);
+        savePort.upsert(done1, player2Id, "alt");
+        savePort.upsert(done2, player2Id, "neu");
+        // ... and a note on the IN_PROGRESS base match, which must be EXCLUDED.
+        savePort.upsert(matchId, player2Id, "laufend");
+
+        assertThat(loadPort.findAboutPlayer(player2Id, 10))
+                .extracting(MatchPlayerNote::note)
+                .containsExactly("neu", "alt"); // completed only, newest first, "laufend" excluded
+    }
+
+    @Test
+    void findAboutPlayer_caps_at_limit() {
+        var done = com.cas.tsas.match.domain.model.MatchStatus.COMPLETED;
+        UUID done1 = persistMatch(player1Id, player2Id, done);
+        UUID done2 = persistMatch(persistPlayer("A", "B"), player2Id, done);
+        savePort.upsert(done1, player2Id, "alt");
+        savePort.upsert(done2, player2Id, "neu");
 
         var about = loadPort.findAboutPlayer(player2Id, 1);
         assertThat(about).hasSize(1);
