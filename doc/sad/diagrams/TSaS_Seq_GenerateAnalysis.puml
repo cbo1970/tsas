@@ -11,6 +11,7 @@ participant "Spring Boot\nResource Server" as API
 participant "MatchAnalysisController\n(ai-module/web)" as Ctrl
 participant "MatchAnalysisService\n(application)" as Svc
 participant "MatchStatisticsService" as Stats
+participant "GetPlayerNotesUseCase\n(match-module)" as Notes
 participant "LlmClientPort\n(OpenAiLlmAdapter / FakeLlmClientAdapter)" as Llm
 database "match_analysis" as DB
 participant "OpenAI\nChat Completions" as OpenAI
@@ -26,7 +27,10 @@ Svc -> Svc : assert MatchStatus = COMPLETED\nelse 409
 Svc -> Stats : compute(matchId)
 Stats --> Svc : MatchStatistics
 Svc -> Svc : assert totalPoints ≥ 10\nelse 422
-Svc -> Llm : generateAnalysis(stats, playerMeta)
+Svc -> Notes : forMatch(matchId)
+Notes --> Svc : List<MatchPlayerNote> (0–2)
+Svc -> Svc : Coach-Notizen in Prompt-\nKontext einbetten (FA-22)
+Svc -> Llm : generateAnalysis(stats, playerMeta + Notizen)
 activate Llm
 alt API-Key konfiguriert
   Llm -> OpenAI : ChatClient.entity(MatchAnalysis.class)
