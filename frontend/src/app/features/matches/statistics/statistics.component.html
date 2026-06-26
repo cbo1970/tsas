@@ -28,7 +28,7 @@
     <div class="stat-grid">
 
       <!-- Gewonnene Punkte -->
-      <span class="val val-left" style="color:#0ea5e9">{{ s.player1.pointsWon }}</span>
+      <span class="val val-left">{{ s.player1.pointsWon }}</span>
       <div data-testid="stat-row">
         <div class="stat-label">Gewonnene Punkte</div>
         <div class="bar">
@@ -39,7 +39,7 @@
       <span class="val val-right" [ngClass]="{ leading: s.player2.pointsWon > s.player1.pointsWon }">{{ s.player2.pointsWon }}</span>
 
       <!-- Asse -->
-      <span class="val val-left" style="color:#0ea5e9" data-testid="val-p1-aces">{{ s.player1.aces }}</span>
+      <span class="val val-left" data-testid="val-p1-aces">{{ s.player1.aces }}</span>
       <div data-testid="stat-row">
         <div class="stat-label">Asse</div>
         <div class="bar">
@@ -50,7 +50,7 @@
       <span class="val val-right" [ngClass]="{ leading: s.player2.aces > s.player1.aces }" data-testid="val-p2-aces">{{ s.player2.aces }}</span>
 
       <!-- Winners -->
-      <span class="val val-left" style="color:#0ea5e9">{{ s.player1.winners }}</span>
+      <span class="val val-left">{{ s.player1.winners }}</span>
       <div data-testid="stat-row">
         <div class="stat-label">Winners</div>
         <div class="bar">
@@ -96,7 +96,7 @@
       <div style="grid-column:span 3" class="divider"></div>
 
       <!-- 1. Aufschlag % -->
-      <span class="val val-left" style="color:#0ea5e9" data-testid="val-p1-first-serve">{{ pct(s.player1.firstServePercentage) }}</span>
+      <span class="val val-left" data-testid="val-p1-first-serve">{{ pct(s.player1.firstServePercentage) }}</span>
       <div data-testid="stat-row">
         <div class="stat-label">1. Aufschlag %</div>
         <div class="bar">
@@ -107,7 +107,7 @@
       <span class="val val-right" [ngClass]="{ leading: s.player2.firstServePercentage > s.player1.firstServePercentage }" data-testid="val-p2-first-serve">{{ pct(s.player2.firstServePercentage) }}</span>
 
       <!-- 2. Aufschlag % -->
-      <span class="val val-left" style="color:#0ea5e9">{{ pct(s.player1.secondServePercentage) }}</span>
+      <span class="val val-left">{{ pct(s.player1.secondServePercentage) }}</span>
       <div data-testid="stat-row">
         <div class="stat-label">2. Aufschlag %</div>
         <div class="bar">
@@ -118,7 +118,7 @@
       <span class="val val-right" [ngClass]="{ leading: s.player2.secondServePercentage > s.player1.secondServePercentage }">{{ pct(s.player2.secondServePercentage) }}</span>
 
       <!-- Break Points -->
-      <span class="val val-left" style="color:#0ea5e9" data-testid="val-p1-break-points">{{ s.player1.breakPointsWon }}/{{ s.player1.breakPointsFaced }}</span>
+      <span class="val val-left" data-testid="val-p1-break-points">{{ s.player1.breakPointsWon }}/{{ s.player1.breakPointsFaced }}</span>
       <div data-testid="stat-row">
         <div class="stat-label">Break Points</div>
         <div class="bar">
@@ -131,7 +131,7 @@
       <div style="grid-column:span 3" class="divider"></div>
 
       <!-- Vorhand / Rückhand -->
-      <span class="val val-left" style="color:#0ea5e9;font-size:11px;">VH {{ pct(s.player1.forehandPercentage) }}</span>
+      <span class="val val-left" style="font-size:11px;">VH {{ pct(s.player1.forehandPercentage) }}</span>
       <div data-testid="stat-row">
         <div class="stat-label">Vorhand / Rückhand</div>
         <div class="bar">
@@ -141,7 +141,7 @@
       </div>
       <span class="val val-right" style="font-size:11px;">VH {{ pct(s.player2.forehandPercentage) }}</span>
 
-      <span class="val val-left" style="color:#94a3b8;font-size:11px;">RH {{ pct(1 - s.player1.forehandPercentage) }}</span>
+      <span class="val val-left" style="color:var(--text-subtle);font-size:11px;">RH {{ pct(1 - s.player1.forehandPercentage) }}</span>
       <div></div>
       <span class="val val-right" style="font-size:11px;">RH {{ pct(1 - s.player2.forehandPercentage) }}</span>
 

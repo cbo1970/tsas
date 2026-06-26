@@ -11,28 +11,28 @@ import { MatchStatistics } from '../../../core/models/statistics.model';
   imports: [MatButtonModule, NgClass],
   templateUrl: './statistics.component.html',
   styles: [`
-    :host { display: block; min-height: 100dvh; background: linear-gradient(160deg, #103A6B 0%, #2D72B8 100%); color: #eee; font-family: sans-serif; }
+    :host { display: block; min-height: 100dvh; background: var(--surface-bg); color: var(--text); }
     .page { max-width: 480px; margin: 0 auto; padding: 16px; }
     .player-row { display: grid; grid-template-columns: 1fr 48px 1fr; align-items: end; margin-bottom: 8px; }
-    .player-name { text-align: center; font-weight: 700; font-size: 15px; color: #fff; }
+    .player-name { text-align: center; font-weight: 700; font-size: 15px; color: var(--text); }
     .set-scores { margin-bottom: 12px; }
     .set-row { display: grid; grid-template-columns: 1fr 48px 1fr; align-items: center; gap: 4px; margin-bottom: 4px; }
-    .set-label { text-align: center; font-size: 10px; color: #555; }
+    .set-label { text-align: center; font-size: 10px; color: var(--text-muted); }
     .badge { text-align: center; }
-    .badge span { display: inline-block; border-radius: 4px; padding: 3px 14px; font-size: 14px; font-weight: 600; background: #1e293b; color: #94a3b8; }
-    .badge.winner span { background: #0ea5e9; color: #000; }
-    .divider { border-top: 1px solid #1e293b; margin: 10px 0; }
+    .badge span { display: inline-block; border-radius: 4px; padding: 3px 14px; font-size: 14px; font-weight: 600; background: var(--surface-muted); color: var(--text-muted); }
+    .badge.winner span { background: var(--brand); color: #fff; }
+    .divider { border-top: 1px solid var(--border); margin: 10px 0; }
     .stat-grid { display: grid; grid-template-columns: 48px 1fr 48px; gap: 3px 6px; align-items: center; }
     .val { font-size: 13px; font-weight: 600; }
-    .val-left { text-align: right; }
-    .val-right { text-align: left; padding-left: 4px; color: #94a3b8; }
-    .val-right.leading { color: #eee; font-weight: 700; }
+    .val-left { text-align: right; color: var(--brand-strong); }
+    .val-right { text-align: left; padding-left: 4px; color: var(--text-subtle); }
+    .val-right.leading { color: var(--text); font-weight: 700; }
     .stat-label { font-size: 10px; color: #64748b; text-align: center; margin-bottom: 1px; }
-    .bar { display: flex; height: 4px; border-radius: 2px; overflow: hidden; margin-top: 1px; }
-    .bar-p1 { background: #0ea5e9; }
-    .bar-p2 { background: #475569; }
-    .bar-err { background: #f87171; }
-    .bar-good { background: #4ade80; }
+    .bar { display: flex; height: 4px; border-radius: 2px; overflow: hidden; margin-top: 1px; background: var(--surface-muted); }
+    .bar-p1 { background: var(--brand); }
+    .bar-p2 { background: var(--text-subtle); }
+    .bar-err { background: var(--danger); }
+    .bar-good { background: var(--success); }
     .back-row { text-align: center; margin-top: 20px; }
   `],
 })
