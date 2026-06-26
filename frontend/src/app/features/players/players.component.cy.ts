@@ -149,6 +149,13 @@ describe('PlayersComponent', () => {
       cy.get('@navigate').should('have.been.calledWith',
         ['/statistics/head-to-head'], { queryParams: { player1: '1' } });
     });
+
+    it('navigates to match-history route from the history button in the row', () => {
+      const navigateSpy = cy.stub().as('navigate');
+      mountPlayers(PLAYERS, [{ provide: Router, useValue: { navigate: navigateSpy } }]);
+      cy.get('[data-testid="player-history-btn"]').first().click();
+      cy.get('@navigate').should('have.been.calledWith', ['/players', '1', 'matches']);
+    });
   });
 
   describe('admin scope toggle (TEN-65)', () => {

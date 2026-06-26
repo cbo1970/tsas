@@ -8,7 +8,8 @@ import {
   MatchWithScore,
   MatchScore,
   CreateMatchRequest,
-  SetScoreRequest
+  SetScoreRequest,
+  MatchHistoryEntry
 } from '../models/match.model';
 import { RecordPointRequest } from '../models/point.model';
 import { MatchStatistics, HeadToHeadStatistics } from '../models/statistics.model';
@@ -108,6 +109,11 @@ export class ApiService {
   ): Observable<MatchAnalysis> {
     return this.http.patch<MatchAnalysis>(
       `${this.base}/matches/${matchId}/analysis/recommendations/${index}`, body);
+  }
+
+  // TEN-35 — Match-History per Spieler
+  getPlayerMatchHistory(playerId: string): Observable<MatchHistoryEntry[]> {
+    return this.http.get<MatchHistoryEntry[]>(`${this.base}/players/${playerId}/matches`);
   }
 
   // TEN-51 — KI-Vorbereitung gegen einen Gegner (Head-to-Head-basiert).
