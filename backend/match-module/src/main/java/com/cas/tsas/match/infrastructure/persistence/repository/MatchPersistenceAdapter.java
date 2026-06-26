@@ -1,7 +1,9 @@
 package com.cas.tsas.match.infrastructure.persistence.repository;
 
+import com.cas.tsas.match.application.port.out.LoadMatchHistoryPort;
 import com.cas.tsas.match.application.port.out.LoadMatchPort;
 import com.cas.tsas.match.application.port.out.LoadMatchesByPlayersPort;
+import com.cas.tsas.match.application.port.out.MatchHistoryRow;
 import com.cas.tsas.match.application.port.out.SaveMatchPort;
 import com.cas.tsas.match.domain.model.Match;
 import com.cas.tsas.match.domain.model.MatchStatus;
@@ -25,7 +27,7 @@ import java.util.UUID;
  * {@link MatchJpaEntity} via {@link MatchMapper}.
  */
 @Component
-public class MatchPersistenceAdapter implements LoadMatchPort, LoadMatchesByPlayersPort, SaveMatchPort, HasMatchesPort, FindActiveMatchPort {
+public class MatchPersistenceAdapter implements LoadMatchPort, LoadMatchesByPlayersPort, SaveMatchPort, HasMatchesPort, FindActiveMatchPort, LoadMatchHistoryPort {
 
     private final MatchJpaRepository repository;
     private final MatchMapper mapper;
@@ -94,5 +96,10 @@ public class MatchPersistenceAdapter implements LoadMatchPort, LoadMatchesByPlay
         var entity = mapper.toEntity(match);
         var saved = repository.save(entity);
         return mapper.toDomain(saved);
+    }
+
+    @Override
+    public List<MatchHistoryRow> findCompletedByPlayer(UUID playerId, UUID ownerId) {
+        return repository.findCompletedHistoryByPlayer(playerId, ownerId);
     }
 }
