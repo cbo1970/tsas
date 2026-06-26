@@ -85,7 +85,7 @@ import { PlayerNotesComponent } from '../notes/player-notes.component';
     .pts-btn.p1 { color: var(--brand-strong); }
     .pts-label {
       font-size: 10px;
-      opacity: .4;
+      color: var(--text);
       letter-spacing: .5px;
       text-align: center;
     }
@@ -93,7 +93,7 @@ import { PlayerNotesComponent } from '../notes/player-notes.component';
       text-align: center;
       margin-top: 4px;
       font-size: 10px;
-      opacity: .35;
+      color: var(--text);
       letter-spacing: .5px;
     }
     .header-actions {
@@ -108,13 +108,14 @@ import { PlayerNotesComponent } from '../notes/player-notes.component';
       flex: 1;
       display: grid;
       grid-template-columns: 1fr 1fr;
+      align-content: start;
       gap: 12px;
       padding: 12px;
       overflow-y: auto;
     }
     .obs-panel {
       background: var(--surface-card);
-      border: 1px solid var(--border);
+      border: 1px solid var(--text);
       border-radius: 10px;
       padding: 10px;
       display: flex;
@@ -124,6 +125,23 @@ import { PlayerNotesComponent } from '../notes/player-notes.component';
     .obs-panel.serving {
       background: var(--brand-soft);
       border-color: var(--brand-border);
+    }
+
+    /* Coach-Notizen: volle Breite direkt unter den beiden Panels */
+    .coach-notes {
+      grid-column: 1 / -1;
+      background: var(--border);
+      border: 1px solid var(--text);
+      border-radius: 10px;
+      padding: 8px 12px;
+    }
+    .coach-notes summary {
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      color: var(--text-muted);
+      padding: 4px 0;
     }
     .panel-title {
       font-size: 11px;
@@ -137,7 +155,8 @@ import { PlayerNotesComponent } from '../notes/player-notes.component';
 
     .section-label {
       font-size: 9px;
-      opacity: .5;
+      color: var(--text);
+      font-weight: 700;
       letter-spacing: .5px;
       margin-top: 4px;
     }
@@ -147,7 +166,7 @@ import { PlayerNotesComponent } from '../notes/player-notes.component';
     /* Context toggle buttons */
     .ctx-row { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
     .ctx-btn {
-      background: #fff;
+      background: var(--border);
       border: 1px solid var(--border);
       border-radius: 5px;
       padding: 6px 4px;
@@ -189,10 +208,12 @@ import { PlayerNotesComponent } from '../notes/player-notes.component';
       color: #fff;
     }
     .err-btn {
-      background: #fff;
-      border: 1px solid var(--danger);
-      color: var(--danger);
+      background: var(--danger);
+      border: none;
+      color: #fff;
     }
+    /* Gelbes Icon-Glyph auf den roten Buttons (auf Rot deutlich sichtbar) */
+    .ico-y { color: #FACC15; font-weight: 900; }
 
     /* ── Winner overlay ── */
     .winner-overlay {

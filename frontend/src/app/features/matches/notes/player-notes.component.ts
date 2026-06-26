@@ -6,7 +6,6 @@ import { ApiService } from '../../../core/services/api.service';
 
 interface NoteSlot {
   playerId: string;
-  name: string;
   roleKey: 'playerNotes.roleOwn' | 'playerNotes.roleOpponent';
   note: string;
   saving: boolean;
@@ -26,7 +25,6 @@ interface NoteSlot {
     .notes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     @media (max-width: 640px) { .notes { grid-template-columns: 1fr; } }
     .slot { display: flex; flex-direction: column; gap: 4px; }
-    .slot-label { font-size: 12px; font-weight: 600; color: var(--text); }
     .slot-role { font-size: 10px; color: var(--text-subtle); }
     textarea {
       width: 100%; box-sizing: border-box; min-height: 90px; resize: vertical;
@@ -48,12 +46,10 @@ export class PlayerNotesComponent implements OnInit {
     this.api.getMatch(this.matchId).subscribe({
       next: (m) => {
         const base: NoteSlot[] = [
-          { playerId: m.player1Id, name: 'Spieler 1', roleKey: 'playerNotes.roleOwn', note: '', saving: false, saved: false },
-          { playerId: m.player2Id, name: 'Spieler 2', roleKey: 'playerNotes.roleOpponent', note: '', saving: false, saved: false },
+          { playerId: m.player1Id, roleKey: 'playerNotes.roleOwn', note: '', saving: false, saved: false },
+          { playerId: m.player2Id, roleKey: 'playerNotes.roleOpponent', note: '', saving: false, saved: false },
         ];
         this.slots.set(base);
-        this.api.getPlayer(m.player1Id).subscribe(p => this.patch(0, s => s.name = `${p.firstName} ${p.lastName}`));
-        this.api.getPlayer(m.player2Id).subscribe(p => this.patch(1, s => s.name = `${p.firstName} ${p.lastName}`));
         this.api.getPlayerNotes(this.matchId).subscribe(notes => {
           for (const n of notes) {
             const idx = this.slots().findIndex(s => s.playerId === n.playerId);
