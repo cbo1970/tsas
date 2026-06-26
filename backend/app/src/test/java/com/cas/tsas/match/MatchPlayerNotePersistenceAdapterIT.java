@@ -8,6 +8,8 @@ import com.cas.tsas.match.domain.model.MatchPlayerNote;
 import com.cas.tsas.match.infrastructure.persistence.entity.MatchJpaEntity;
 import com.cas.tsas.match.infrastructure.persistence.repository.MatchJpaRepository;
 import com.cas.tsas.match.infrastructure.persistence.repository.MatchPlayerNoteJpaRepository;
+import com.cas.tsas.match.infrastructure.persistence.repository.MatchScoreJpaRepository;
+import com.cas.tsas.match.infrastructure.persistence.repository.PointJpaRepository;
 import com.cas.tsas.player.infrastructure.persistence.entity.PlayerJpaEntity;
 import com.cas.tsas.player.infrastructure.persistence.repository.PlayerJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +27,8 @@ class MatchPlayerNotePersistenceAdapterIT extends AbstractIntegrationTest {
     @Autowired LoadPlayerNotesPort loadPort;
     @Autowired MatchPlayerNoteJpaRepository noteRepository;
     @Autowired MatchJpaRepository matchRepository;
+    @Autowired MatchScoreJpaRepository matchScoreRepository;
+    @Autowired PointJpaRepository pointRepository;
     @Autowired PlayerJpaRepository playerRepository;
 
     private UUID matchId;
@@ -33,7 +37,12 @@ class MatchPlayerNotePersistenceAdapterIT extends AbstractIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        // FK-safe order: this IT shares the JVM-wide Testcontainer with other classes that leave
+        // points/match_scores referencing matches (fk_match_scores_match is not ON DELETE CASCADE),
+        // so those children must be cleared before matches.
         noteRepository.deleteAll();
+        pointRepository.deleteAll();
+        matchScoreRepository.deleteAll();
         matchRepository.deleteAll();
         playerRepository.deleteAll();
         player1Id = persistPlayer("Max", "Muster");
