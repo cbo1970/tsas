@@ -52,6 +52,7 @@ services:
     volumes:
       - ./keycloak:/opt/keycloak/data/import
       - ./keycloak/certs:/opt/keycloak/certs
+      - ./keycloak/themes:/opt/keycloak/themes
       - keycloak_data:/opt/keycloak/data/h2
     ports:
       - "8443:8443"

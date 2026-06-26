@@ -1,6 +1,7 @@
 {
   "realm": "tsas",
   "enabled": true,
+  "loginTheme": "tsas",
   "registrationAllowed": true,
   "registrationEmailAsUsername": false,
   "loginWithEmailAllowed": true,
