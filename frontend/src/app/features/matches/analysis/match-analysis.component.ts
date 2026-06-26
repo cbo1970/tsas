@@ -17,29 +17,29 @@ import { PlayerNotesComponent } from '../notes/player-notes.component';
   imports: [MatButtonModule, MatProgressSpinnerModule, MatInputModule, FormsModule, DatePipe, TranslatePipe, PlayerNotesComponent],
   templateUrl: './match-analysis.component.html',
   styles: [`
-    :host { display: block; min-height: 100dvh; background: #0f172a; color: #eee; font-family: sans-serif; }
+    :host { display: block; min-height: 100dvh; background: var(--surface-bg); color: var(--text); }
     .page { max-width: 560px; margin: 0 auto; padding: 16px; }
     .title { text-align: center; font-weight: 700; font-size: 18px; margin: 4px 0 2px; }
-    .subtitle { text-align: center; font-size: 13px; color: #94a3b8; margin-bottom: 4px; }
-    .meta { text-align: center; font-size: 11px; color: #64748b; margin-bottom: 16px; }
+    .subtitle { text-align: center; font-size: 13px; color: var(--text-subtle); margin-bottom: 4px; }
+    .meta { text-align: center; font-size: 11px; color: var(--text-muted); margin-bottom: 16px; }
     .centered { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 40px 8px; text-align: center; }
-    .hint { font-size: 13px; color: #94a3b8; max-width: 340px; }
-    .section { background: #1e293b; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
-    .section-label { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #0ea5e9; font-weight: 700; margin-bottom: 4px; }
-    .section-text { font-size: 14px; line-height: 1.45; color: #e2e8f0; white-space: pre-wrap; }
-    .rec-heading { font-size: 13px; font-weight: 700; color: #94a3b8; margin: 18px 0 8px; text-transform: uppercase; letter-spacing: .04em; }
-    .rec { display: flex; gap: 10px; background: #1e293b; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
-    .rec-prio { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; background: #0ea5e9; color: #001018; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+    .hint { font-size: 13px; color: var(--text-subtle); max-width: 340px; }
+    .section { background: var(--surface-card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+    .section-label { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--brand-strong); font-weight: 700; margin-bottom: 4px; }
+    .section-text { font-size: 14px; line-height: 1.45; color: var(--text); white-space: pre-wrap; }
+    .rec-heading { font-size: 13px; font-weight: 700; color: var(--text-muted); margin: 18px 0 8px; text-transform: uppercase; letter-spacing: .04em; }
+    .rec { display: flex; gap: 10px; background: var(--surface-card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+    .rec-prio { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; background: var(--brand); color: #fff; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; }
     .rec-body { flex: 1; }
-    .rec-title { font-size: 14px; font-weight: 600; color: #f1f5f9; }
-    .rec-detail { font-size: 13px; color: #cbd5e1; line-height: 1.4; margin-top: 2px; white-space: pre-wrap; }
-    .rec[data-status="ACCEPTED"] { border-left: 3px solid #22c55e; }
+    .rec-title { font-size: 14px; font-weight: 600; color: var(--text); }
+    .rec-detail { font-size: 13px; color: var(--text-muted); line-height: 1.4; margin-top: 2px; white-space: pre-wrap; }
+    .rec[data-status="ACCEPTED"] { border-left: 3px solid var(--success); }
     .rec[data-status="REJECTED"] { opacity: .55; }
     .rec[data-status="REJECTED"] .rec-title { text-decoration: line-through; }
-    .rec-note { font-size: 12px; color: #fca5a5; margin-top: 4px; font-style: italic; }
+    .rec-note { font-size: 12px; color: var(--danger); margin-top: 4px; font-style: italic; }
     .rec-review { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
-    .rec-note-input { background: #0f172a; color: #e2e8f0; border: 1px solid #334155; border-radius: 6px; padding: 4px 8px; font-size: 12px; flex: 1 1 140px; }
-    .error-box { background: #422; border: 1px solid #7f1d1d; border-radius: 10px; padding: 14px; color: #fecaca; font-size: 14px; text-align: center; margin-bottom: 14px; }
+    .rec-note-input { background: #fff; color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 12px; flex: 1 1 140px; }
+    .error-box { background: #FEF2F2; border: 1px solid var(--danger); border-radius: 10px; padding: 14px; color: var(--danger); font-size: 14px; text-align: center; margin-bottom: 14px; }
     .actions { text-align: center; margin: 18px 0; }
     .back-row { text-align: center; margin-top: 20px; }
   `],
