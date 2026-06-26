@@ -35,18 +35,16 @@ import { PlayerNotesComponent } from '../notes/player-notes.component';
       display: flex;
       flex-direction: column;
       height: 100dvh;
-      /* US-Open-Platz: dunkles Umrandungsblau → helleres Court-Blau */
-      background: linear-gradient(160deg, #103A6B 0%, #2D72B8 100%);
-      color: white;
+      background: var(--surface-bg);
+      color: var(--text);
       overflow: hidden;
-      font-family: sans-serif;
     }
 
     /* ── Score header ── */
     .score-header {
-      background: rgba(0,0,0,.8);
+      background: var(--surface-card);
       padding: 10px 16px;
-      border-bottom: 1px solid rgba(255,255,255,.1);
+      border-bottom: 1px solid var(--border);
       flex-shrink: 0;
     }
     .header-grid {
@@ -60,9 +58,9 @@ import { PlayerNotesComponent } from '../notes/player-notes.component';
     .player-name {
       font-size: 14px;
       font-weight: 700;
-      color: rgba(255,255,255,.75);
+      color: var(--text-muted);
     }
-    .player-name.serving { color: #4ade80; }
+    .player-name.serving { color: var(--brand-strong); }
     .score-center { display: flex; align-items: center; gap: 8px; }
     .sep { opacity: .3; }
     .games-num {
@@ -70,11 +68,11 @@ import { PlayerNotesComponent } from '../notes/player-notes.component';
       font-weight: 800;
       line-height: 1;
     }
-    .games-num.winning { color: #4ade80; }
+    .games-num.winning { color: var(--brand-strong); }
     .pts-btn {
       background: none;
       border: none;
-      color: white;
+      color: var(--text);
       font-size: 34px;
       font-weight: 900;
       line-height: 1;
@@ -83,8 +81,8 @@ import { PlayerNotesComponent } from '../notes/player-notes.component';
       padding: 2px 10px;
       transition: background .15s;
     }
-    .pts-btn:hover { background: rgba(255,255,255,.12); }
-    .pts-btn.p1 { color: #4ade80; }
+    .pts-btn:hover { background: var(--surface-muted); }
+    .pts-btn.p1 { color: var(--brand-strong); }
     .pts-label {
       font-size: 10px;
       opacity: .4;
@@ -115,8 +113,8 @@ import { PlayerNotesComponent } from '../notes/player-notes.component';
       overflow-y: auto;
     }
     .obs-panel {
-      background: rgba(255,255,255,.05);
-      border: 1px solid rgba(255,255,255,.12);
+      background: var(--surface-card);
+      border: 1px solid var(--border);
       border-radius: 10px;
       padding: 10px;
       display: flex;
@@ -124,17 +122,17 @@ import { PlayerNotesComponent } from '../notes/player-notes.component';
       gap: 6px;
     }
     .obs-panel.serving {
-      background: rgba(74,222,128,.08);
-      border-color: rgba(74,222,128,.3);
+      background: var(--brand-soft);
+      border-color: var(--brand-border);
     }
     .panel-title {
       font-size: 11px;
       font-weight: 700;
       letter-spacing: .5px;
       text-align: center;
-      color: rgba(255,255,255,.7);
+      color: var(--text-muted);
     }
-    .obs-panel.serving .panel-title { color: #4ade80; }
+    .obs-panel.serving .panel-title { color: var(--brand-strong); }
     .serve-badge { font-size: 9px; opacity: .6; font-weight: 400; }
 
     .section-label {
@@ -143,26 +141,26 @@ import { PlayerNotesComponent } from '../notes/player-notes.component';
       letter-spacing: .5px;
       margin-top: 4px;
     }
-    .section-label.green { color: #4ade80; opacity: .8; }
-    .section-label.red   { color: #fca5a5; opacity: .8; }
+    .section-label.green { color: var(--success); opacity: .8; }
+    .section-label.red   { color: var(--danger); opacity: .8; }
 
-    /* Context toggle buttons (yellow) */
+    /* Context toggle buttons */
     .ctx-row { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
     .ctx-btn {
-      background: rgba(254,240,138,.1);
-      border: 1px solid rgba(254,240,138,.2);
+      background: #fff;
+      border: 1px solid var(--border);
       border-radius: 5px;
       padding: 6px 4px;
       text-align: center;
       font-size: 12px;
-      color: rgba(254,240,138,.5);
+      color: var(--text-muted);
       cursor: pointer;
       transition: background .15s;
     }
     .ctx-btn.active {
-      background: #854d0e;
-      border-color: #fef08a;
-      color: #fef08a;
+      background: var(--brand-soft);
+      border-color: var(--brand);
+      color: var(--brand-strong);
       font-weight: 600;
     }
 
@@ -186,14 +184,14 @@ import { PlayerNotesComponent } from '../notes/player-notes.component';
     .obs-btn.err-sm { font-size: 11px; padding: 6px 2px; }
 
     .win-btn {
-      background: #166534;
-      border: 1px solid #4ade80;
-      color: #4ade80;
+      background: var(--success);
+      border: none;
+      color: #fff;
     }
     .err-btn {
-      background: #7f1d1d;
-      border: 1px solid #fca5a5;
-      color: #fca5a5;
+      background: #fff;
+      border: 1px solid var(--danger);
+      color: var(--danger);
     }
 
     /* ── Winner overlay ── */
@@ -204,21 +202,22 @@ import { PlayerNotesComponent } from '../notes/player-notes.component';
       align-items: center;
       justify-content: center;
       z-index: 20;
-      background: rgba(0,0,0,.6);
+      background: rgba(15,23,42,.45);
     }
     .winner-card {
-      background: linear-gradient(135deg,#1a237e,#283593);
-      color: white;
+      background: var(--surface-card);
+      color: var(--text);
       border-radius: 12px;
       padding: 24px;
       max-width: 320px;
       width: 90%;
       text-align: center;
+      box-shadow: var(--shadow-pop);
     }
-    .winner-text { font-size: 22px; font-weight: bold; margin-bottom: 8px; }
-    .final-score { font-size: 15px; color: rgba(255,255,255,.7); margin-bottom: 16px; }
+    .winner-text { font-size: 22px; font-weight: bold; margin-bottom: 8px; color: var(--brand-strong); }
+    .final-score { font-size: 15px; color: var(--text-muted); margin-bottom: 16px; }
 
-    .loading { text-align: center; padding: 48px; color: rgba(255,255,255,.5); }
+    .loading { text-align: center; padding: 48px; color: var(--text-subtle); }
   `]
 })
 export class ScoreComponent implements OnInit {

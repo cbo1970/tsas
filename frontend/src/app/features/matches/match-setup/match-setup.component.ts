@@ -39,9 +39,9 @@ import { Player } from '../../../core/models/player.model';
     .setup-form { display: flex; flex-direction: column; gap: 16px; padding: 8px 0; }
     .full-width { width: 100%; }
     .form-row { display: flex; align-items: center; gap: 16px; }
-    .form-label { font-size: 14px; color: rgba(0,0,0,.6); min-width: 120px; }
+    .form-label { font-size: 14px; color: var(--text-muted); min-width: 120px; }
     .radio-group { display: flex; gap: 16px; }
-    .toggle-row { justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+    .toggle-row { justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
     .actions { display: flex; justify-content: flex-end; padding-top: 16px; }
   `]
 })

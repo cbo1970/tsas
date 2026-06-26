@@ -23,14 +23,19 @@ import { LanguageService } from './core/i18n/language.service';
   templateUrl: './app.html',
   styles: [`
     :host { display: flex; flex-direction: column; min-height: 100vh; }
-    .app-title { margin-left: 12px; font-size: 20px; font-weight: 500; }
+    .app-title { margin-left: 12px; font-size: 20px; font-weight: 800; color: var(--brand-strong); }
     .spacer { flex: 1; }
-    main { flex: 1; background: #f5f5f5; min-height: calc(100vh - 64px); }
-    .active-link { background: rgba(255,255,255,0.15); border-radius: 4px; }
+    mat-toolbar {
+      background: var(--surface-card);
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+    }
+    main { flex: 1; background: var(--surface-bg); min-height: calc(100vh - 64px); }
+    .active-link { border-bottom: 2px solid var(--brand); border-radius: 0; }
     mat-toolbar mat-icon { font-size: 28px; }
     .user-name { font-size: 14px; margin-right: 4px; opacity: 0.9; }
     .admin-badge {
-      --mdc-chip-elevated-container-color: #c62828;
+      --mdc-chip-elevated-container-color: var(--danger);
       --mdc-chip-label-text-color: #fff;
       --mdc-chip-with-icon-icon-color: #fff;
       margin-right: 8px;
@@ -38,8 +43,8 @@ import { LanguageService } from './core/i18n/language.service';
       font-weight: 600;
       letter-spacing: 0.5px;
     }
-    .danger-item { color: #c62828; }
-    .danger-item mat-icon { color: #c62828; }
+    .danger-item { color: var(--danger); }
+    .danger-item mat-icon { color: var(--danger); }
     .flag { display: inline-block; margin-right: 6px; font-size: 18px; line-height: 1; }
   `]
 })

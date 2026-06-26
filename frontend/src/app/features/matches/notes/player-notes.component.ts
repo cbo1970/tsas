@@ -26,14 +26,14 @@ interface NoteSlot {
     .notes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     @media (max-width: 640px) { .notes { grid-template-columns: 1fr; } }
     .slot { display: flex; flex-direction: column; gap: 4px; }
-    .slot-label { font-size: 12px; font-weight: 600; opacity: .8; }
-    .slot-role { font-size: 10px; opacity: .55; }
+    .slot-label { font-size: 12px; font-weight: 600; color: var(--text); }
+    .slot-role { font-size: 10px; color: var(--text-subtle); }
     textarea {
       width: 100%; box-sizing: border-box; min-height: 90px; resize: vertical;
-      border-radius: 6px; border: 1px solid rgba(127,127,127,.4);
-      padding: 8px; font: inherit; background: rgba(255,255,255,.04); color: inherit;
+      border-radius: 6px; border: 1px solid var(--border);
+      padding: 8px; font: inherit; background: var(--surface-card); color: var(--text);
     }
-    .saved-hint { font-size: 10px; color: #4ade80; min-height: 12px; }
+    .saved-hint { font-size: 10px; color: var(--success); min-height: 12px; }
   `],
 })
 export class PlayerNotesComponent implements OnInit {
