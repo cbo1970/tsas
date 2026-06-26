@@ -24,11 +24,11 @@ import { PlayerNotesComponent } from '../notes/player-notes.component';
     .meta { text-align: center; font-size: 11px; color: var(--text-muted); margin-bottom: 16px; }
     .centered { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 40px 8px; text-align: center; }
     .hint { font-size: 13px; color: var(--text-subtle); max-width: 340px; }
-    .section { background: var(--surface-card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
-    .section-label { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--brand-strong); font-weight: 700; margin-bottom: 4px; }
+    .section { background: var(--surface-card); border: 1px solid var(--text); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+    .section-label { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--text); font-weight: 700; margin-bottom: 4px; }
     .section-text { font-size: 14px; line-height: 1.45; color: var(--text); white-space: pre-wrap; }
-    .rec-heading { font-size: 13px; font-weight: 700; color: var(--text-muted); margin: 18px 0 8px; text-transform: uppercase; letter-spacing: .04em; }
-    .rec { display: flex; gap: 10px; background: var(--surface-card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+    .rec-heading { font-size: 13px; font-weight: 700; color: var(--text); margin: 18px 0 8px; text-transform: uppercase; letter-spacing: .04em; }
+    .rec { display: flex; gap: 10px; background: var(--surface-card); border: 1px solid var(--text); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
     .rec-prio { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; background: var(--brand); color: #fff; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; }
     .rec-body { flex: 1; }
     .rec-title { font-size: 14px; font-weight: 600; color: var(--text); }
