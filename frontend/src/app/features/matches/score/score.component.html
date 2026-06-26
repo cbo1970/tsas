@@ -76,13 +76,6 @@
 
         <!-- ── Player 1 Panel ── -->
         <div class="obs-panel" [class.serving]="servingPlayer() === 1" data-testid="panel-p1">
-          <div class="panel-title">
-            {{ player1Name() }}
-            @if (servingPlayer() === 1) {
-              <span class="serve-badge">&nbsp;(Aufschlag)</span>
-            }
-          </div>
-
           <div class="section-label">SERVICE (Kontext)</div>
           <div class="ctx-row">
             <button class="ctx-btn"
@@ -109,7 +102,7 @@
           <div class="obs-row-1">
             <button class="obs-btn err-btn"
                     data-testid="p1-df"
-                    (click)="recordObservation(1, 'DOUBLE_FAULT')">❌ DF</button>
+                    (click)="recordObservation(1, 'DOUBLE_FAULT')"><span class="ico-y">✕</span> DF</button>
           </div>
           <div class="obs-row-3">
             <button class="obs-btn err-btn err-sm"
@@ -120,7 +113,7 @@
                     (click)="recordObservation(1, 'UNFORCED_ERROR')">😓 Unforced</button>
             <button class="obs-btn err-btn err-sm"
                     data-testid="p1-net"
-                    (click)="recordObservation(1, 'NET')">🔴 Netz</button>
+                    (click)="recordObservation(1, 'NET')">🎾 Netz</button>
           </div>
 
           <div class="section-label">SCHLAGART (Kontext)</div>
@@ -136,13 +129,6 @@
 
         <!-- ── Player 2 Panel ── -->
         <div class="obs-panel" [class.serving]="servingPlayer() === 2" data-testid="panel-p2">
-          <div class="panel-title">
-            {{ player2Name() }}
-            @if (servingPlayer() === 2) {
-              <span class="serve-badge">&nbsp;(Aufschlag)</span>
-            }
-          </div>
-
           <div class="section-label">SERVICE (Kontext)</div>
           <div class="ctx-row">
             <button class="ctx-btn"
@@ -169,7 +155,7 @@
           <div class="obs-row-1">
             <button class="obs-btn err-btn"
                     data-testid="p2-df"
-                    (click)="recordObservation(2, 'DOUBLE_FAULT')">❌ DF</button>
+                    (click)="recordObservation(2, 'DOUBLE_FAULT')"><span class="ico-y">✕</span> DF</button>
           </div>
           <div class="obs-row-3">
             <button class="obs-btn err-btn err-sm"
@@ -180,7 +166,7 @@
                     (click)="recordObservation(2, 'UNFORCED_ERROR')">😓 Unforced</button>
             <button class="obs-btn err-btn err-sm"
                     data-testid="p2-net"
-                    (click)="recordObservation(2, 'NET')">🔴 Netz</button>
+                    (click)="recordObservation(2, 'NET')">🎾 Netz</button>
           </div>
 
           <div class="section-label">SCHLAGART (Kontext)</div>
@@ -194,18 +180,16 @@
           </div>
         </div>
 
+        <!-- ── Coach Notes (volle Breite, direkt unter den Panels) ── -->
+        <details class="coach-notes">
+          <summary>{{ 'playerNotes.title' | translate }}</summary>
+          @if (matchData(); as m) {
+            <app-player-notes [matchId]="m.id" />
+          }
+        </details>
+
       </div>
     }
-
-    <!-- ── Coach Notes ── -->
-    <details class="coach-notes" style="padding: 8px 12px; background: rgba(0,0,0,.3); border-top: 1px solid rgba(255,255,255,.1);">
-      <summary style="cursor: pointer; font-size: 12px; font-weight: 700; letter-spacing: .04em; color: rgba(255,255,255,.7); padding: 4px 0;">
-        {{ 'playerNotes.title' | translate }}
-      </summary>
-      @if (matchData(); as m) {
-        <app-player-notes [matchId]="m.id" />
-      }
-    </details>
 
     <!-- ── Winner overlay (completed match) ── -->
     @if (matchData()!.score.isDone) {

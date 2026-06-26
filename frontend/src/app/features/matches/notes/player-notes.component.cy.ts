@@ -7,8 +7,6 @@ const MATCH = {
   id: 'match-1', player1Id: 'p1', player2Id: 'p2', status: 'IN_PROGRESS',
   score: {},
 };
-const PLAYER1 = { id: 'p1', firstName: 'Max', lastName: 'Muster' };
-const PLAYER2 = { id: 'p2', firstName: 'Tom', lastName: 'Gegner' };
 
 function mount() {
   cy.mount(PlayerNotesComponent, {
@@ -20,8 +18,6 @@ function mount() {
 describe('PlayerNotesComponent', () => {
   beforeEach(() => {
     cy.intercept('GET', '**/api/matches/match-1', MATCH).as('getMatch');
-    cy.intercept('GET', '**/api/players/p1', PLAYER1).as('getP1');
-    cy.intercept('GET', '**/api/players/p2', PLAYER2).as('getP2');
   });
 
   it('renders two note inputs and prefills existing notes', () => {
@@ -32,8 +28,8 @@ describe('PlayerNotesComponent', () => {
     cy.wait(['@getMatch', '@getNotes']);
     cy.get('[data-testid="note-input-0"]').should('have.value', 'RH longline');
     cy.get('[data-testid="note-input-1"]').should('have.value', '');
-    cy.contains('Max Muster').should('exist');
-    cy.contains('Tom Gegner').should('exist');
+    cy.contains('playerNotes.roleOwn').should('exist');
+    cy.contains('playerNotes.roleOpponent').should('exist');
   });
 
   it('PUTs the note to the correct player on save', () => {

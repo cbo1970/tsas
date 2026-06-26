@@ -1,7 +1,6 @@
 <div class="notes" data-testid="player-notes">
   @for (slot of slots(); track slot.playerId; let i = $index) {
     <div class="slot">
-      <span class="slot-label">{{ slot.name }}</span>
       <span class="slot-role">{{ slot.roleKey | translate }}</span>
       <textarea
         [attr.data-testid]="'note-input-' + i"
