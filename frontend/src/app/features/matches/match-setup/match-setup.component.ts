@@ -35,14 +35,16 @@ import { Player } from '../../../core/models/player.model';
   styles: [`
     .page-container { padding: 24px; max-width: 600px; margin: 0 auto; }
     .page-header { margin-bottom: 24px; }
-    .page-header h1 { margin: 0; font-size: 28px; }
+    .page-header h1 { margin: 0; font-size: 28px; font-weight: 700; color: var(--text); }
     .setup-form { display: flex; flex-direction: column; gap: 16px; padding: 8px 0; }
     .full-width { width: 100%; }
     .form-row { display: flex; align-items: center; gap: 16px; }
-    .form-label { font-size: 14px; color: var(--text-muted); min-width: 120px; }
+    .form-label { font-size: 14px; color: var(--text); font-weight: 700; min-width: 120px; }
     .radio-group { display: flex; gap: 16px; }
-    .toggle-row { justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .toggle-row { justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--text); }
+    .toggle-row span { font-weight: 700; }
     .actions { display: flex; justify-content: flex-end; padding-top: 16px; }
+    mat-card { border: 1px solid var(--text); }
   `]
 })
 export class MatchSetupComponent implements OnInit {
