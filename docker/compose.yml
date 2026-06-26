@@ -6,8 +6,14 @@ services:
       POSTGRES_DB: ${DB_NAME:-tsas}
       POSTGRES_USER: ${DB_USERNAME:-tsas}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-tsas}
+      # Consumed by db/init/01-create-keycloak-db.sh to bootstrap Keycloak's own
+      # "keycloak" DB + role (runs once on a fresh data volume).
+      KC_DB_NAME: ${KC_DB_NAME:-keycloak}
+      KC_DB_USERNAME: ${KC_DB_USERNAME:-keycloak}
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD:-keycloak}
     volumes:
       - ../volume/postgres:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
     read_only: true
     tmpfs:
       - /tmp:size=64M
@@ -32,6 +38,11 @@ services:
       --https-port=8443
       --https-certificate-file=/opt/keycloak/certs/localhost.pem
       --https-certificate-key-file=/opt/keycloak/certs/localhost-key.pem
+      --db=postgres
+      --db-url-host=db
+      --db-url-database=${KC_DB_NAME:-keycloak}
+      --db-username=${KC_DB_USERNAME:-keycloak}
+      --db-password=${KC_DB_PASSWORD:-keycloak}
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:-admin}
@@ -53,7 +64,8 @@ services:
       - ./keycloak:/opt/keycloak/data/import
       - ./keycloak/certs:/opt/keycloak/certs
       - ./keycloak/themes:/opt/keycloak/themes
-      - keycloak_data:/opt/keycloak/data/h2
+    depends_on:
+      db: { condition: service_healthy }
     ports:
       - "8443:8443"
       - "18080:8080"
@@ -132,6 +144,3 @@ services:
     cpus: 0.5
     depends_on:
       - backend
-
-volumes:
-  keycloak_data:
