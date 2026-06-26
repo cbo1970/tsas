@@ -27,6 +27,6 @@ public class MatchStatisticsController {
     @GetMapping
     public MatchStatisticsDto getStatistics(@PathVariable UUID id) {
         getMatchUseCase.findById(id); // throws MatchNotFoundException → 404 via GlobalExceptionHandler
-        return MatchStatisticsDto.from(computeStatistics.compute(id));
+        return MatchStatisticsDto.from(computeStatistics.computeBreakdown(id));
     }
 }

@@ -25,125 +25,138 @@
   <div class="divider"></div>
 
   @if (stats(); as s) {
+    @let a = activeStats()!;
+
+    @if (sets().length > 0) {
+      <div class="set-tabs">
+        <button type="button" class="set-tab" [class.active]="selectedView() === 'total'"
+                data-testid="set-tab-total" (click)="selectView('total')">Gesamt</button>
+        @for (set of sets(); track set.setNumber) {
+          <button type="button" class="set-tab" [class.active]="selectedView() === set.setNumber"
+                  [attr.data-testid]="'set-tab-' + set.setNumber" (click)="selectView(set.setNumber)">Satz {{ set.setNumber }}</button>
+        }
+      </div>
+    }
+
     <div class="stat-grid">
 
       <!-- Gewonnene Punkte -->
-      <span class="val val-left">{{ s.player1.pointsWon }}</span>
+      <span class="val val-left">{{ a.p1.pointsWon }}</span>
       <div data-testid="stat-row">
         <div class="stat-label">Gewonnene Punkte</div>
         <div class="bar">
-          <div class="bar-p1" [style.flex]="s.player1.pointsWon"></div>
-          <div class="bar-p2" [style.flex]="s.player2.pointsWon"></div>
+          <div class="bar-p1" [style.flex]="a.p1.pointsWon"></div>
+          <div class="bar-p2" [style.flex]="a.p2.pointsWon"></div>
         </div>
       </div>
-      <span class="val val-right" [ngClass]="{ leading: s.player2.pointsWon > s.player1.pointsWon }">{{ s.player2.pointsWon }}</span>
+      <span class="val val-right" [ngClass]="{ leading: a.p2.pointsWon > a.p1.pointsWon }">{{ a.p2.pointsWon }}</span>
 
       <!-- Asse -->
-      <span class="val val-left" data-testid="val-p1-aces">{{ s.player1.aces }}</span>
+      <span class="val val-left" data-testid="val-p1-aces">{{ a.p1.aces }}</span>
       <div data-testid="stat-row">
         <div class="stat-label">Asse</div>
         <div class="bar">
-          <div class="bar-p1" [style.flex]="s.player1.aces || 1"></div>
-          <div class="bar-p2" [style.flex]="s.player2.aces || 1"></div>
+          <div class="bar-p1" [style.flex]="a.p1.aces || 1"></div>
+          <div class="bar-p2" [style.flex]="a.p2.aces || 1"></div>
         </div>
       </div>
-      <span class="val val-right" [ngClass]="{ leading: s.player2.aces > s.player1.aces }" data-testid="val-p2-aces">{{ s.player2.aces }}</span>
+      <span class="val val-right" [ngClass]="{ leading: a.p2.aces > a.p1.aces }" data-testid="val-p2-aces">{{ a.p2.aces }}</span>
 
       <!-- Winners -->
-      <span class="val val-left">{{ s.player1.winners }}</span>
+      <span class="val val-left">{{ a.p1.winners }}</span>
       <div data-testid="stat-row">
         <div class="stat-label">Winners</div>
         <div class="bar">
-          <div class="bar-p1" [style.flex]="s.player1.winners || 1"></div>
-          <div class="bar-p2" [style.flex]="s.player2.winners || 1"></div>
+          <div class="bar-p1" [style.flex]="a.p1.winners || 1"></div>
+          <div class="bar-p2" [style.flex]="a.p2.winners || 1"></div>
         </div>
       </div>
-      <span class="val val-right" [ngClass]="{ leading: s.player2.winners > s.player1.winners }">{{ s.player2.winners }}</span>
+      <span class="val val-right" [ngClass]="{ leading: a.p2.winners > a.p1.winners }">{{ a.p2.winners }}</span>
 
       <!-- Forced Errors -->
-      <span class="val val-right" [ngClass]="{ leading: s.player1.forcedErrors <= s.player2.forcedErrors }">{{ s.player1.forcedErrors }}</span>
+      <span class="val val-right" [ngClass]="{ leading: a.p1.forcedErrors <= a.p2.forcedErrors }">{{ a.p1.forcedErrors }}</span>
       <div data-testid="stat-row">
         <div class="stat-label">Forced Errors</div>
         <div class="bar">
-          <div [class]="s.player1.forcedErrors <= s.player2.forcedErrors ? 'bar-good' : 'bar-err'" [style.flex]="s.player1.forcedErrors || 1"></div>
-          <div [class]="s.player2.forcedErrors <= s.player1.forcedErrors ? 'bar-good' : 'bar-err'" [style.flex]="s.player2.forcedErrors || 1"></div>
+          <div [class]="a.p1.forcedErrors <= a.p2.forcedErrors ? 'bar-good' : 'bar-err'" [style.flex]="a.p1.forcedErrors || 1"></div>
+          <div [class]="a.p2.forcedErrors <= a.p1.forcedErrors ? 'bar-good' : 'bar-err'" [style.flex]="a.p2.forcedErrors || 1"></div>
         </div>
       </div>
-      <span class="val val-right" [ngClass]="{ leading: s.player2.forcedErrors <= s.player1.forcedErrors }">{{ s.player2.forcedErrors }}</span>
+      <span class="val val-right" [ngClass]="{ leading: a.p2.forcedErrors <= a.p1.forcedErrors }">{{ a.p2.forcedErrors }}</span>
 
       <!-- Unforced Errors -->
-      <span class="val val-right" [ngClass]="{ leading: s.player1.unforcedErrors <= s.player2.unforcedErrors }">{{ s.player1.unforcedErrors }}</span>
+      <span class="val val-right" [ngClass]="{ leading: a.p1.unforcedErrors <= a.p2.unforcedErrors }">{{ a.p1.unforcedErrors }}</span>
       <div data-testid="stat-row">
         <div class="stat-label">Unforced Errors</div>
         <div class="bar">
-          <div [class]="s.player1.unforcedErrors <= s.player2.unforcedErrors ? 'bar-good' : 'bar-err'" [style.flex]="s.player1.unforcedErrors || 1"></div>
-          <div [class]="s.player2.unforcedErrors <= s.player1.unforcedErrors ? 'bar-good' : 'bar-err'" [style.flex]="s.player2.unforcedErrors || 1"></div>
+          <div [class]="a.p1.unforcedErrors <= a.p2.unforcedErrors ? 'bar-good' : 'bar-err'" [style.flex]="a.p1.unforcedErrors || 1"></div>
+          <div [class]="a.p2.unforcedErrors <= a.p1.unforcedErrors ? 'bar-good' : 'bar-err'" [style.flex]="a.p2.unforcedErrors || 1"></div>
         </div>
       </div>
-      <span class="val val-right" [ngClass]="{ leading: s.player2.unforcedErrors <= s.player1.unforcedErrors }">{{ s.player2.unforcedErrors }}</span>
+      <span class="val val-right" [ngClass]="{ leading: a.p2.unforcedErrors <= a.p1.unforcedErrors }">{{ a.p2.unforcedErrors }}</span>
 
       <!-- Doppelfehler -->
-      <span class="val val-right" [ngClass]="{ leading: s.player1.doubleFaults <= s.player2.doubleFaults }">{{ s.player1.doubleFaults }}</span>
+      <span class="val val-right" [ngClass]="{ leading: a.p1.doubleFaults <= a.p2.doubleFaults }">{{ a.p1.doubleFaults }}</span>
       <div data-testid="stat-row">
         <div class="stat-label">Doppelfehler</div>
         <div class="bar">
-          <div [class]="s.player1.doubleFaults <= s.player2.doubleFaults ? 'bar-good' : 'bar-err'" [style.flex]="s.player1.doubleFaults || 1"></div>
-          <div [class]="s.player2.doubleFaults <= s.player1.doubleFaults ? 'bar-good' : 'bar-err'" [style.flex]="s.player2.doubleFaults || 1"></div>
+          <div [class]="a.p1.doubleFaults <= a.p2.doubleFaults ? 'bar-good' : 'bar-err'" [style.flex]="a.p1.doubleFaults || 1"></div>
+          <div [class]="a.p2.doubleFaults <= a.p1.doubleFaults ? 'bar-good' : 'bar-err'" [style.flex]="a.p2.doubleFaults || 1"></div>
         </div>
       </div>
-      <span class="val val-right" [ngClass]="{ leading: s.player2.doubleFaults <= s.player1.doubleFaults }">{{ s.player2.doubleFaults }}</span>
+      <span class="val val-right" [ngClass]="{ leading: a.p2.doubleFaults <= a.p1.doubleFaults }">{{ a.p2.doubleFaults }}</span>
 
       <div style="grid-column:span 3" class="divider"></div>
 
       <!-- 1. Aufschlag % -->
-      <span class="val val-left" data-testid="val-p1-first-serve">{{ pct(s.player1.firstServePercentage) }}</span>
+      <span class="val val-left" data-testid="val-p1-first-serve">{{ pct(a.p1.firstServePercentage) }}</span>
       <div data-testid="stat-row">
         <div class="stat-label">1. Aufschlag %</div>
         <div class="bar">
-          <div class="bar-p1" [style.flex]="s.player1.firstServePercentage * 100 || 1"></div>
-          <div class="bar-p2" [style.flex]="s.player2.firstServePercentage * 100 || 1"></div>
+          <div class="bar-p1" [style.flex]="a.p1.firstServePercentage * 100 || 1"></div>
+          <div class="bar-p2" [style.flex]="a.p2.firstServePercentage * 100 || 1"></div>
         </div>
       </div>
-      <span class="val val-right" [ngClass]="{ leading: s.player2.firstServePercentage > s.player1.firstServePercentage }" data-testid="val-p2-first-serve">{{ pct(s.player2.firstServePercentage) }}</span>
+      <span class="val val-right" [ngClass]="{ leading: a.p2.firstServePercentage > a.p1.firstServePercentage }" data-testid="val-p2-first-serve">{{ pct(a.p2.firstServePercentage) }}</span>
 
       <!-- 2. Aufschlag % -->
-      <span class="val val-left">{{ pct(s.player1.secondServePercentage) }}</span>
+      <span class="val val-left">{{ pct(a.p1.secondServePercentage) }}</span>
       <div data-testid="stat-row">
         <div class="stat-label">2. Aufschlag %</div>
         <div class="bar">
-          <div class="bar-p1" [style.flex]="s.player1.secondServePercentage * 100 || 1"></div>
-          <div class="bar-p2" [style.flex]="s.player2.secondServePercentage * 100 || 1"></div>
+          <div class="bar-p1" [style.flex]="a.p1.secondServePercentage * 100 || 1"></div>
+          <div class="bar-p2" [style.flex]="a.p2.secondServePercentage * 100 || 1"></div>
         </div>
       </div>
-      <span class="val val-right" [ngClass]="{ leading: s.player2.secondServePercentage > s.player1.secondServePercentage }">{{ pct(s.player2.secondServePercentage) }}</span>
+      <span class="val val-right" [ngClass]="{ leading: a.p2.secondServePercentage > a.p1.secondServePercentage }">{{ pct(a.p2.secondServePercentage) }}</span>
 
       <!-- Break Points -->
-      <span class="val val-left" data-testid="val-p1-break-points">{{ s.player1.breakPointsWon }}/{{ s.player1.breakPointsFaced }}</span>
+      <span class="val val-left" data-testid="val-p1-break-points">{{ a.p1.breakPointsWon }}/{{ a.p1.breakPointsFaced }}</span>
       <div data-testid="stat-row">
         <div class="stat-label">Break Points</div>
         <div class="bar">
-          <div class="bar-p1" [style.flex]="s.player1.breakPointsFaced || 1"></div>
-          <div class="bar-p2" [style.flex]="s.player2.breakPointsFaced || 1"></div>
+          <div class="bar-p1" [style.flex]="a.p1.breakPointsFaced || 1"></div>
+          <div class="bar-p2" [style.flex]="a.p2.breakPointsFaced || 1"></div>
         </div>
       </div>
-      <span class="val val-right" data-testid="val-p2-break-points">{{ s.player2.breakPointsWon }}/{{ s.player2.breakPointsFaced }}</span>
+      <span class="val val-right" data-testid="val-p2-break-points">{{ a.p2.breakPointsWon }}/{{ a.p2.breakPointsFaced }}</span>
 
       <div style="grid-column:span 3" class="divider"></div>
 
       <!-- Vorhand / Rückhand -->
-      <span class="val val-left" style="font-size:11px;">VH {{ pct(s.player1.forehandPercentage) }}</span>
+      <span class="val val-left" style="font-size:11px;">VH {{ pct(a.p1.forehandPercentage) }}</span>
       <div data-testid="stat-row">
         <div class="stat-label">Vorhand / Rückhand</div>
         <div class="bar">
-          <div class="bar-p1" [style.flex]="s.player1.forehandPercentage * 100 || 1"></div>
-          <div class="bar-p2" [style.flex]="s.player2.forehandPercentage * 100 || 1"></div>
+          <div class="bar-p1" [style.flex]="a.p1.forehandPercentage * 100 || 1"></div>
+          <div class="bar-p2" [style.flex]="a.p2.forehandPercentage * 100 || 1"></div>
         </div>
       </div>
-      <span class="val val-right" style="font-size:11px;">VH {{ pct(s.player2.forehandPercentage) }}</span>
+      <span class="val val-right" style="font-size:11px;">VH {{ pct(a.p2.forehandPercentage) }}</span>
 
-      <span class="val val-left" style="color:var(--text-subtle);font-size:11px;">RH {{ pct(1 - s.player1.forehandPercentage) }}</span>
+      <span class="val val-left" style="color:var(--text-subtle);font-size:11px;">RH {{ pct(1 - a.p1.forehandPercentage) }}</span>
       <div></div>
-      <span class="val val-right" style="font-size:11px;">RH {{ pct(1 - s.player2.forehandPercentage) }}</span>
+      <span class="val val-right" style="font-size:11px;">RH {{ pct(1 - a.p2.forehandPercentage) }}</span>
 
     </div>
   }

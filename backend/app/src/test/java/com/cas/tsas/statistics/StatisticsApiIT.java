@@ -101,7 +101,26 @@ class StatisticsApiIT extends AbstractIntegrationTest {
                     .andExpect(jsonPath("$.player2.pointsWon").value(1))
                     .andExpect(jsonPath("$.player1.aces").value(1))
                     .andExpect(jsonPath("$.player1.winners").value(1))
-                    .andExpect(jsonPath("$.player2.unforcedErrors").value(1));
+                    .andExpect(jsonPath("$.player2.unforcedErrors").value(1))
+                    .andExpect(jsonPath("$.sets[0].setNumber").value(1));
+        }
+
+        @Test
+        void returns_per_set_breakdown() throws Exception {
+            UUID p1 = createPlayer();
+            UUID p2 = createPlayer();
+            UUID matchId = createMatch(p1, p2);
+            mockMvc.perform(post("/api/matches/{id}/serve/player1", matchId)).andExpect(status().isOk());
+            recordPoint(matchId, 1, "ACE");
+            recordPoint(matchId, 1, "WINNER");
+
+            mockMvc.perform(get("/api/matches/{id}/statistics", matchId))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.sets.length()").value(1))
+                    .andExpect(jsonPath("$.sets[0].setNumber").value(1))
+                    .andExpect(jsonPath("$.sets[0].totalPoints").value(2))
+                    .andExpect(jsonPath("$.sets[0].player1.aces").value(1))
+                    .andExpect(jsonPath("$.sets[0].player1.winners").value(1));
         }
 
         @Test

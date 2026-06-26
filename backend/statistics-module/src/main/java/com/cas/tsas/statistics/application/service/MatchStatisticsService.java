@@ -9,7 +9,9 @@ import com.cas.tsas.statistics.application.port.in.ComputeMatchStatisticsUseCase
 import com.cas.tsas.statistics.domain.PointAttribution;
 import com.cas.tsas.statistics.domain.model.DirectionDistribution;
 import com.cas.tsas.statistics.domain.model.MatchStatistics;
+import com.cas.tsas.statistics.domain.model.MatchStatisticsBreakdown;
 import com.cas.tsas.statistics.domain.model.PlayerStatistics;
+import com.cas.tsas.statistics.domain.model.SetStatistics;
 import com.cas.tsas.statistics.domain.model.StrokeDistribution;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +19,9 @@ import java.time.Instant;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Computes match statistics on the fly from the recorded points; nothing is persisted.
@@ -34,18 +38,25 @@ public class MatchStatisticsService implements ComputeMatchStatisticsUseCase {
         this.loadPointsByMatchPort = loadPointsByMatchPort;
     }
 
-    /**
-     * Loads all points of the match and accumulates per-player statistics in a single pass.
-     *
-     * <p>For each point the attributed player gets its winner/error/ace/double-fault count
-     * bumped and its stroke/direction distribution updated. Serve attempts feed the 1st/2nd
-     * serve percentages (a 2nd serve counts as "in" unless it was a double fault). Break points
-     * are credited to the returner when the server lost the point. Points with no point type
-     * (untyped score entries) only contribute to {@code pointsWon}.
-     */
     @Override
     public MatchStatistics compute(UUID matchId) {
+        return computeFrom(matchId, loadPointsByMatchPort.loadPointsByMatch(matchId));
+    }
+
+    @Override
+    public MatchStatisticsBreakdown computeBreakdown(UUID matchId) {
         List<Point> points = loadPointsByMatchPort.loadPointsByMatch(matchId);
+        MatchStatistics total = computeFrom(matchId, points);
+        List<SetStatistics> sets = points.stream()
+                .collect(Collectors.groupingBy(Point::getSetNumber, TreeMap::new, Collectors.toList()))
+                .entrySet().stream()
+                .map(e -> new SetStatistics(e.getKey(), computeFrom(matchId, e.getValue())))
+                .toList();
+        return new MatchStatisticsBreakdown(total, sets);
+    }
+
+    /** Accumulates per-player statistics from the given points in a single pass. */
+    private MatchStatistics computeFrom(UUID matchId, List<Point> points) {
         Accumulator acc1 = new Accumulator(1);
         Accumulator acc2 = new Accumulator(2);
         int breakPointsTotal = 0;
