@@ -55,3 +55,12 @@ export interface SetScoreRequest {
   isDone: boolean;
   winner: string | null;
 }
+
+export interface MatchHistoryEntry {
+  matchId: string;
+  opponentName: string;
+  setsWon: number;
+  setsLost: number;
+  won: boolean;
+  completedAt: string;
+}

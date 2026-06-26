@@ -1,5 +1,6 @@
 package com.cas.tsas.match.infrastructure.persistence.repository;
 
+import com.cas.tsas.match.application.port.out.MatchHistoryRow;
 import com.cas.tsas.match.domain.model.MatchStatus;
 import com.cas.tsas.match.infrastructure.persistence.entity.MatchJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -31,4 +32,17 @@ public interface MatchJpaRepository extends JpaRepository<MatchJpaEntity, UUID> 
 
     /** Bulk-delete used by the DSGVO Art. 17 endpoint (TEN-66). Caller deletes child rows first. */
     long deleteAllByOwnerId(UUID ownerId);
+
+    @Query("""
+            SELECT new com.cas.tsas.match.application.port.out.MatchHistoryRow(
+                m.id, m.player1Id, m.player2Id, ms.setsPlayer1, ms.setsPlayer2, ms.winner, m.updatedAt)
+            FROM MatchJpaEntity m, MatchScoreJpaEntity ms
+            WHERE ms.matchId = m.id
+              AND (m.player1Id = :playerId OR m.player2Id = :playerId)
+              AND m.status = com.cas.tsas.match.domain.model.MatchStatus.COMPLETED
+              AND m.ownerId = :ownerId
+            ORDER BY m.updatedAt DESC
+            """)
+    List<MatchHistoryRow> findCompletedHistoryByPlayer(@Param("playerId") UUID playerId,
+                                                       @Param("ownerId") UUID ownerId);
 }

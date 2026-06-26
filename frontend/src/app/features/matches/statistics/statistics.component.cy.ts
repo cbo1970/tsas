@@ -49,6 +49,15 @@ const activatedRouteStub = {
   },
 };
 
+const activatedRouteStubNoNames = {
+  snapshot: {
+    paramMap: { get: (key: string) => key === 'id' ? 'match-1' : null },
+    queryParamMap: {
+      get: (_key: string) => null,
+    },
+  },
+};
+
 function mountStatsWithSets(extraProviders: any[] = []) {
   cy.intercept('GET', '**/api/matches/match-1/statistics', MOCK_STATS_WITH_SETS).as('getStats');
   cy.mount(StatisticsComponent, {
@@ -158,5 +167,33 @@ describe('StatisticsComponent', () => {
   it('shows no set tabs when the response has no sets', () => {
     mountStats(); // MOCK_STATS has no sets
     cy.get('[data-testid="set-tab-total"]').should('not.exist');
+  });
+
+  it('fetches player names from the match when p1/p2 query params are absent', () => {
+    cy.intercept('GET', '**/api/matches/match-1/statistics', MOCK_STATS).as('getStats');
+    cy.intercept('GET', '**/api/matches/match-1', {
+      id: 'match-1', player1Id: 'player-a', player2Id: 'player-b',
+      ownerId: 'owner-1', setsToWin: 2, matchTiebreak: false, shortSet: false, status: 'COMPLETED',
+    }).as('getMatch');
+    cy.intercept('GET', '**/api/players/player-a', {
+      id: 'player-a', firstName: 'Anna', lastName: 'Spielerin',
+      ownerId: 'owner-1', gender: 'FEMALE', handedness: 'RIGHT', backhandType: 'TWO_HANDED', active: true,
+    }).as('getP1');
+    cy.intercept('GET', '**/api/players/player-b', {
+      id: 'player-b', firstName: 'Bob', lastName: 'Gegner',
+      ownerId: 'owner-1', gender: 'MALE', handedness: 'RIGHT', backhandType: 'ONE_HANDED', active: true,
+    }).as('getP2');
+    cy.mount(StatisticsComponent, {
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideAnimationsAsync(),
+        { provide: ActivatedRoute, useValue: activatedRouteStubNoNames },
+      ],
+    });
+    cy.wait('@getStats');
+    cy.wait('@getMatch');
+    cy.contains('Anna Spielerin').should('exist');
+    cy.contains('Bob Gegner').should('exist');
   });
 });

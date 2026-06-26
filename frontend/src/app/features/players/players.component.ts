@@ -142,6 +142,10 @@ export class PlayersComponent implements OnInit {
     this.router.navigate(['/statistics/head-to-head'], { queryParams: { player1: player.id } });
   }
 
+  goToHistory(player: Player) {
+    this.router.navigate(['/players', player.id, 'matches']);
+  }
+
   openCreateDialog() {
     const ref = this.dialog.open(PlayerDialogComponent, { width: '500px' });
     ref.afterClosed().subscribe((result: CreatePlayerRequest | undefined) => {

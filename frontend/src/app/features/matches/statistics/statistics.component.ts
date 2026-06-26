@@ -83,8 +83,17 @@ export class StatisticsComponent implements OnInit {
         })
       );
     }
-    this.p1Name.set(this.route.snapshot.queryParamMap.get('p1') ?? 'Spieler 1');
-    this.p2Name.set(this.route.snapshot.queryParamMap.get('p2') ?? 'Spieler 2');
+    const p1Param = this.route.snapshot.queryParamMap.get('p1');
+    const p2Param = this.route.snapshot.queryParamMap.get('p2');
+    if (p1Param && p2Param) {
+      this.p1Name.set(p1Param);
+      this.p2Name.set(p2Param);
+    } else {
+      this.api.getMatch(this.matchId).subscribe(m => {
+        this.api.getPlayer(m.player1Id).subscribe(p => this.p1Name.set(`${p.firstName} ${p.lastName}`));
+        this.api.getPlayer(m.player2Id).subscribe(p => this.p2Name.set(`${p.firstName} ${p.lastName}`));
+      });
+    }
 
     this.api.getMatchStatistics(this.matchId).subscribe({
       next: s => this.stats.set(s),
