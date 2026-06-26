@@ -179,4 +179,38 @@ class MatchStatisticsServiceTest {
         assertThat(s.player1().winners()).isZero();
         assertThat(s.player2().winners()).isZero();
     }
+
+    @Test
+    void breakdownProducesTotalAndPerSet() {
+        Mockito.when(loadPort.loadPointsByMatch(matchId)).thenReturn(List.of(
+                // Set 1: P1 winner + P1 ace
+                p(1,1,1,1,PointType.WINNER,StrokeType.FOREHAND,Direction.CROSS_COURT,1,false,1),
+                p(1,1,2,1,PointType.ACE,null,null,1,false,1),
+                // Set 2: P2 winner
+                p(2,1,1,2,PointType.WINNER,StrokeType.BACKHAND,Direction.MIDDLE,2,false,1)
+        ));
+
+        var b = service.computeBreakdown(matchId);
+
+        assertThat(b.total().totalPoints()).isEqualTo(3);
+        assertThat(b.sets()).extracting(com.cas.tsas.statistics.domain.model.SetStatistics::setNumber)
+                .containsExactly(1, 2);
+
+        var set1 = b.sets().get(0).stats();
+        assertThat(set1.totalPoints()).isEqualTo(2);
+        assertThat(set1.player1().winners()).isEqualTo(1);
+        assertThat(set1.player1().aces()).isEqualTo(1);
+
+        var set2 = b.sets().get(1).stats();
+        assertThat(set2.totalPoints()).isEqualTo(1);
+        assertThat(set2.player2().winners()).isEqualTo(1);
+    }
+
+    @Test
+    void breakdownOfEmptyMatchHasNoSets() {
+        Mockito.when(loadPort.loadPointsByMatch(matchId)).thenReturn(List.of());
+        var b = service.computeBreakdown(matchId);
+        assertThat(b.total().totalPoints()).isZero();
+        assertThat(b.sets()).isEmpty();
+    }
 }
