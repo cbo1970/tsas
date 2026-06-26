@@ -10,6 +10,7 @@ import com.cas.tsas.ai.domain.model.AnalysisStatus;
 import com.cas.tsas.ai.domain.model.MatchAnalysis;
 import com.cas.tsas.ai.infrastructure.llm.FakeLlmClientAdapter;
 import com.cas.tsas.match.application.port.in.GetMatchUseCase;
+import com.cas.tsas.match.application.port.in.GetPlayerNotesUseCase;
 import com.cas.tsas.match.domain.model.Match;
 import com.cas.tsas.match.domain.model.MatchStatus;
 import com.cas.tsas.player.application.port.out.LoadPlayerPort;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -39,6 +41,7 @@ import static org.mockito.Mockito.when;
 class MatchAnalysisServiceTest {
 
     private GetMatchUseCase getMatchUseCase;
+    private GetPlayerNotesUseCase getPlayerNotesUseCase;
     private LoadPlayerPort loadPlayerPort;
     private ComputeMatchStatisticsUseCase statisticsUseCase;
     private LlmClientPort llm;
@@ -51,12 +54,14 @@ class MatchAnalysisServiceTest {
     @BeforeEach
     void setUp() {
         getMatchUseCase = Mockito.mock(GetMatchUseCase.class);
+        getPlayerNotesUseCase = Mockito.mock(GetPlayerNotesUseCase.class);
+        when(getPlayerNotesUseCase.forMatch(any())).thenReturn(List.of());
         loadPlayerPort = Mockito.mock(LoadPlayerPort.class);
         statisticsUseCase = Mockito.mock(ComputeMatchStatisticsUseCase.class);
         llm = new FakeLlmClientAdapter();
         savePort = Mockito.mock(SaveMatchAnalysisPort.class);
         loadPort = Mockito.mock(LoadMatchAnalysisPort.class);
-        service = new MatchAnalysisService(getMatchUseCase, loadPlayerPort,
+        service = new MatchAnalysisService(getMatchUseCase, getPlayerNotesUseCase, loadPlayerPort,
                 statisticsUseCase, llm, savePort, loadPort, () -> "de", 10);
 
         matchId = UUID.randomUUID();
@@ -139,7 +144,8 @@ class MatchAnalysisServiceTest {
         when(failing.generateAnalysis(any(), any(), any())).thenThrow(new RuntimeException("boom"));
 
         MatchAnalysisService failingService = new MatchAnalysisService(getMatchUseCase,
-                loadPlayerPort, statisticsUseCase, failing, savePort, loadPort, () -> "de", 10);
+                getPlayerNotesUseCase, loadPlayerPort, statisticsUseCase, failing, savePort, loadPort,
+                () -> "de", 10);
 
         assertThatThrownBy(() -> failingService.generate(matchId))
                 .isInstanceOf(AnalysisGenerationException.class)

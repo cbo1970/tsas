@@ -12,6 +12,7 @@ import com.cas.tsas.ai.domain.model.MatchAnalysis;
 import com.cas.tsas.ai.domain.model.Recommendation;
 import com.cas.tsas.ai.domain.model.RecommendationStatus;
 import com.cas.tsas.match.application.port.in.GetMatchUseCase;
+import com.cas.tsas.match.application.port.in.GetPlayerNotesUseCase;
 import com.cas.tsas.match.domain.exception.MatchNotFoundException;
 import com.cas.tsas.match.domain.model.Match;
 import com.cas.tsas.player.application.port.out.LoadPlayerPort;
@@ -36,6 +37,7 @@ import static org.mockito.Mockito.when;
 class ReviewRecommendationServiceTest {
 
     @Mock GetMatchUseCase getMatchUseCase;
+    @Mock GetPlayerNotesUseCase getPlayerNotesUseCase;
     @Mock LoadPlayerPort loadPlayerPort;
     @Mock ComputeMatchStatisticsUseCase statisticsUseCase;
     @Mock LlmClientPort llmClient;
@@ -48,8 +50,8 @@ class ReviewRecommendationServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new MatchAnalysisService(getMatchUseCase, loadPlayerPort, statisticsUseCase,
-                llmClient, savePort, loadPort, userLanguagePort, 10);
+        service = new MatchAnalysisService(getMatchUseCase, getPlayerNotesUseCase, loadPlayerPort,
+                statisticsUseCase, llmClient, savePort, loadPort, userLanguagePort, 10);
     }
 
     private MatchAnalysis completedWith(Recommendation... recs) {
