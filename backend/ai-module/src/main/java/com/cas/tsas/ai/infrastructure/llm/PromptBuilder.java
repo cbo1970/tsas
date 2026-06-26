@@ -76,8 +76,29 @@ public class PromptBuilder {
         sb.append("\n");
         appendPlayer(sb, "Spieler 2", s.player2());
 
+        appendCoachNotes(sb, m.player1Note(), m.player2Note());
+
         sb.append("\n").append(prompts.userInstruction());
         return sb.toString();
+    }
+
+    /**
+     * TEN-68: appends the coach's free-text observations when present. Skips the whole block when
+     * both notes are absent/blank, so the prompt is byte-for-byte unchanged for matches without notes.
+     */
+    private void appendCoachNotes(StringBuilder sb, String player1Note, String player2Note) {
+        boolean has1 = player1Note != null && !player1Note.isBlank();
+        boolean has2 = player2Note != null && !player2Note.isBlank();
+        if (!has1 && !has2) {
+            return;
+        }
+        sb.append("\nCoach-Beobachtungen (Freitext, nicht aus der Statistik abgeleitet):\n");
+        if (has1) {
+            sb.append("- Spieler 1 (eigener Spieler): ").append(player1Note.trim()).append("\n");
+        }
+        if (has2) {
+            sb.append("- Spieler 2 (Gegner): ").append(player2Note.trim()).append("\n");
+        }
     }
 
     /** System prompt für die KI-Vorbereitung gegen einen Gegner (TEN-51). */
@@ -105,8 +126,26 @@ public class PromptBuilder {
         sb.append("\n");
         appendH2hPlayer(sb, "Gegner (kumuliert)", h2h.player2());
 
+        appendOpponentNotes(sb, m.opponentNotes());
+
         sb.append("\n").append(prompts.opponentUserInstruction());
         return sb.toString();
+    }
+
+    /**
+     * TEN-68: appends the coach's past free-text observations about this opponent (newest first,
+     * already capped by the caller). Skips the block when there are none.
+     */
+    private void appendOpponentNotes(StringBuilder sb, java.util.List<String> opponentNotes) {
+        if (opponentNotes == null || opponentNotes.isEmpty()) {
+            return;
+        }
+        sb.append("\nFrühere Coach-Beobachtungen zu diesem Gegner (neueste zuerst):\n");
+        for (String note : opponentNotes) {
+            if (note != null && !note.isBlank()) {
+                sb.append("- ").append(note.trim()).append("\n");
+            }
+        }
     }
 
     /** Block per Spieler mit den Head-to-Head-Kennzahlen aus FA-08 (kumuliert). */

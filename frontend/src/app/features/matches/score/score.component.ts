@@ -6,12 +6,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 
+import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../../core/services/api.service';
 import { Player } from '../../../core/models/player.model';
 import { MatchWithScore, MatchScore } from '../../../core/models/match.model';
 import { ScoreEditDialogComponent } from './score-edit-dialog.component';
 import { EndMatchDialogComponent, EndMatchDialogResult } from './end-match-dialog.component';
 import { PointType, StrokeType, RecordPointRequest } from '../../../core/models/point.model';
+import { PlayerNotesComponent } from '../notes/player-notes.component';
 
 @Component({
   selector: 'app-score',
@@ -22,6 +24,8 @@ import { PointType, StrokeType, RecordPointRequest } from '../../../core/models/
     MatIconModule,
     MatDialogModule,
     MatSnackBarModule,
+    PlayerNotesComponent,
+    TranslatePipe,
   ],
   templateUrl: './score.component.html',
   styles: [`

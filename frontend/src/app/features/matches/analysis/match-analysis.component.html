@@ -92,6 +92,13 @@
     }
   }
 
+  <div class="section">
+    <div class="section-label">{{ 'playerNotes.title' | translate }}</div>
+    @if (matchId) {
+      <app-player-notes [matchId]="matchId" />
+    }
+  </div>
+
   <div class="back-row">
     <button mat-flat-button data-testid="back-btn" (click)="goBack()">
       Zur Spielerübersicht

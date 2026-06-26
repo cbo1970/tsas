@@ -5,6 +5,7 @@ import com.cas.tsas.ai.application.port.out.LoadMatchAnalysisPort;
 import com.cas.tsas.ai.application.port.out.SaveMatchAnalysisPort;
 import com.cas.tsas.ai.infrastructure.llm.FakeLlmClientAdapter;
 import com.cas.tsas.match.application.port.in.GetMatchUseCase;
+import com.cas.tsas.match.application.port.in.GetPlayerNotesUseCase;
 import com.cas.tsas.match.domain.exception.MatchNotFoundException;
 import com.cas.tsas.player.application.port.out.LoadPlayerPort;
 import com.cas.tsas.statistics.application.port.in.ComputeMatchStatisticsUseCase;
@@ -12,9 +13,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 /**
@@ -27,6 +30,7 @@ import static org.mockito.Mockito.when;
 class MatchAnalysisServiceOwnershipTest {
 
     private GetMatchUseCase getMatchUseCase;
+    private GetPlayerNotesUseCase getPlayerNotesUseCase;
     private LoadPlayerPort loadPlayerPort;
     private ComputeMatchStatisticsUseCase statisticsUseCase;
     private SaveMatchAnalysisPort savePort;
@@ -36,12 +40,14 @@ class MatchAnalysisServiceOwnershipTest {
     @BeforeEach
     void setUp() {
         getMatchUseCase = Mockito.mock(GetMatchUseCase.class);
+        getPlayerNotesUseCase = Mockito.mock(GetPlayerNotesUseCase.class);
+        when(getPlayerNotesUseCase.forMatch(any())).thenReturn(List.of());
         loadPlayerPort = Mockito.mock(LoadPlayerPort.class);
         statisticsUseCase = Mockito.mock(ComputeMatchStatisticsUseCase.class);
         LlmClientPort llm = new FakeLlmClientAdapter();
         savePort = Mockito.mock(SaveMatchAnalysisPort.class);
         loadPort = Mockito.mock(LoadMatchAnalysisPort.class);
-        service = new MatchAnalysisService(getMatchUseCase, loadPlayerPort,
+        service = new MatchAnalysisService(getMatchUseCase, getPlayerNotesUseCase, loadPlayerPort,
                 statisticsUseCase, llm, savePort, loadPort, () -> "de", 10);
     }
 

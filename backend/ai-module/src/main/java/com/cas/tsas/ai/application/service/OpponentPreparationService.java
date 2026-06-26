@@ -9,6 +9,8 @@ import com.cas.tsas.ai.domain.exception.AnalysisGenerationException;
 import com.cas.tsas.ai.domain.exception.InsufficientHeadToHeadDataException;
 import com.cas.tsas.ai.domain.model.OpponentPreparation;
 import com.cas.tsas.auth.application.port.in.CurrentUserProvider;
+import com.cas.tsas.match.application.port.in.GetPlayerNotesUseCase;
+import com.cas.tsas.match.domain.model.MatchPlayerNote;
 import com.cas.tsas.player.application.port.out.LoadPlayerPort;
 import com.cas.tsas.player.domain.exception.PlayerNotFoundException;
 import com.cas.tsas.player.domain.model.Player;
@@ -35,18 +37,24 @@ public class OpponentPreparationService implements GenerateOpponentPreparationUs
 
     private static final Logger LOG = LoggerFactory.getLogger(OpponentPreparationService.class);
 
+    /** TEN-68: cap on how many past notes about the opponent are fed into the prompt. */
+    private static final int MAX_OPPONENT_NOTES = 10;
+
     private final LoadPlayerPort loadPlayerPort;
+    private final GetPlayerNotesUseCase getPlayerNotesUseCase;
     private final ComputeHeadToHeadStatisticsUseCase headToHeadUseCase;
     private final LlmClientPort llmClient;
     private final CurrentUserProvider currentUserProvider;
     private final UserLanguagePort userLanguagePort;
 
     public OpponentPreparationService(LoadPlayerPort loadPlayerPort,
+                                      GetPlayerNotesUseCase getPlayerNotesUseCase,
                                       ComputeHeadToHeadStatisticsUseCase headToHeadUseCase,
                                       LlmClientPort llmClient,
                                       CurrentUserProvider currentUserProvider,
                                       UserLanguagePort userLanguagePort) {
         this.loadPlayerPort = loadPlayerPort;
+        this.getPlayerNotesUseCase = getPlayerNotesUseCase;
         this.headToHeadUseCase = headToHeadUseCase;
         this.llmClient = llmClient;
         this.currentUserProvider = currentUserProvider;
@@ -76,8 +84,12 @@ public class OpponentPreparationService implements GenerateOpponentPreparationUs
                             + "mindestens 1 Head-to-Head-Match.");
         }
 
+        List<String> opponentNotes = getPlayerNotesUseCase.aboutPlayer(opponentId, MAX_OPPONENT_NOTES)
+                .stream().map(MatchPlayerNote::note).toList();
+
         MatchMetadata meta = new MatchMetadata(toInfo(own), toInfo(opponent),
-                /* setsToWin */ 2, /* matchTiebreak */ false, /* shortSet */ false);
+                /* setsToWin */ 2, /* matchTiebreak */ false, /* shortSet */ false,
+                /* player1Note */ null, /* player2Note */ null, opponentNotes);
 
         OpponentPreparationResult result;
         try {

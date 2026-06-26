@@ -20,7 +20,9 @@ import com.cas.tsas.ai.domain.model.MatchAnalysis;
 import com.cas.tsas.ai.domain.model.Recommendation;
 import com.cas.tsas.ai.domain.model.RecommendationStatus;
 import com.cas.tsas.match.application.port.in.GetMatchUseCase;
+import com.cas.tsas.match.application.port.in.GetPlayerNotesUseCase;
 import com.cas.tsas.match.domain.model.Match;
+import com.cas.tsas.match.domain.model.MatchPlayerNote;
 import com.cas.tsas.match.domain.model.MatchStatus;
 import com.cas.tsas.player.application.port.out.LoadPlayerPort;
 import com.cas.tsas.player.domain.exception.PlayerNotFoundException;
@@ -33,8 +35,10 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Orchestrates AI-based match analysis: loads the match, its statistics and the involved players,
@@ -45,6 +49,7 @@ public class MatchAnalysisService implements GenerateMatchAnalysisUseCase, GetMa
         ReviewRecommendationUseCase {
 
     private final GetMatchUseCase getMatchUseCase;
+    private final GetPlayerNotesUseCase getPlayerNotesUseCase;
     private final LoadPlayerPort loadPlayerPort;
     private final ComputeMatchStatisticsUseCase statisticsUseCase;
     private final LlmClientPort llmClient;
@@ -54,6 +59,7 @@ public class MatchAnalysisService implements GenerateMatchAnalysisUseCase, GetMa
     private final int minPointsForAnalysis;
 
     public MatchAnalysisService(GetMatchUseCase getMatchUseCase,
+                                GetPlayerNotesUseCase getPlayerNotesUseCase,
                                 LoadPlayerPort loadPlayerPort,
                                 ComputeMatchStatisticsUseCase statisticsUseCase,
                                 LlmClientPort llmClient,
@@ -62,6 +68,7 @@ public class MatchAnalysisService implements GenerateMatchAnalysisUseCase, GetMa
                                 UserLanguagePort userLanguagePort,
                                 @Value("${tsas.ai.min-points-for-analysis:10}") int minPointsForAnalysis) {
         this.getMatchUseCase = getMatchUseCase;
+        this.getPlayerNotesUseCase = getPlayerNotesUseCase;
         this.loadPlayerPort = loadPlayerPort;
         this.statisticsUseCase = statisticsUseCase;
         this.llmClient = llmClient;
@@ -169,9 +176,14 @@ public class MatchAnalysisService implements GenerateMatchAnalysisUseCase, GetMa
                 .orElseThrow(() -> new PlayerNotFoundException(match.getPlayer1Id()));
         Player p2 = loadPlayerPort.loadPlayer(match.getPlayer2Id())
                 .orElseThrow(() -> new PlayerNotFoundException(match.getPlayer2Id()));
+
+        Map<UUID, String> notes = getPlayerNotesUseCase.forMatch(match.getId()).stream()
+                .collect(Collectors.toMap(MatchPlayerNote::playerId, MatchPlayerNote::note, (a, b) -> a));
+
         return new MatchMetadata(
                 toInfo(p1), toInfo(p2),
-                match.getSetsToWin(), match.isMatchTiebreak(), match.isShortSet());
+                match.getSetsToWin(), match.isMatchTiebreak(), match.isShortSet(),
+                notes.get(match.getPlayer1Id()), notes.get(match.getPlayer2Id()), List.of());
     }
 
     private MatchMetadata.PlayerInfo toInfo(Player p) {

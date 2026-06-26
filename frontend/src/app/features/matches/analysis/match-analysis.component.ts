@@ -9,11 +9,12 @@ import { ApiService } from '../../../core/services/api.service';
 import { MatchAnalysis, RecommendationReviewStatus } from '../../../core/models/analysis.model';
 import { MatInputModule } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
+import { PlayerNotesComponent } from '../notes/player-notes.component';
 
 @Component({
   selector: 'app-match-analysis',
   standalone: true,
-  imports: [MatButtonModule, MatProgressSpinnerModule, MatInputModule, FormsModule, DatePipe, TranslatePipe],
+  imports: [MatButtonModule, MatProgressSpinnerModule, MatInputModule, FormsModule, DatePipe, TranslatePipe, PlayerNotesComponent],
   templateUrl: './match-analysis.component.html',
   styles: [`
     :host { display: block; min-height: 100dvh; background: #0f172a; color: #eee; font-family: sans-serif; }
@@ -56,7 +57,7 @@ export class MatchAnalysisComponent implements OnInit {
   p1Name = signal('Spieler 1');
   p2Name = signal('Spieler 2');
 
-  private matchId = '';
+  matchId = '';
 
   /** Analysis is shown only when it completed successfully. */
   readonly hasResult = computed(() => this.analysis()?.status === 'COMPLETED');

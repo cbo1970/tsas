@@ -242,5 +242,13 @@
       "insufficientData": "Match hat zu wenige Punkte für eine Analyse.",
       "llmFailed": "Die KI konnte keine Analyse erzeugen."
     }
+  },
+  "playerNotes": {
+    "title": "Coach-Notizen",
+    "roleOwn": "eigener Spieler",
+    "roleOpponent": "Gegner",
+    "placeholder": "Beobachtungen zu diesem Spieler …",
+    "save": "Speichern",
+    "saved": "gespeichert"
   }
 }

@@ -133,6 +133,16 @@ export class ApiService {
   updateUserPreference(language: string): Observable<UserPreference> {
     return this.http.put<UserPreference>(`${this.base}/user-preferences`, { language });
   }
+
+  // TEN-68 — Coach free-text notes per player
+  getPlayerNotes(matchId: string): Observable<PlayerNote[]> {
+    return this.http.get<PlayerNote[]>(`${this.base}/matches/${matchId}/notes`);
+  }
+
+  savePlayerNote(matchId: string, playerId: string, note: string): Observable<PlayerNote | void> {
+    return this.http.put<PlayerNote | void>(
+      `${this.base}/matches/${matchId}/notes/${playerId}`, { note });
+  }
 }
 
 export interface UserPreference {
@@ -145,4 +155,10 @@ export interface DeletionSummary {
   matches: number;
   points: number;
   scores: number;
+}
+
+export interface PlayerNote {
+  playerId: string;
+  note: string;
+  updatedAt: string;
 }

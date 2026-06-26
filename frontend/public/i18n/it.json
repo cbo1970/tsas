@@ -242,5 +242,13 @@
       "insufficientData": "Il match ha troppo pochi punti per un'analisi.",
       "llmFailed": "L'AI non è riuscita a produrre un'analisi."
     }
+  },
+  "playerNotes": {
+    "title": "Note del coach",
+    "roleOwn": "proprio giocatore",
+    "roleOpponent": "avversario",
+    "placeholder": "Osservazioni su questo giocatore …",
+    "save": "Salva",
+    "saved": "salvato"
   }
 }

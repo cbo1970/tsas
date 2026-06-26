@@ -5,6 +5,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { MatchWithScore } from '../../../core/models/match.model';
 import { Player } from '../../../core/models/player.model';
+import { testTranslateProviders } from '../../../core/i18n/test-providers';
 
 // ─── Fixtures ──────────────────────────────────────────────────────────────
 
@@ -58,12 +59,14 @@ function mountScore(match: MatchWithScore = makeMatch()) {
   cy.intercept('GET', '**/api/matches/match-1', match).as('getMatch');
   cy.intercept('GET', '**/api/players/p1', PLAYER1).as('getPlayer1');
   cy.intercept('GET', '**/api/players/p2', PLAYER2).as('getPlayer2');
+  cy.intercept('GET', '**/api/matches/*/notes', []).as('notes');
 
   cy.mount(ScoreComponent, {
     providers: [
       provideHttpClient(),
       provideAnimationsAsync(),
       provideRouter([]),
+      ...testTranslateProviders,
       { provide: ActivatedRoute, useValue: activatedRouteStub },
     ],
   });
