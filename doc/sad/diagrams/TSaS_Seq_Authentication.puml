@@ -1,0 +1,56 @@
+@startuml TSaS_Seq_Authentication
+title Benutzer-Authentifizierung — Sequenz (Szenario §6.3)
+
+skinparam sequenceMessageAlign center
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 16
+skinparam titleFontSize 20
+
+actor "Benutzer" as User
+participant "Angular SPA" as FE
+participant "Keycloak" as KC
+participant "Google IdP" as Google
+participant "Resource Server" as API
+
+== Login (OAuth2 Authorization Code + PKCE) ==
+
+User -> FE : App öffnen / geschützte Route
+activate FE
+FE -> FE : AuthGuard: kein Access-Token\ncode_verifier + code_challenge (S256)
+FE -> KC : Redirect /authorize\n(response_type=code, PKCE S256)
+activate KC
+KC -> User : Login-Seite
+
+alt Passwort-Login (V1)
+  User -> KC : Benutzername + Passwort
+else Google-Login (ab V2, Federation)
+  KC -> Google : Redirect zur Google-Anmeldung
+  activate Google
+  User -> Google : Google-Login
+  Google --> KC : Callback + ID-Token
+  deactivate Google
+  KC -> KC : Konto verknüpfen / anlegen
+end
+
+KC --> FE : Redirect + Authorization Code
+deactivate KC
+FE -> KC : POST /token\n(code + code_verifier)
+activate KC
+KC --> FE : Access- + Refresh- + ID-Token
+deactivate KC
+FE -> User : App bereit (eingeloggt)
+deactivate FE
+
+== Authentifizierter API-Zugriff ==
+
+User -> FE : Aktion (z. B. Match laden)
+FE -> API : GET /api/... \nAuthorization: Bearer <Access-Token>
+activate API
+API -> API : JWT validieren\n(JWKS von Keycloak, gecacht)
+API --> FE : 200 + Daten
+deactivate API
+
+note over FE, KC : Bei abgelaufenem Access-Token:\nRefresh-Token → neues Access-Token (ohne erneuten Login)
+
+@enduml

@@ -1,0 +1,80 @@
+<mxfile host="Electron" agent="tsas-sad-gen">
+  <diagram id="TSaS_Whitebox_Gesamtsystem" name="TSaS_Whitebox_Gesamtsystem">
+    <mxGraphModel dx="1222" dy="884" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1120" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="t1" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontStyle=1;fontSize=18;" value="TSaS – Bausteinsicht Ebene 1: Whitebox Gesamtsystem" vertex="1">
+          <mxGeometry height="30" width="760" x="60" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="b_user" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=12;" value="Benutzer&#xa;(Browser)" vertex="1">
+          <mxGeometry height="80" width="50" x="70" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="b_app" parent="1" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#F5F7FA;strokeColor=#9AA6B1;verticalAlign=top;align=left;fontStyle=1;fontSize=13;spacingLeft=10;spacingTop=6;" value="TSaS Application  ·  Docker Compose (eigenständige Services)" vertex="1">
+          <mxGeometry height="170" width="470" x="200" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="b_fe" parent="1" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=12;align=center;" value="&lt;b&gt;Frontend&lt;/b&gt;&lt;br&gt;&lt;br&gt;Angular SPA&lt;br&gt;(ausgeliefert via Nginx)" vertex="1">
+          <mxGeometry height="95" width="180" x="230" y="175" as="geometry" />
+        </mxCell>
+        <mxCell id="b_be" parent="1" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;align=center;" value="&lt;b&gt;Backend&lt;br&gt;&lt;/b&gt;&lt;br&gt;Spring Boot REST-API&lt;br&gt;(modularer Monolith)" vertex="1">
+          <mxGeometry height="95" width="180" x="460" y="175" as="geometry" />
+        </mxCell>
+        <mxCell id="b_pg" parent="1" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=12;align=center;" value="&lt;b&gt;PostgreSQL&lt;br&gt;&lt;/b&gt;&lt;br&gt;Persistenz&lt;br&gt;(App-Daten + KC-Realm)" vertex="1">
+          <mxGeometry height="100" width="200" x="210" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="b_kc" parent="1" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=12;align=center;" value="&lt;b&gt;Keycloak&lt;/b&gt;&lt;br&gt;&lt;br&gt;Identity Provider&lt;br&gt;(OIDC / OAuth2)" vertex="1">
+          <mxGeometry height="100" width="200" x="480" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="b_ext" parent="1" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#BBBBBB;verticalAlign=top;align=left;fontStyle=1;fontSize=13;spacingLeft=10;spacingTop=6;" value="Externe Dienste" vertex="1">
+          <mxGeometry height="350" width="250" x="740" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="b_oa" parent="1" style="shape=cloud;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=12;" value="&lt;b&gt;OpenAI LLM API&lt;/b&gt;&lt;br&gt;(Spring AI)" vertex="1">
+          <mxGeometry height="100" width="230" x="750" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="b_ms" parent="1" style="shape=cloud;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;" value="&lt;b&gt;MailServer&lt;/b&gt;&lt;br&gt;(SMTP · Dev: mailhog)" vertex="1">
+          <mxGeometry height="100" width="230" x="760" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="e_u_fe" edge="1" parent="1" source="b_user" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=10;labelBackgroundColor=#FFFFFF;endArrow=block;strokeColor=#555555;fontColor=#333333;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.4;entryDx=0;entryDy=0;" target="b_fe" value="HTTPS · SPA laden">
+          <mxGeometry relative="1" x="0.009" y="23" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_u_kc" edge="1" parent="1" source="b_user" style="rounded=1;html=1;fontSize=10;labelBackgroundColor=#FFFFFF;endArrow=block;strokeColor=#555555;fontColor=#333333;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.3;entryY=1;entryDx=0;entryDy=0;edgeStyle=orthogonalEdgeStyle;" target="b_kc" value="OAuth2 / OIDC · Login (PKCE)">
+          <mxGeometry relative="1" x="0.0075" y="10" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="95" y="460" />
+              <mxPoint x="540" y="460" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_fe_be" edge="1" parent="1" source="b_fe" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=10;labelBackgroundColor=#FFFFFF;endArrow=block;strokeColor=#555555;fontColor=#333333;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="b_be" value="REST /api · JSON + Bearer-Token">
+          <mxGeometry relative="1" x="-0.2" y="13" as="geometry">
+            <mxPoint y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_be_pg" edge="1" parent="1" source="b_be" style="rounded=1;html=1;fontSize=10;labelBackgroundColor=#FFFFFF;endArrow=block;strokeColor=#555555;fontColor=#333333;exitX=0.2;exitY=1;exitDx=0;exitDy=0;entryX=0.6;entryY=0;entryDx=0;entryDy=0;edgeStyle=orthogonalEdgeStyle;" target="b_pg" value="JDBC">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_be_kc" edge="1" parent="1" source="b_be" style="rounded=1;html=1;fontSize=10;labelBackgroundColor=#FFFFFF;endArrow=block;strokeColor=#555555;fontColor=#333333;exitX=0.633;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitPerimeter=0;" target="b_kc" value="JWT-Validierung · JWKS">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_be_oa" edge="1" parent="1" source="b_be" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=10;labelBackgroundColor=#FFFFFF;endArrow=block;strokeColor=#555555;fontColor=#333333;dashed=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="b_oa" value="HTTPS · LLM (Spring AI)">
+          <mxGeometry relative="1" x="-0.0154" y="-12" as="geometry">
+            <mxPoint x="12" y="-12" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_kc_pg" edge="1" parent="1" source="b_kc" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=10;labelBackgroundColor=#FFFFFF;endArrow=block;strokeColor=#555555;fontColor=#333333;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="b_pg" value="JDBC · Realm &#39;keycloak&#39;">
+          <mxGeometry relative="1" x="-0.1429" y="-20" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_kc_ms" edge="1" parent="1" source="b_kc" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=10;labelBackgroundColor=#FFFFFF;endArrow=block;strokeColor=#555555;fontColor=#333333;dashed=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="b_ms" value="SMTP · Verify / Recovery">
+          <mxGeometry relative="1" y="20" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

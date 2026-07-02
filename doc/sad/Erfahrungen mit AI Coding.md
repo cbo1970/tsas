@@ -34,10 +34,12 @@ Nach den ersten Schritten und einem zu 70 % fertigen SAD habe ich dann mit dem C
 ## Beobachtungen
 
 - Je genauer der Prompt, desto besser das Ergebnis.
-- Man kommt sehr weit. Teilweise muss man aber sehr hartnäckig mit Claude sein, bis er das macht, was man a) will und b) dachte, man hätte es ihm auch klar und deutlich gesagt.
+- Man kommt sehr weit. Teilweise muss man aber sehr hartnäckig mit Claude sein, bis Claude das macht, was man a) will und b) dachte, man hätte es ihm auch klar und deutlich gesagt.
 - Für mich als BE-Entwickler mit minimalem FE-/Angular-Wissen war es schön, mit der AI einen Sparring-Partner zu haben, dem ich meine Vorstellungen mitteilen und den ich auch um Rat fragen konnte, welcher Style nun am besten für meine App geeignet ist.
 - Nachträgliche «Refactorings» an der Architektur dauern sehr lange und benötigen viele Tokens. Deshalb bin ich der Überzeugung, dass eine sehr solide Vorarbeit von Architekt, UX- und Frontend-Designer essenziell wichtig ist. Die Eckpfeiler der Applikation wie BE-Architektur, FE und System-Architektur müssen klar in einem Dokument festgehalten sein und von jedem Mitarbeiter als Erstes von seinem Claude CLI gelesen werden. Ich gehe sogar so weit, dass das `CLAUDE.md` zu einem zentralen Bestandteil für den Architekten wird, damit ein Team von Entwicklern gleichwertigen Code erzeugen kann. Dazu gehört auch ein DoD (Definition of Done).
 - Tasks/Tickets müssen mit einem Template erstellt werden und benötigen wesentlich mehr Sorgfalt, als wenn nur Menschen am Code arbeiten. Auch hier kann die AI beim Erstellen helfen.
+- Neben den klassischen FA und NFA's müssen wir Architekten in Zukunft auch die Rahmenbedingen "Pflöcke" für die AI bestimmen und einschlagen, so dass die AI für alle Teammitglieder die gleichen Grundvoraussetzungen wie in diesem Projekt gearbeitet wird hat und befolgt.
+- Die Überwachung, dass die AI-Richtlinien befolgt werden, gehört neu zu den Aufgaben des Architekten. Evt. kann hier ein anderes LLM zur Unterstützung verwendet werden. 
 
 ## Konkrete Beispiele: AI-Vorschläge akzeptiert, korrigiert, verworfen
 
@@ -49,8 +51,6 @@ Für die KI-Match-Analyse schlug Claude vor, die Antwort des LLM nicht als Text 
 **Korrigiert – NullPointer in der Statistik-Berechnung.**
 Der von der AI generierte `MatchStatisticsService` iterierte über alle Punkte und griff dabei auf `pointType` zu. Die später eingeführten «Quick-Points» (schnelle Punkterfassung ohne Attribut) haben aber keinen `pointType` – das führte zu einer NullPointerException. Ich habe den Vorschlag korrigiert (Guard-Klausel: solche Punkte zählen nur zum Punktestand und überspringen die Attribution) und einen Regressionstest ergänzt. → Commit `9e35106` (+6 Zeilen Service, +17 Zeilen Test).
 
-**Verworfen – Mermaid/PlantUML-Diagramme.**
-Anfangs hat die AI die Architektur-Diagramme als Mermaid bzw. PlantUML direkt im Markdown erzeugt. Das fand ich – wie oben beschrieben – unübersichtlich und schlecht pflegbar. Diesen Ansatz habe ich verworfen und alle Diagramme auf draw.io umgestellt, inklusive Löschen der `.puml`-Quellen. → Commit `02dc699`.
 
 ## Fazit
 
