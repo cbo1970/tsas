@@ -47,8 +47,10 @@ PostgreSQL läuft auf `localhost:5432`.
 ### 2. Keycloak + Mailhog starten
 
 ```bash
-podman compose -f docker/compose.yml up -d keycloak mailhog
+podman compose -f docker/compose.yml up -d db keycloak mailhog
 ```
+
+Der `db`-Service (Postgres) muss mitlaufen — Keycloak persistiert seit PR #44 in einer dedizierten `keycloak`-Datenbank darauf (`--db=postgres`) und hängt per `depends_on` daran. Compose startet ihn zwar dank `depends_on` auch bei `up -d keycloak` automatisch, aber explizit ist es eindeutiger. (Dieser Compose-interne Postgres exponiert **keinen** Host-Port; für das Backend-`bootRun` in Schritt 3 dient die separate DB aus Schritt 1.)
 
 Keycloak ist unter **`https://localhost:8443`** erreichbar.
 
@@ -195,7 +197,31 @@ KC_SMTP_PASSWORD=SG.xxxxxxxxxxxxxxxxxx
 
 Ohne diese Variablen läuft der Stack mit Mailhog-Defaults — keine externe SMTP-Verbindung, alle Mails landen im Browser unter `http://localhost:8025`.
 
-> **Wichtig:** Der Realm-Import erfolgt nur, wenn das Keycloak-`keycloak_data`-Volume frisch ist (`IGNORE_EXISTING`-Strategie). Änderungen an den SMTP-Variablen greifen erst nach `podman compose down && podman volume rm docker_keycloak_data && podman compose up -d` oder per Admin-API-PATCH zur Laufzeit.
+> **Wichtig:** Keycloak persistiert Realm + Nutzer in einer dedizierten `keycloak`-Datenbank auf dem `db`-Postgres (seit PR #44 — kein H2-Volume mehr). Der Realm wird nur bei **leerer** DB importiert (`--import-realm`, `IGNORE_EXISTING`). Geänderte SMTP-/Realm-Werte greifen daher **nicht** durch bloßes Neustarten — stattdessen zur Laufzeit per **Admin-REST-API** bzw. Admin-Konsole ändern oder mit `OVERWRITE_EXISTING` neu importieren. Die Postgres-Daten (`volume/postgres`) **nicht** löschen, um einen Re-Import zu erzwingen — das entfernt auch selbst registrierte Nutzer.
+
+## Health-Checks
+
+Jeder Container bringt einen `HEALTHCHECK` mit; Compose nutzt die Signale zusätzlich für die Startreihenfolge (`depends_on: condition: service_healthy`). Der Backend-Endpoint `/actuator/health` ist `permitAll` (Spring Actuator, exponiert: `health,info,metrics`).
+
+| Service | Health-Check-Aufruf (im Container) | Erwartetes Ergebnis | Timing | Konfiguriert in |
+|---------|-----------------------------------|---------------------|--------|-----------------|
+| **backend** | `curl -sf http://localhost:8080/actuator/health \| grep '"status":"UP"'` | `{"status":"UP"}` | interval 15s · timeout 5s · start-period 60s · retries 5 | `docker/backend/Dockerfile` |
+| **frontend** | `wget -qO- http://localhost:8080/` | HTTP 200 (nginx Root) | interval 15s · timeout 5s · start-period 10s · retries 5 | `docker/frontend/Dockerfile` |
+| **db** (Postgres) | `pg_isready -U ${DB_USERNAME:-tsas}` | `accepting connections` | interval 15s · timeout 5s · retries 5 | `docker/compose.yml`, `docker/db/compose.yaml` |
+| **keycloak** | TCP-Connect auf Management-Port `127.0.0.1:9000` | Port offen | interval 15s · timeout 5s · start-period 60s · retries 8 | `docker/compose.yml` |
+
+**Status live ansehen** (Spalte `STATUS` zeigt `healthy` / `starting` / `unhealthy`):
+
+```bash
+podman compose -f docker/compose.yml ps
+```
+
+**Manueller Aufruf vom Host** (Backend, laufend über Compose):
+
+```bash
+curl -sf http://localhost:8080/actuator/health        # Compose-Backend (HTTP)
+curl -ksf https://localhost:8080/actuator/health      # bootRun mit Profil `local` (HTTPS)
+```
 
 ## Production Deployment (TEN-58)
 
@@ -230,7 +256,7 @@ Pflichtfelder (alle anderen `${VAR:?…}`-Referenzen in `compose.prod.yml` brech
 | Komponente | Dev (`compose.yml`) | Prod (`+ compose.prod.yml`) |
 |---|---|---|
 | **nginx** | HTTP auf Container 8080, Host 80 | TLS auf 8443 (Host 443); Port 80 redirected 301 → HTTPS; HSTS, CSP, etc. weiterhin gesetzt |
-| **Keycloak** | `start-dev --import-realm` mit H2-Volume | `start --import-realm` mit Postgres-Backend, `--hostname=${KC_HOSTNAME}`, `--proxy-headers=xforwarded` |
+| **Keycloak** | `start-dev --import-realm`, Postgres-Backend (dedizierte `keycloak`-DB) | `start --import-realm`, Postgres-Backend, `--hostname=${KC_HOSTNAME}`, `--proxy-headers=xforwarded` |
 | **Postgres** | Default-Creds `tsas/tsas` (`:-tsas`) | `${VAR:?required}` — Start bricht ab, wenn Credentials fehlen |
 | **Keycloak-Admin** | Default `admin/admin` | `KC_BOOTSTRAP_ADMIN_*` aus `.env`, keine Defaults |
 | **OPENAI_API_KEY** | Default leer | required, kein Default |

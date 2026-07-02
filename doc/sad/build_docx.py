@@ -17,8 +17,10 @@ import os, re, subprocess, sys, tempfile, zipfile
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 DIAGRAMS = os.path.join(BASE, "diagrams")
-MD = os.path.join(BASE, "TSaS_SAD_arc42_1.md")
-OUT = os.path.join(BASE, "TSaS_SAD_arc42_1.docx")
+# Version stem: `python3 build_docx.py [N]` builds TSaS_SAD_arc42_{N}.{md,docx} (default 1).
+VER = sys.argv[1] if len(sys.argv) > 1 else "1"
+MD = os.path.join(BASE, f"TSaS_SAD_arc42_{VER}.md")
+OUT = os.path.join(BASE, f"TSaS_SAD_arc42_{VER}.docx")
 
 DRAWIO = next((p for p in (
     "/Applications/draw.io.app/Contents/MacOS/draw.io",
@@ -27,15 +29,18 @@ DRAWIO = next((p for p in (
 # diagram source stem -> (png stem, width in the docx)
 DIAGRAM_WIDTHS = {
     "TSaS_Fachlicher_Kontext":       ("Fachlicher_Kontext", "14cm"),
+    "TSaS_Whitebox_Gesamtsystem":    ("Whitebox_Gesamtsystem", "15.5cm"),
     "TSaS_Backend_Module":           ("Backend_Module", "15.5cm"),
     "TSaS_Backend_CleanArchitecture":("Backend_CleanArchitecture", "16cm"),
     "TSaS_Deployment":               ("Deployment", "15cm"),
     "TSaS_Datenmodell":              ("Datenmodell", "16cm"),
     "TSaS_Seq_RecordPoint":          ("Seq_RecordPoint", "14cm"),
     "TSaS_Seq_GenerateAnalysis":     ("Seq_GenerateAnalysis", "15cm"),
+    "TSaS_Seq_Authentication":       ("Seq_Authentication", "15cm"),
 }
 
-PLANTUML_SOURCES = {"TSaS_Seq_RecordPoint", "TSaS_Seq_GenerateAnalysis"}
+PLANTUML_SOURCES = {"TSaS_Seq_RecordPoint", "TSaS_Seq_GenerateAnalysis",
+                    "TSaS_Seq_Authentication"}
 
 
 def patch_zip(src, dst, edits):

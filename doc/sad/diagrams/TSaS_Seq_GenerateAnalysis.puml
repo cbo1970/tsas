@@ -1,20 +1,23 @@
 @startuml TSaS_Seq_GenerateAnalysis
 title KI-Match-Analyse generieren — Sequenz (Szenario §6.2)
 
+scale 1.3
 skinparam sequenceMessageAlign center
 skinparam shadowing false
 skinparam defaultFontName Helvetica
+skinparam defaultFontSize 16
+skinparam titleFontSize 20
 
 actor Coach
-participant "Angular SPA\n(match-analysis)" as FE
-participant "Spring Boot\nResource Server" as API
-participant "MatchAnalysisController\n(ai-module/web)" as Ctrl
-participant "MatchAnalysisService\n(application)" as Svc
-participant "MatchStatisticsService" as Stats
-participant "GetPlayerNotesUseCase\n(match-module)" as Notes
-participant "LlmClientPort\n(OpenAiLlmAdapter / FakeLlmClientAdapter)" as Llm
+participant "Angular SPA" as FE
+participant "Resource Server\n(Spring Boot)" as API
+participant "MatchAnalysis\nController" as Ctrl
+participant "MatchAnalysis\nService" as Svc
+participant "Statistics\nService" as Stats
+participant "GetPlayerNotes\nUseCase" as Notes
+participant "LlmClientPort\n(OpenAI / Fake)" as Llm
 database "match_analysis" as DB
-participant "OpenAI\nChat Completions" as OpenAI
+participant "OpenAI API" as OpenAI
 
 Coach -> FE : Klick „Taktische Analyse generieren"
 FE -> API : POST /api/matches/{id}/analysis\nAuthorization: Bearer <JWT>
