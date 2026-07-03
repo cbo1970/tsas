@@ -8,6 +8,8 @@ Diese Datei dokumentiert den Ist-Zustand des Backend-Codes gegen die Anker der K
 **7** (Lesbarkeit, Dokumentation, Schichten-/Modulstruktur) und **8** (idiomatischer
 Framework-Einsatz) und benennt die konkreten Lücken zur jeweils höchsten Stufe.
 
+> **Hinweis:** `doc/sad/TSaS_SAD_arc42_1.md` wurde inzwischen nach `TSaS_SAD_arc42_2.md` überführt und entfernt. Die Datei-/Zeilenangaben unten beziehen sich auf den damaligen v1-Stand (2026-06-12); die referenzierten Inhalte finden sich – ggf. an anderer Stelle – in `arc42_2.md` wieder.
+
 ---
 
 ## Kriterium 7 — Code lesbar, dokumentiert, nach Schichten und Modulen strukturiert
