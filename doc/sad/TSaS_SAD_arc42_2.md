@@ -355,9 +355,11 @@ Spring Data JPA / Hibernate auf PostgreSQL; jedes Modul mit eigenen Repositories
 
 ### 8.3 Fehlerbehandlung
 
-Deklarativ über `@RestControllerAdvice`. Querschnittliches liegt zentral im `common-module` (`CommonExceptionHandler`, `LOWEST_PRECEDENCE`): `ConflictException` → 409, Bean-Validation → 400 (mit Feld-Details), ungültige Argumente → 400. Modulspezifisch: `GlobalExceptionHandler` (Player/Match „nicht gefunden" → 404), `AiExceptionHandler` (`InsufficientMatchData` → 422, `AnalysisGeneration` → 502).
+Die Fehlerbehandlung ist deklarativ über `@RestControllerAdvice` gelöst. Das **Antwortformat** ist durchgängig **RFC 7807** über Springs `ProblemDetail` (ersetzt das frühere Ad-hoc-Format); die Schemas der Fehlerantworten (400/404/409/422/502) sind via springdoc unter `/v3/api-docs` dokumentiert.  
+Der `GlobalExceptionHandler` behandelt die modulübergreifende "nicht gefunden"-Domain-Exceptions der fachlichen Module (Player/Match) und führen zu einem 404.  
+Querschnittliche Fälle (Konflikte, Validierung, ungültige Argumente) übernimmt der `CommonExceptionHandler` im `common-module` und AI-spezifische Fälle der `AiExceptionHandler`. 
 
-**Catch-all + Sanitization (STRIDE I5+I6).** Vier breite Klassen werden abgefangen, ohne interne Details (Klassenpfade, SQL, Stack-Traces) zu lecken:
+**Catch-all + Sanitization (STRIDE I5+I6).** Vier allgemeine Exception-Typen werden als Auffangnetz verwendet. So werden keine interne Details (Klassenpfade, SQL, Stack-Traces) nach aussen gegeben.
 
 | Exception | Status | Detail |
 |---|---|---|
@@ -366,11 +368,12 @@ Deklarativ über `@RestControllerAdvice`. Querschnittliches liegt zentral im `co
 | `AccessDeniedException` | 403 | „Zugriff verweigert." |
 | `Exception` (Catch-all) | 500 | „Interner Fehler …"; Original via ERROR geloggt |
 
-Ergänzend setzen `server.error.include-*`-Properties Springs Whitelabel-Fallback still. `CommonExceptionHandlerTest` (7 Pfade) assertet, dass weder SQL noch UUIDs noch Klassennamen in `detail` auftauchen. Antwortformat: **RFC 7807** über Springs `ProblemDetail` (löst das frühere Ad-hoc-Format ab); Schemas (400/404/409/422/502) via springdoc unter `/v3/api-docs`.
+Damit auch Springs eingebauter **Whitelabel-Fallback** nichts preisgibt, sind `server.error.include-message` und `include-stacktrace` auf `never` gesetzt — er zeigt dann weder Fehlermeldung noch Stack-Trace.  
+Abgesichert wird das durch `CommonExceptionHandlerTest` (7 Testfälle), der prüft, dass in `detail` weder SQL noch UUIDs noch Klassennamen auftauchen.
 
 ### 8.4 Logging und Monitoring
 
-Strukturiertes JSON-Logging via SLF4J/Logback. Spring Boot Actuator liefert Health-/Metrics-/Info-Endpunkte (Prometheus/Grafana-fähig).
+Ein strukturiertes JSON-Logging erfolgt über SLF4J/Logback. Der Spring Boot Actuator liefert Health-/Metrics-/Info-Endpunkte (Prometheus/Grafana-fähig).
 
 ### 8.5 Testkonzept
 
@@ -381,9 +384,19 @@ Testpyramide: viele schnelle Unit-Tests (Domäne/Service), eine schmalere Integr
 - **Coverage-Gate:** JaCoCo, modulübergreifend aggregiert (die `*IT` im `app`-Modul decken alle Module ab; `jacocoRootReport`/`…CoverageVerification`). In `check` eingehängt, bricht unter **85 % Line / 70 % Branch** (Ist ~95 %/~80 %).
 - **Frontend:** Vitest (`*.spec.ts`) + Cypress Component Testing (`*.cy.ts`, gemockte HTTP via `cy.intercept`).
 
-**Begründung der Werkzeuge.** (a) *Echtes PostgreSQL via Testcontainers statt H2:* Persistenz-/Schema-Verhalten ist PostgreSQL-spezifisch und wird gegen dieselbe Engine wie in Prod verifiziert (Flyway V1–V10 real, nativer `UUID`-Typ, `CHECK`/`ON DELETE CASCADE`); H2 im PG-Modus weicht ab. (b) *WireMock für den LLM-Adapter:* `OpenAiLlmAdapterTest` stubbt den OpenAI-HTTP-Endpoint und prüft den realen Serialisierungspfad deterministisch, offline, ohne Kosten. (c) *Coverage-Gate 85/70:* knapp unter Ist-Stand → fängt Regressionen ohne Brechen bei Schwankungen (ADR-11).
+#### 8.5.1  Begründung der Werkzeuge  
+(a) *Echtes PostgreSQL via Testcontainers statt H2:* Persistenz-/Schema-Verhalten ist PostgreSQL-spezifisch und wird gegen dieselbe Engine wie in Prod verifiziert (Flyway V1–V10 real, nativer `UUID`-Typ, `CHECK`/`ON DELETE CASCADE`); H2 im PG-Modus weicht ab.  
+(b) *WireMock für den LLM-Adapter:* `OpenAiLlmAdapterTest` stubbt den OpenAI-HTTP-Endpoint und prüft den realen Serialisierungspfad deterministisch, offline, ohne Kosten.  
+(c) *Coverage-Gate 85/70:* knapp unter Ist-Stand → fängt Regressionen ohne Brechen bei Schwankungen (ADR-11).
 
-**Tests der KI-Anteile.** Nichtdeterminismus eliminiert (WireMock-Stub auf Adapter-Ebene, `FakeLlmClientAdapter` auf Service/IT-Ebene → `modelUsed = fake-llm`). Guardrails: `MatchAnalysisServiceTest` prüft `COMPLETED`-Vorbedingung und Mindestpunktzahl; Rate-Limit separat (`MatchAnalysisRateLimitIT`). Fehlerpfade: LLM-Ausfall persistiert `FAILED` und propagiert (→ 502); `MatchAnalysisControllerIT` prüft 409/422/404 end-to-end.
+#### 8.5.2 Tests der KI-Anteile (Nichtdeterminismus, Guardrails, Fehlerpfade)
+
+Die KI-Anteile sind wegen Nichtdeterminismus, externer Abhängigkeit und Kosten gesondert abgesichert:
+
+- **Nichtdeterminismus eliminieren.** Auf Adapter-Ebene fixiert der WireMock-Stub die LLM-Antwort (`OpenAiLlmAdapterTest`). Auf Service-/IT-Ebene ersetzt der deterministische `FakeLlmClientAdapter` (aktiv via `@ConditionalOnMissingBean`, ohne API-Key) den Provider vollständig — die IT belegen das über `modelUsed = fake-llm`. So sind KI-Pfade reproduzierbar testbar, ohne dass eine generative Antwort das Ergebnis verwackelt.
+- **Guardrails verifizieren.** `MatchAnalysisServiceTest` prüft die fachlichen Vorbedingungen explizit: `generate_throwsWhenMatchNotCompleted` (Match muss `COMPLETED` sein) und `generate_throwsWhenTooFewPoints` (Mindestpunktzahl). Die Kosten-Guardrail (Rate-Limit) ist separat in `MatchAnalysisRateLimitIT` abgedeckt (vgl. §7.1.3 / TEN-64).
+- **Fehlerpfade abdecken.** `generate_persistsFailedAnalysisAndRethrowsOnLlmError` belegt: ein LLM-Ausfall persistiert einen `FAILED`-Datensatz **und** propagiert den Fehler (→ HTTP 502). `MatchAnalysisControllerIT` prüft die HTTP-Abbildung end-to-end gegen echtes PostgreSQL (409 nicht beendet, 422 zu wenige Punkte, 404 unbekannt/cross-tenant).
+
 
 ### 8.6 Continuous Integration / Build-Gate
 
@@ -394,7 +407,8 @@ Zwei GitHub-Actions-Workflows bei jedem Push/PR auf `develop`/`main`:
 | Backend CI (`backend-ci.yml`) | `./gradlew check` (Tests + JaCoCo-Gate) auf JDK 25; lädt den aggregierten Coverage-Report als Artifact. Testcontainers nutzt das native Docker des Runners. |
 | Frontend CI (`frontend-ci.yml`) | `ng build` + Vitest + Cypress auf Node 22 (mit Cache). |
 
-Beide sind **required status checks** (Branch Protection); ohne Pfadfilter (ein nicht ausgelöster required Check würde den Merge blockieren). `enforce_admins=false` (Admin-Override im Notfall).
+Beide sind **required status checks** (Branch Protection) ohne Pfadfilter (ein nicht ausgelöster required Check würde den Merge blockieren).  
+`enforce_admins=false` (Admin-Override im Notfall).
 
 ### 8.7 Testergebnisse
 
@@ -413,49 +427,89 @@ Snapshot vom **2026-06-13** (`develop`, nach PR #6). Reproduzierbar via `./gradl
 
 **Coverage (JaCoCo, aggregiert):** Gesamt **94,8 %** Line (1336/1410) / **79,7 %** Branch (278/349); je Modul `match` 92,0/74,2, `statistics` 98,2/89,8, `player` 100/70,0, `ai` 94,8/72,2, `common` 100/75,0. Das Gate (85/70) ist erfüllt.
 
-**Interpretation.** Abgedeckt ist die fachliche Kernlogik (Tennis-Zählregeln, Punkt-Attribution/Statistik, Spieler-Regeln, KI-Analyse inkl. Fehlerpfade 502/422/409); 
-die IT fahren gegen echtes PostgreSQL inkl. Flyway + JWT, der `ArchitectureTest` sichert Schichten-/Modulgrenzen. Die Branch-Coverage (80 %) liegt erwartungsgemäss 
-unter der Line-Coverage — die offenen Zweige sind überwiegend defensive Pfade (Guards, Mapper-Null-Prüfungen, seltene Scoring-Verzweigungen); d
-as 70-%-Gate verankert die Untergrenze ohne Tests für triviale Zweige zu erzwingen. 
+**Interpretation.**  
+Abgedeckt ist die fachliche Kernlogik wie Tennis-Zählregeln, Punkt-Attribution/Statistik, Spieler-Regeln und KI-Analyse inkl. Fehlerpfade 502/422/409.  
+Die IntegrationTests fahren gegen eine echte PostgreSQL Instanz inkl. Flyway und JWT, der `ArchitectureTest` sichert die Einhaltung der Schichten-/Modulgrenzen.  
+Die Branch-Coverage (80 %) liegt erwartungsgemäss unter der Line-Coverage — die offenen Zweige sind überwiegend defensive Pfade (Guards, Mapper-Null-Prüfungen, 
+seltene Scoring-Verzweigungen). Das 70-%-Gate sichert eine Untergrenze, ohne für jeden trivialen Zweig einen Test zu erzwingen. 
 Bewusste Lücken: OpenAI-Happy-Path gegen die echte API (über Fake/WireMock abgebildet; manuelle Verifikation), `main` und reine Config-Klassen.
 
 ---
 
 ## 9. Architekturentscheidungen
 
-Architecture Decision Records (ADR), je als Entscheidung + Begründung. Alle Status **Akzeptiert**. Inhaltlich manuell entschieden (siehe §14.2); die KI half nur beim Ausformulieren.
+Architecture Decision Records (ADR), jede Entscheidung mit Begründung. Alle Status sind **akzeptiert**. Inhaltlich manuell entschieden (siehe §14.2), die KI half nur beim Ausformulieren.
 
-**ADR-01 · Modularer Monolith statt Microservices.** V1 ist klein und wird von einem kleinen Team gebaut; Microservice-Komplexität (Service Discovery, verteilte Transaktionen, Netzwerk-Overhead) ist nicht gerechtfertigt. Die Modularisierung als Gradle-Multi-Module erzwingt Modulgrenzen auf Compile-Ebene und erleichtert spätere Service-Extraktion.
+**ADR-01 · Modularer Monolith statt Microservices.** V1 ist klein und wird von einem kleinen Team gebaut. Die Microservice-Komplexität (Komplexeres Deployment, Netzwerk-Overhead, 
+Fehlerbehandlung und Recovery bei Ausfall ...) ist hier nicht gerechtfertigt. Die Modularisierung als Gradle-Multi-Module erzwingt Modulgrenzen auf Compile-Ebene 
+und erleichtert eine spätere Service-Extraktion.
 
-**ADR-02 · Frontend und Backend in separaten Containern.** Angular (via Nginx) und Spring Boot laufen eigenständig; Nginx liefert die statischen Artefakte und proxied `/api/` ans Backend. Ermöglicht unabhängige Skalierung und saubere Separation of Concerns (übliches SPA-+-REST-Muster).
+**ADR-02 · Frontend und Backend in separaten Containern.** Angular (via Nginx) und Spring Boot laufen eigenständig; Nginx liefert die statischen Artefakte und proxied `/api/` ans Backend. 
+Ermöglicht unabhängige Skalierung und saubere Separation of Concerns (übliches SPA-+-REST-Muster).
 
 **ADR-03 · Keycloak als Identity Provider.** De-facto-Standard für OIDC/OAuth2 mit Out-of-the-box User-Management, Rollen, federated IDPs und Self-Service-Registrierung.
 
 **ADR-04 · PostgreSQL als Datenbank.** Bewährte relationale DB mit guter Spring-Integration; das Datenmodell ist klar relational (Player, Match, Set, Point, Stats) — kein NoSQL-Bedarf.
 
-**ADR-05 · REST API als Schnittstellenformat.** JSON/REST ist Web-Standard, gut tooling-unterstützt und via OpenAPI/Swagger dokumentierbar. GraphQL erhöht die Komplexität unnötig.
+**ADR-05 · REST API als Schnittstellenformat.** JSON/REST ist Web-Standard, gut tooling-unterstützt und via OpenAPI/Swagger dokumentierbar. GraphQL würde die Komplexität unnötig erhöhen.
 
-**ADR-06 · Flyway statt Liquibase.** Eine PostgreSQL-Instanz, stabiles Schema (6 Kernentitäten): Flyway versioniert plain-SQL ohne XML/YAML-Overhead und ist in Spring Boot auto-konfiguriert. Liquibase-Flexibilität (DB-agnostisch, Rollback-Skripte, Diff) ist nicht nötig (kein DB-Wechsel geplant; Rollbacks via Backup). Skripte unter `db/migration/`, Baseline `V1__baseline.sql`.
+**ADR-06 · Flyway statt Liquibase.** Eine PostgreSQL-Instanz, stabiles Schema (6 Kernentitäten): Flyway versioniert plain-SQL ohne XML/YAML-Overhead und ist in Spring Boot auto-konfiguriert. 
+Liquibase-Flexibilität (DB-agnostisch, Rollback-Skripte, Diff) ist nicht nötig (kein DB-Wechsel geplant; Rollbacks via Backup). Skripte unter `db/migration/`, Baseline `V1__baseline.sql`.
 
-**ADR-07 · Gradle Multi-Module statt Spring Modulith.** Spring Modulith verworfen, weil es modulübergreifend standardmässig auf Application-Events (asynchron) setzt — unnötige Komplexität für synchrone Antworten. Explizite Application-Layer-Interfaces (Ports & Adapters) bilden die Kommunikation sauberer ab; Gradle-Module erzwingen Grenzen zur Compile-Zeit (unerwünschte Abhängigkeiten = Build-Fehler) und erleichtern spätere Service-Extraktion.
+**ADR-07 · Gradle Multi-Module statt Spring Modulith.** Spring Modulith verworfen, weil es modulübergreifend standardmässig auf Application-Events (asynchron) 
+setzt — unnötige Komplexität für synchrone Antworten. Explizite Application-Layer-Interfaces (Ports & Adapters) bilden die Kommunikation sauberer ab. 
+Gradle-Module erzwingen Grenzen zur Compile-Zeit (unerwünschte Abhängigkeiten = Build-Fehler) und erleichtern spätere Service-Extraktion.
 
-**ADR-08 · Angular Material + ngx-charts als UI-Framework.** Nutzer bedienen die App während des Matches auf Tablet/Smartphone; Material liefert out-of-the-box touch-optimierte, responsive Komponenten für schnelle Punkterfassung, ist eng mit Angular verzahnt und kostenfrei. ngx-charts ergänzt die Statistik-Visualisierung (FA-08). PrimeNG (Alternative) wäre für V1 Over-Engineering.
+**ADR-08 · Angular Material + ngx-charts als UI-Framework.** Nutzer bedienen die App während des Matches auf Tablet/Smartphone. Material liefert out-of-the-box touch-optimierte, 
+responsive Komponenten für schnelle Punkterfassung, ist eng mit Angular verzahnt und kostenfrei. ngx-charts ergänzt die Statistik-Visualisierung (FA-08). Die Alternative PrimeNG 
+wäre für V1 Over-Engineering.
 
-**ADR-09 · `angular-oauth2-oidc` statt `keycloak-angular`.** Generische, standard-konforme OIDC-Library ohne Keycloak-Coupling im Frontend-Code — ein IDP-Wechsel ändert nur Konfiguration, nicht Code. Schlanker (keine `keycloak-js`-Abhängigkeit), native PKCE-Unterstützung, aktiv gepflegt. Umsetzung: `OAuthModuleConfig`, Bearer-Token-Interceptor, `CanActivateFn`-Guard auf allen Routes.
+**ADR-09 · angular-oauth2-oidc statt keycloak-angular.** Generische, standard-konforme OIDC-Library ohne Keycloak-Coupling im Frontend-Code — ein IDP-Wechsel ändert nur Konfiguration, nicht Code. 
+Schlanker (keine `keycloak-js`-Abhängigkeit), native PKCE-Unterstützung, aktiv gepflegt. Umsetzung: `OAuthModuleConfig`, Bearer-Token-Interceptor, `CanActivateFn`-Guard auf allen Routes.
 
-**ADR-10 · Spring AI mit OpenAI; Provider-Abstraktion via `LlmClientPort`.** Spring AI 2.0.x (Boot-4-kompatibel) liefert mit `ChatClient.entity(Class)` strukturierten JSON-Output statt fragiler Parser. OpenAI als initialer Provider (Default `gpt-4o-mini`, via Property tauschbar); ein zweiter Adapter (Anthropic, Ollama) ist über den Out-Port `LlmClientPort` ohne Use-Case-Eingriff ergänzbar. Aktivierung des `OpenAiLlmAdapter` per `@ConditionalOnExpression` auf nicht-leeren API-Key, sonst deterministischer `FakeLlmClientAdapter`. Analyse wird einmal pro Match generiert und persistiert (Kostenkontrolle, Reproduzierbarkeit). **Bewusst kein RAG / keine Vektor-DB:** der Analyse-Input ist strukturierte Numerik (wenige Dutzend Felder pro Match), passt in einen Prompt-Context; eine Embedding-Schicht wäre Over-Engineering. Für V2 (Head-to-Head über N Matches) wird das neu bewertet.
+**ADR-10 · Spring AI mit OpenAI. Provider-Abstraktion via `LlmClientPort`.** Spring AI 2.0.x (Boot-4-kompatibel) liefert mit `ChatClient.entity(Class)` strukturierten JSON-Output 
+statt fragiler Parser. OpenAI als initialer Provider (Default `gpt-4o-mini`, via Property tauschbar); ein zweiter Adapter (Anthropic, Ollama) ist über den Out-Port `LlmClientPort` 
+ohne Use-Case-Eingriff ergänzbar. Aktivierung des `OpenAiLlmAdapter` per `@ConditionalOnExpression` auf nicht-leeren API-Key, sonst deterministischer `FakeLlmClientAdapter`. 
+Analyse wird einmal pro Match generiert und persistiert (Kostenkontrolle, Reproduzierbarkeit). **Bewusst kein RAG / keine Vektor-DB:** der Analyse-Input ist strukturierte 
+Numerik (wenige Dutzend Felder pro Match), passt in einen Prompt-Context; eine Embedding-Schicht wäre Over-Engineering. Für V2 (Head-to-Head über N Matches) wird das neu bewertet.
 
-**ADR-11 · GitHub Actions + aggregiertes JaCoCo-Coverage-Gate.** Qualität wird durchgesetzt statt empfohlen: zwei pfad-ungefilterte Workflows (Backend, Frontend) auf `develop`/`main` als required status checks. Coverage modulübergreifend aggregiert (IT im `app`-Modul decken alle Module ab → per-Modul-Gate würde unterzählen), Gate in `check` (**85 % Line / 70 % Branch**, knapp unter Ist ~95/80). Pfadfilter entfernt (ein nicht ausgelöster required Check blockiert den Merge dauerhaft); `enforce_admins=false`.
+**ADR-11 · GitHub Actions und aggregiertes JaCoCo-Coverage-Gate.** Qualität wird erzwungen, nicht nur empfohlen: Zwei GitHub-Actions-Workflows (Backend und Frontend) laufen bei 
+jedem Push und Pull Request auf `develop` und `main` und sind als *required status checks* gesetzt — ohne beide grün kein Merge. 
+Die Backend-Coverage misst JaCoCo modulübergreifend als Summe: Die Integrationstests liegen im `app`-Modul, decken aber alle Module ab, 
+weshalb ein Gate pro Modul zu niedrig zählen würde. Das Gate hängt in `check` und verlangt **85 % Line / 70 % Branch** — 
+bewusst knapp unter dem Ist-Stand (~95 % / ~80 %), damit normale Schwankungen den Build nicht brechen. Die Workflows laufen 
+absichtlich **ohne Pfadfilter**, da ein `required Check`, der wegen eines Pfadfilters gar nicht erst startet, den Merge sonst 
+dauerhaft blockieren würde. Damit ein Administrator zur Not auch ohne die `required Checks` einen Merge durchführen kann, bleibt `enforce_admins` auf `false` gesetzt.
 
-**ADR-12 · Scoring im `match-module` statt eigenem `scoring-module`.** Bei der Umsetzung konsolidiert: Punkte erfassen/zählen ist das **Kernverhalten** eines Matches und operiert untrennbar auf dessen Zustand — eine Modulgrenze hätte feingranularen Port-Verkehr ohne fachlichen Mehrwert erzwungen. Scoring bleibt intern als `ScoringService` gekapselt (spätere Extraktion möglich).
+**ADR-12 · Scoring im `match-module` statt eigenem `scoring-module`.** Bei der Umsetzung konsolidiert: Punkte erfassen/zählen ist das **Kernverhalten** 
+eines Matches und operiert untrennbar auf dessen Zustand — eine Modulgrenze hätte feingranularen Port-Verkehr ohne fachlichen Mehrwert erzwungen. 
+Scoring bleibt intern als `ScoringService` gekapselt (spätere Extraktion möglich).
 
-**ADR-13 · Gemeinsames lesendes Domänenmodell statt DTO-Mapping an jeder Grenze.** Module rufen fremdes Verhalten nur über Ports auf (RB-T06), verwenden aber stabile Domänen-Wertobjekte direkt als Read-Model (z. B. liest `statistics-module` `Point`s, `ai-module` `Match`/`Player`/`MatchStatistics`). Diese Typen sind framework-frei und stabil; Spiegel-DTOs an jeder Grenze wären für einen Monolithen Over-Engineering und Duplikation. Abhängigkeiten bleiben einwärts/zyklenfrei (`ArchitectureTest`). Bei späterer Service-Extraktion werden sie zu Vertragstypen/DTOs.
+**ADR-13 · Gemeinsames lesendes Domänenmodell statt DTO-Mapping an jeder Grenze.** Module rufen fremdes Verhalten nur über Ports auf (RB-T06), 
+verwenden aber stabile Domänen-Wertobjekte direkt als Read-Model (z. B. liest `statistics-module` `Point`s, `ai-module` `Match`/`Player`/`MatchStatistics`). 
+Diese Typen sind framework-frei und stabil. Spiegel-DTOs an jeder Grenze wären für einen Monolithen Over-Engineering und Duplikation. 
+Abhängigkeiten bleiben einwärts gerichtet und zyklenfrei (`ArchitectureTest`). Bei späterer Service-Extraktion werden sie zu Vertragstypen/DTOs.
 
-**ADR-14 · SemVer 2.0.0 + Keep a Changelog 1.1.0.** Branchenstandard im Java-/JS-Ökosystem. Pre-1.0 (`0.x`): MINOR gilt als potenziell breaking (passt zum MVP, Datenmodell/API in Bewegung); ab `1.0.0` greifen die strengen Regeln. `CHANGELOG.md` mit `[Unreleased]`-Sammelabschnitt und Kategorien Added/Changed/Deprecated/Removed/Fixed/Security. Bewusst (vorerst) nicht automatisiert (release-please o. ä. wäre für ein Ein-Personen-MVP Over-Engineering). Git-Tags `vX.Y.Z` je Version.
+**ADR-14 · Versionierung nach SemVer 2.0.0, Changelog nach „Keep a Changelog" 1.1.0.** Beide sind der De-facto-Standard im Java- und JS-Ökosystem. 
+Solange die Version bei `0.x` steht, gilt bereits eine MINOR-Erhöhung als potenziell breaking — das passt zum MVP, dessen Datenmodell und API noch in Bewegung sind. 
+Ab `1.0.0` greifen die strengen SemVer-Regeln (breaking changes nur bei einer MAJOR-Erhöhung). Die Änderungen werden in `CHANGELOG.md` gepflegt. 
+Ein Sammelabschnitt `[Unreleased]` nimmt laufend neue Einträge auf, geordnet nach den Kategorien Added/Changed/Deprecated/Removed/Fixed/Security. 
+Der Changelog wird vorerst bewusst von Hand statt automatisiert geführt — Werkzeuge wie release-please wären für ein Ein-Personen-MVP Over-Engineering. 
+Jede Version wird als Git-Tag `vX.Y.Z` markiert.
 
-**ADR-15 · Nginx als Laufzeit-Server der SPA (kein Node).** `ng build` erzeugt rein statische Artefakte — Node.js ist nur Build-/Testwerkzeug (CI, Dockerfile-Build-Stage, `ng serve`), nicht Laufzeit. Ein Multi-Stage-Build liefert das finale Image auf `nginx-unprivileged:alpine` (kein Node im Image → kleine Angriffsfläche, `mem_limit: 128m`, non-root UID 101, `read_only`). Nginx übernimmt zugleich TLS-Terminierung + HTTP→HTTPS-Redirect (`nginx.prod.conf`), Reverse-Proxy `/api/` ans Backend (eine Origin → kein CORS, Backend ohne öffentlichen Port), Security-Header (CSP/HSTS/…) und Per-IP-Rate-Limit auf den KI-Endpoint sowie SPA-Fallback (`try_files … /index.html`) für Deep-Links. Ein Node-Runtime-Server wäre nur bei SSR/Angular Universal nötig — für die reine Client-SPA Over-Engineering. Ergänzt die Container-Trennung aus ADR-02.
+**ADR-15 · Nginx als Laufzeit-Server der SPA (kein Node).** `ng build` erzeugt rein statische Artefakte — Node.js ist nur Build-/Testwerkzeug 
+(CI, Dockerfile-Build-Stage, `ng serve`), nicht Laufzeit. Ein Multi-Stage-Build liefert das finale Image auf `nginx-unprivileged:alpine` 
+(kein Node im Image → kleine Angriffsfläche, `mem_limit: 128m`, non-root UID 101, `read_only`). Nginx übernimmt zugleich TLS-Terminierung und 
+HTTP→HTTPS-Redirect (`nginx.prod.conf`), Reverse-Proxy `/api/` ans Backend (eine Origin → kein CORS, Backend ohne öffentlichen Port), Security-Header 
+(CSP/HSTS/…) und Per-IP-Rate-Limit auf den KI-Endpoint sowie SPA-Fallback (`try_files … /index.html`) für Deep-Links. Ein Node-Runtime-Server wäre 
+nur bei SSR/Angular Universal nötig — für die reine Client-SPA Over-Engineering. Ergänzt die Container-Trennung aus ADR-02.
 
-**ADR-16 · MailHog als SMTP-Sink im Dev, echter Provider erst in Prod.** Keycloak versendet Verifizierungs-/Passwort-Mails (verifyEmail, §7.1.3). Im Dev fängt der Container `mailhog` allen SMTP-Verkehr ab (`:1025` SMTP, `:8025` Web-UI) statt real zuzustellen: kein Provider-Account/API-Key/Domain-Setup nötig, keine Zustellkosten, keine versehentlichen Mails an echte Adressen, jede Test-Mail sofort in der Web-UI einsehbar. Ein transaktionaler Dienst (Mailgun/SendGrid) wäre im Dev Over-Engineering. Prod ersetzt MailHog durch echtes SMTP — gleiche Keycloak-Konfiguration, nur `${KC_SMTP_*}` umgesetzt (`compose.prod.yml`: `mailhog: !reset null`). Umsetzung von RB-T07.
+**ADR-16 · MailHog als SMTP-Sink im Dev, echter Provider erst in Prod.** Keycloak versendet Verifizierungs-/Passwort-Mails (verifyEmail, §7.1.3). 
+Im Dev fängt der Container `mailhog` allen SMTP-Verkehr ab (`:1025` SMTP, `:8025` Web-UI) statt real zuzustellen, so ist kein Provider-Account/API-Key/Domain-Setup 
+für die Entwicklung nötig, keine Zustellkosten, keine versehentlichen Mails an echte Adressen, jede Test-Mail ist sofort in der Web-UI einsehbar. 
+Ein transaktionaler Dienst (Mailgun/SendGrid) wäre im Dev Over-Engineering. In Produktion wird MailHog durch einen echten SMTP-Server ersetzt. 
+Die Keycloak-Konfiguration bleibt dabei unverändert, nur die `${KC_SMTP_*}`-Umgebungsvariablen werden mit echten Werten belegt. Das Compose-Overlay `compose.prod.yml` 
+entfernt zusätzlich den MailHog-Dienst (`mailhog: !reset null`). Damit ist die Randbedingung RB-T07 umgesetzt.
 
 ---
 
@@ -463,32 +517,32 @@ Architecture Decision Records (ADR), je als Entscheidung + Begründung. Alle Sta
 
 ### 10.1 Funktionale Anforderungen (SMART)
 
-> Antwortzeit-Ziele sind übergreifend in §1.2 (QZ-03/04/06) und §10.2 (NFA-01) festgelegt (Write ≤ 250 ms, Read ≤ 500 ms, KI ≤ 60 s) und werden unten nicht je FA wiederholt.
+Antwortzeit-Ziele sind übergreifend in §1.2 (QZ-03/04/06) und §10.2 (NFA-01) festgelegt (Write ≤ 250 ms, Read ≤ 500 ms, KI ≤ 60 s) und werden unten nicht je FA wiederholt.
 
 | ID | Anforderung | SMART-Beschreibung (Kurz) | Version |
-|----|-------------|----------------------------|---------|
+|----|-------------|---------------------------|---------|
 | FA-01 | **User-Registrierung** | Keycloak-Self-Service mit E-Mail (RFC 5322), Benutzername (3–50) und Passwort (≥ 8, ≥ 1 Grossbuchstabe + 1 Ziffer). Danach automatisch authentifiziert und auf die Startseite weitergeleitet. Doppelte E-Mail/Username → Fehlermeldung (intern 409). | V1 |
-| FA-02 | **Authentifizierung** | OAuth2 Authorization Code + PKCE über Keycloak. Access-Token (15 min), Refresh-Token (30 Tage). Mit gültigem Token alle geschützten Endpunkte → 200; ohne → 401 (ausser `/health`). | V1 |
-| FA-03 | **Spieler erfassen** | `POST /api/players`. Pflicht: Vor-/Nachname (≤ 50), Geschlecht, Spielhand, Backhand-Typ. Optional: Ranking (> 0), Nationalität (ISO 3166-1 α-2), Geburtsdatum (ISO 8601). Erfolg → 201 mit UUID; Formatfehler → 400 (Feld + Grund). | V1 |
-| FA-04 | **Spieler suchen** | `GET /api/players?firstName=&lastName=` (mind. ein Parameter, sonst 400). Paginierte Liste (max. 50/Seite, Nachname aufsteigend); keine Treffer → leere Liste (200). | V1 |
-| FA-05 | **Match erstellen** | `POST /api/matches`. Pflicht: `player1Id`/`player2Id` (müssen existieren, sonst 404), `setsToWin` (2/3), `matchTiebreak`, `shortSet`. Erfolg → 201 mit UUID, Status `IN_PROGRESS`. | V1 |
-| FA-06 | **Punkte erfassen** | `POST /api/matches/{id}/points` (Match `IN_PROGRESS`). Pflicht: `pointType`, `strokeType`, `direction` (typisierte Enums). Optional: `remark` (≤ 500). Erfolg → 201 mit aktualisiertem Spielstand; ungültige Enums/fehlende Pflichtfelder → 400. | V1 |
+| FA-02 | **Authentifizierung** | OAuth2 Authorization Code mit PKCE über Keycloak. Access-Token (15 min), Refresh-Token (30 Tage). Mit gültigem Token alle geschützten Endpunkte → 200; ohne → 401 (ausser dem öffentlichen Health-Check). | V1 |
+| FA-03 | **Spieler erfassen** | Erfasst einen neuen Spieler. Pflichtfelder Vor-/Nachname (≤ 50), Geschlecht, Spielhand, Backhand-Typ. Optional: Ranking (> 0), Nationalität (ISO 3166-1 α-2), Geburtsdatum (ISO 8601). Erfolg → 201 mit UUID; Formatfehler → 400 (Feld + Grund). | V1 |
+| FA-04 | **Spieler suchen** | Sucht einen Spieler. Mindestens ein Suchparameter ist erforderlich (sonst 400). Paginierte Liste (max. 50/Seite, Nachname aufsteigend); keine Treffer → leere Liste (200). | V1 |
+| FA-05 | **Match erstellen** | Erstellt einen neuen Match. Pflichtfelder `player1Id`/`player2Id` (müssen existieren, sonst 404), `setsToWin` (2/3), `matchTiebreak`, `shortSet`. Erfolg → 201 mit UUID, Status `IN_PROGRESS`. | V1 |
+| FA-06 | **Punkte erfassen** | Erfasst einen Punkt in einem laufenden Match (`IN_PROGRESS`). Pflicht ist nur `winner` (1/2). Optional: die typisierten Attribute `pointType`, `strokeType`, `direction` (ohne Attribut = „Quick-Point“), `remark` (≤ 500) und `serveAttempt` (1/2). Erfolg → 201 mit aktualisiertem Spielstand; fehlendes `winner` oder ungültige Enum-Werte → 400. | V1 |
 | FA-07 | **Spielstand anzeigen** | Jede Punkt-Antwort enthält den vollständig berechneten Stand: Game-Punkte (0/15/30/40/Vorteil/Tiebreak), Games je Satz, Sätze. Einstand/Vorteile/Tiebreak gemäss **ITF-Regelwerk**. | V1 |
-| FA-08 | **Head-to-Head-Statistik** | `GET /api/statistics/head-to-head?player1=&player2=`. Je Spieler: Aufschlag (First/Second Serve Won%, Aces, DF), Return (Return Points Won% 1./2., Break Points Won%, Return Games Won%), Rallye (Winners%, UE%), Match-Bilanz (Siege/Niederlagen, Satzbilanz). Bilanz nur aus abgeschlossenen Matches; unbekannte ID → 404. | V1 |
-| FA-09 | **Google-Login** | Keycloak-Federation „Mit Google anmelden"; erster Login legt automatisch ein TSaS-Konto mit verifizierter Google-E-Mail an. Gleiche Rechte wie lokal registriert. | V2 |
+| FA-08 | **Head-to-Head-Statistik** | Head-to-Head-Statistik zweier Spieler. Je Spieler: Aufschlag (First/Second Serve Won%, Aces, DF), Return (Return Points Won% 1./2., Break Points Won%, Return Games Won%), Rallye (Winners%, UE%), Match-Bilanz (Siege/Niederlagen, Satzbilanz). Bilanz nur aus abgeschlossenen Matches; unbekannte ID → 404. | V1 |
+| FA-09 | **Google-Login** | Keycloak-Federation „Mit Google anmelden“; erster Login legt automatisch ein TSaS-Konto mit verifizierter Google-E-Mail an. Gleiche Rechte wie lokal registriert. | V2 |
 | FA-10 | **Aufsprungpunkte erfassen** | Touch/Klick auf massstabsgetreue Feld-Darstellung (23,77 × 10,97 m); normalisierte X/Y als Optionalfeld im Punkt. Marker-Feedback ≤ 100 ms. | V3 |
-| FA-11 | **KI-Match-Analyse (Postmortem)** | `POST /api/matches/{id}/analysis` (Match `COMPLETED`, ≥ 10 Punkte). Prompt aus Statistiken + Spielermetadaten + Coach-Notizen (FA-22), LLM via Spring AI. Antwort: 5 Textfelder (Schlüsselmomente, eigene/gegnerische Stärken/Schwächen) + 3–5 priorisierte Empfehlungen; persistiert (1:1, überschreibbar). Codes: 200/404/409 (nicht `COMPLETED`)/422 (< 10)/502 (LLM-Fehler → `FAILED` persistiert). `GET …/analysis` liest aus DB ohne LLM-Aufruf. Sprache Deutsch. **HITL:** `PATCH …/recommendations/{index}` setzt je Empfehlung Status `OPEN/ACCEPTED/REJECTED` (+ Begründung ≤ 500); Codes 200/400/404/409. Neu-Generieren setzt den Review zurück. | V1.x |
-| FA-12 | **Spieler aktualisieren** | `PUT /api/players/{id}` (Felder wie FA-03). Erfolg → 200 mit Ressource (inkl. `deletable`, ggf. `activeMatchId`); unbekannt → 404, Formatfehler → 400. | V1 |
-| FA-13 | **Spieler löschen / deaktivieren** | `DELETE /api/players/{id}` → 204; an Match beteiligt → 409 (Historieschutz), stattdessen `PATCH /…/deactivate` (Soft-Delete `active=false`, → 204). Unbekannt → 404. | V1 |
-| FA-14 | **Match beenden / Walkover** | `POST /…/end` finalisiert offenen Stand und leitet Sieger aus Sätzen ab (200). `POST /…/end/walkover` (Body `winner`) weist Sieg unabhängig vom Stand zu. Walkover auf abgeschlossenem Match → 409, unbekannt → 404, ungültiger `winner` → 400. | V1 |
-| FA-15 | **Spielstand manuell korrigieren** | `PUT /…/score`. Pflicht: Punkte/Games/Sätze (≥ 0), `currentSet` (≥ 1), `isDeuce`, `isDone`. Optional: `isAdvantagePlayer1`, `winner`. Status folgt `isDone` (entschieden → `COMPLETED`, sonst zurück auf `IN_PROGRESS`). Unbekannt → 404, Wertebereich → 400. | V1 |
-| FA-16 | **Aufschläger setzen** | `POST /…/serve/player1|2` (kein Body). `servingPlayer` ist Grundlage der Break-Point-Erkennung (FA-06). Auf abgeschlossenem Match → 409, unbekannt → 404. | V1 |
-| FA-17 | **Match-Statistik (einzelnes Match)** | `GET /api/matches/{id}/statistics`. Antwort: `matchId`, `totalPoints` + je Spieler gewonnene Punkte, Winners, Unforced/Forced Errors, Aces, DF, First/Second-Serve-%, gewonnene/gespielte Break Points, Vorhand-Anteil. Unbekannt → 404. | V1 |
-| FA-18 | **DSGVO Art. 20 — Datenexport** | `GET /api/dataexport/export` liefert JSON-Snapshot der eigenen Daten (`players`, `matches`, `points`, `scores`, `analyses`), gefiltert auf `owner_id = sub`. Frontend lädt `tsas-export-YYYY-MM-DD.json`. | V1 |
-| FA-19 | **DSGVO Art. 17 — Löschung** | `DELETE /api/dataexport` löscht alle eigenen Aggregate in einer Transaktion (FK-Reihenfolge `points → match_scores → match_analysis → matches → players`). Antwort: Counts; idempotent. Keycloak-Konto bleibt. | V1 |
-| FA-20 | **KI-Gegner-Vorbereitung (Head-to-Head)** | `POST /api/players/{ownId}/opponent-preparation/{opponentId}`. Lädt beide Profile, aggregiert die Head-to-Head-Statistik (FA-08), LLM via Spring AI. Antwort: 4 Textfelder (`opponentProfile`, `tacticalObservations`, `serveStrategy`, `returnStrategy`) + 3–5 Empfehlungen. **Nicht persistiert** (Stand ändert sich pro Match); gleicher Rate-Limiter wie FA-11. Codes: 200/400 (gleiche IDs)/404 (Spieler unbekannt/fremder Owner — IDOR-Schutz: 404 statt 403)/422 (kein gemeinsames Match)/429/502. Verankert auf der Head-to-Head-Seite; Sprache aus User-Preferences (FA-21). | V2 |
-| FA-21 | **Mehrsprachigkeit (DE/EN/IT/FR)** | UI in vier Sprachen (DE Default), Picker in der Toolbar. ngx-translate (JSON-Locales `public/i18n/`), persistiert in `user_preferences` (PK = Keycloak-`sub`, `CHECK` auf vier Codes). `LanguageService` lädt beim Boot (`GET /api/user-preferences`), schreibt zurück (`PUT`), Fallback `localStorage`. KI-Antworten (FA-11/FA-20) folgen der Sprache: `PromptBuilder` hängt eine sprachspezifische Direktive an, gelesen über `UserLanguagePort`. | V1.x |
-| FA-22 | **Coach-Freitext-Notizen je Spieler** | Genau **eine** Notiz pro Spieler/Match, entkoppelt vom Spielstand. `GET /api/matches/{id}/notes` (0–2 Notizen, owner-geprüft), `PUT /…/notes/{playerId}` (Upsert; leere Notiz löscht → 204). `playerId` muss teilnehmen (sonst 400), `note` ≤ 2000 (sonst 400), fremdes Match → 404. Persistenz `match_player_notes`. Notizen fliessen als Kontext in FA-11 (Match-Notizen) und FA-20 (Gegner-Notizen aus abgeschlossenen Matches). Wiederverwendbares Panel auf Score- und Analyse-Seite. | V1.x |
+| FA-11 | **KI-Match-Analyse (Postmortem)** | KI-Postmortem für ein abgeschlossenes Match (`COMPLETED`, ≥ 10 Punkte). Prompt aus Statistiken + Spielermetadaten + Coach-Notizen (FA-22), LLM via Spring AI. Antwort: 5 Textfelder (Schlüsselmomente, eigene/gegnerische Stärken/Schwächen) + 3–5 priorisierte Empfehlungen; persistiert (1:1, überschreibbar). Codes: 200/404/409 (nicht `COMPLETED`)/422 (< 10)/502 (LLM-Fehler → `FAILED` persistiert). Erneutes Lesen liefert die gespeicherte Analyse ohne LLM-Aufruf. Sprache Deutsch. **HITL:** je Empfehlung Status `OPEN/ACCEPTED/REJECTED` setzbar (+ Begründung ≤ 500); Codes 200/400/404/409. Neu-Generieren setzt den Review zurück. | V1.x |
+| FA-12 | **Spieler aktualisieren** | Aktualisiert einen Spieler (Felder wie FA-03). Erfolg → 200 mit Ressource (inkl. `deletable`, ggf. `activeMatchId`); unbekannt → 404, Formatfehler → 400. | V1 |
+| FA-13 | **Spieler löschen / deaktivieren** | Löscht einen Spieler → 204; ist er an einem Match beteiligt → 409 (Historieschutz), stattdessen Deaktivieren (Soft-Delete `active=false` → 204). Unbekannt → 404. | V1 |
+| FA-14 | **Match beenden / Walkover** | Beenden finalisiert den offenen Stand und leitet den Sieger aus den Sätzen ab (200). Walkover (Body `winner`) weist den Sieg unabhängig vom Stand zu. Walkover auf abgeschlossenem Match → 409, unbekannt → 404, ungültiger `winner` → 400. | V1 |
+| FA-15 | **Spielstand manuell korrigieren** | Manuelle Spielstand-Korrektur. Pflicht: Punkte/Games/Sätze (≥ 0), `currentSet` (≥ 1), `isDeuce`, `isDone`. Optional: `isAdvantagePlayer1`, `winner`. Status folgt `isDone` (entschieden → `COMPLETED`, sonst zurück auf `IN_PROGRESS`). Unbekannt → 404, Wertebereich → 400. | V1 |
+| FA-16 | **Aufschläger setzen** | Setzt den Aufschläger (Spieler 1 oder 2, kein Body). `servingPlayer` ist Grundlage der Break-Point-Erkennung (FA-06). Auf abgeschlossenem Match → 409, unbekannt → 404. | V1 |
+| FA-17 | **Match-Statistik (einzelnes Match)** | Statistik eines einzelnen Matches. Antwort: `matchId`, `totalPoints` + je Spieler gewonnene Punkte, Winners, Unforced/Forced Errors, Aces, DF, First/Second-Serve-%, gewonnene/gespielte Break Points, Vorhand-Anteil. Unbekannt → 404. | V1 |
+| FA-18 | **DSGVO Art. 20 — Datenexport** | Liefert einen JSON-Snapshot der eigenen Daten (`players`, `matches`, `points`, `scores`, `analyses`), gefiltert auf `owner_id = sub`. Frontend lädt `tsas-export-YYYY-MM-DD.json`. | V1 |
+| FA-19 | **DSGVO Art. 17 — Löschung** | Löscht alle eigenen Aggregate in einer Transaktion (FK-Reihenfolge `points → match_scores → match_analysis → matches → players`). Antwort: Counts; idempotent. Keycloak-Konto bleibt. | V1 |
+| FA-20 | **KI-Gegner-Vorbereitung (Head-to-Head)** | Head-to-Head-Vorbereitung gegen einen Gegner. Lädt beide Profile, aggregiert die Head-to-Head-Statistik (FA-08), LLM via Spring AI. Antwort: 4 Textfelder (`opponentProfile`, `tacticalObservations`, `serveStrategy`, `returnStrategy`) + 3–5 Empfehlungen. **Nicht persistiert** (Stand ändert sich pro Match); gleicher Rate-Limiter wie FA-11. Codes: 200/400 (gleiche IDs)/404 (Spieler unbekannt/fremder Owner — IDOR-Schutz: 404 statt 403)/422 (kein gemeinsames Match)/429/502. Verankert auf der Head-to-Head-Seite; Sprache aus User-Preferences (FA-21). | V2 |
+| FA-21 | **Mehrsprachigkeit (DE/EN/IT/FR)** | UI in vier Sprachen (DE Default), Picker in der Toolbar. ngx-translate (JSON-Locales `public/i18n/`), persistiert in `user_preferences` (PK = Keycloak-`sub`, `CHECK` auf vier Codes). `LanguageService` lädt die Präferenz beim Boot, schreibt sie zurück, Fallback `localStorage`. KI-Antworten (FA-11/FA-20) folgen der Sprache: `PromptBuilder` hängt eine sprachspezifische Direktive an, gelesen über `UserLanguagePort`. | V1.x |
+| FA-22 | **Coach-Freitext-Notizen je Spieler** | Genau **eine** Notiz pro Spieler/Match, entkoppelt vom Spielstand. Lesen liefert 0–2 Notizen (owner-geprüft); Schreiben ist ein Upsert (leere Notiz löscht → 204). `playerId` muss teilnehmen (sonst 400), `note` ≤ 2000 (sonst 400), fremdes Match → 404. Persistenz `match_player_notes`. Notizen fliessen als Kontext in FA-11 (Match-Notizen) und FA-20 (Gegner-Notizen aus abgeschlossenen Matches). Wiederverwendbares Panel auf Score- und Analyse-Seite. | V1.x |
 
 ### 10.2 Nicht-funktionale Anforderungen (SMART)
 
@@ -503,7 +557,7 @@ Ergänzend zu den Qualitätszielen (QZ-01–QZ-06, §1.2):
 
 ### 10.3 Abnahmekriterien je Kernfunktion
 
-Je Kernfunktion ein abnahmefähiges *Gegeben/Wenn/Dann*-Kriterium, verlinkt auf FA (§10.1) und QZ/NFA. **Erfüllt**, wenn der zugehörige automatisierte Test grün ist (Modul-Tests + `*IT` gegen echtes PostgreSQL, §8.5–8.7).
+Je Kernfunktion ein abnahmefähiges *Gegeben/Wenn/Dann*-Kriterium, verlinkt auf FA (§10.1) und QZ/NFA. **Erfüllt**, wenn der zugehörige automatisierte Test grün ist (Modul-Tests plus `IntegrationTests` gegen eine PostgreSQL Instanz, §8.5–8.7).
 
 | Kernfunktion | Abnahmekriterium (Kurz) | FA | QZ/NFA |
 |---|---|---|---|
@@ -514,7 +568,8 @@ Je Kernfunktion ein abnahmefähiges *Gegeben/Wenn/Dann*-Kriterium, verlinkt auf 
 | **Statistik (H2H & Match)** | `GET …/head-to-head` bzw. `…/statistics` → **200** mit den definierten Kennzahlen je Spieler; unbekannte ID → **404**. | FA-08, FA-17 | QZ-04 |
 | **KI-Analyse & Vorbereitung** | `COMPLETED` + ≥ 10 Punkte (bzw. ≥ 1 gemeinsames Match) → **200** mit Textfeldern + 3–5 Empfehlungen; Fehler korrekt: **409/422/429/502** (`FAILED` persistiert). HITL `PATCH …/recommendations/{index}` → 200/400/404/409. | FA-11, FA-20 | QZ-06 |
 
-Die **funktionalen** Kriterien sind durchgängig automatisiert abgedeckt (§8.7). Die **Antwortzeit**-Kriterien (QZ-03/04/06, NFA-01) sind als Design-Ziele spezifiziert; ihr formaler Nachweis erfolgt über den NFA-01-Lasttest (noch durchzuführen, vgl. §12).
+Die **funktionalen** Kriterien sind durchgängig automatisiert abgedeckt (§8.7). Die **Antwortzeit**-Kriterien (QZ-03/04/06, NFA-01) sind als Design-Ziele spezifiziert. 
+Ihr formaler Nachweis erfolgt über den NFA-01-Lasttest (noch durchzuführen, vgl. §12).
 
 ---
 
@@ -560,6 +615,7 @@ Sätze und Statistiken werden **nicht eigenständig persistiert**: der Satzstand
 | R-05 | Mittel | **iOS-Doppelentwicklung** | Native iOS-App (V2) = doppeltes Frontend. Alternative: PWA evaluieren. |
 | R-06 | Mittel | **OpenAI-Kosten** | Manueller Trigger + Persistenz (eine Analyse/Match) + Mindest-Punktzahl (≥ 10) begrenzen das Volumen; `gpt-4o-mini` Default; Wechsel auf lokales LLM via `LlmClientPort` möglich. |
 | R-07 | Niedrig | **Spring AI Milestone** | Spring AI 2.0.x im Milestone-Status (`2.0.0-M6`) — Breaking-Change-Risiko vor GA. Mitigation: dünner Adapter, GA-Umstellung voraussichtlich trivial. |
+| R-08 | Niedrig | **Lasttest ausstehend** | Antwortzeit-/Skalierbarkeitsziele (QZ-03/04/06, NFA-01) sind spezifiziert, aber noch nicht formal per Lasttest nachgewiesen. Nachweis via k6/JMeter (100 Nutzer, p95: Write ≤ 250 ms, Read ≤ 500 ms, Degradation ≤ 20 %). Offen als Ticket **TEN-69**. |
 
 ---
 
@@ -577,20 +633,25 @@ Sätze und Statistiken werden **nicht eigenständig persistiert**: der Satzstand
 
 ### 13.2 Einsatz pro Phase
 
-- **Generierung.** Jede grössere Änderung folgt Brainstorming → Spec → Plan → Implementierung mit TDD. Spec-/Plan-Dokumente unter `docs/superpowers/specs/` bzw. `…/plans/` (je mit TEN-Ticket im Namen), z. B. AI-Postmortem (FA-11), Bean-Validation (TEN-60), Owner-Binding/RBAC (TEN-55).
+- **Generierung.** Jede grössere Änderung folgt der Reihenfolge `Brainstorming → Spec → Plan → Implementierung mit TDD`. Spec-/Plan-Dokumente unter `docs/superpowers/specs/` bzw. `…/plans/` (je mit dem   TEN-Ticket im Namen), z. B. AI-Postmortem (FA-11), Bean-Validation (TEN-60), Owner-Binding/RBAC (TEN-55).
 - **Review.** Vor jedem Merge auf `develop` läuft `/code-review` bzw. `pr-review-toolkit:review-pr` (Multi-Agent-Fan-out) gegen das Diff. Der KI-Selbst-Audit `Code-Pruefung_Kriterien_7_und_8.md` identifizierte Lücken, die in ADR-12, ADR-13 und `ArchitectureTest` adressiert wurden.
 - **Refactoring.** Spec-getriebene Cleanups mit TDD (z. B. TEN-60 typed enums + `@Size` auf DTOs).
 - **Recherche.** Punktuelle Aufgaben (Spring AI 2.x Boot-4, JaCoCo-Aggregation, JWT-Mock, Testcontainers + Podman) via Web-Recherche-Subagenten und Context7; Ergebnisse flossen in ADR-10 (R-07) und ADR-11 (Coverage-Schwellen).
 
 ### 13.3 Eigenständigkeit
 
-Eine separate Eigenständigkeitserklärung (`doc/sad/TSaS_Eigenstaendigkeitserklaerung.md`) bestätigt, dass alle KI-Vorschläge vor Übernahme geprüft, angenommen oder zurückgewiesen wurden. Die drei wichtigsten bewusst **nicht** an die KI delegierten Entscheidungen sind in §14 belegt.
+Eine separate Eigenständigkeitserklärung (`doc/sad/TSaS_Eigenstaendigkeitserklaerung.md`) bestätigt, dass alle KI-Vorschläge vor Übernahme geprüft, 
+angenommen oder zurückgewiesen wurden. Die drei wichtigsten bewusst **nicht** an die KI delegierten Entscheidungen sind in §14 belegt.
 
 ---
 
 ## 14. Reflexion und Fazit
 
-Drei Bereiche wurden bewusst **nicht an die KI delegiert**. „Nicht delegiert" heisst dabei nicht, dass der Code von Hand statt KI-gestützt entstand — die *Generierung* war wie beim übrigen Code KI-unterstützt. Delegiert wurde nicht die **Entscheidung und Verifikation**: hier blieb die inhaltliche Verantwortung durchgängig menschlich, KI-Vorschläge wurden geprüft und wo nötig verworfen (konsistent mit §13.3).
+Die Anwendung entstand auf Basis eines rund zu 70 % vorab erstellten SAD und wurde danach schrittweise mit dem Claude CLI entwickelt — anfangs rein über Prompts, 
+später über Linear-Tickets. Aus dieser Arbeitsweise ergeben sich die folgenden Reflexionen.
+
+Drei Bereiche wurden bewusst **nicht an die KI delegiert**. „Nicht delegiert" heisst dabei nicht, dass der Code von Hand statt KI-gestützt entstand — die *Generierung* war wie 
+beim übrigen Code KI-unterstützt. Delegiert wurde nicht die **Entscheidung und Verifikation**: hier blieb die inhaltliche Verantwortung durchgängig menschlich, KI-Vorschläge wurden geprüft und wo nötig verworfen (konsistent mit §13.3).
 
 ### 14.1 Veto 1 — Security-Konfiguration
 
@@ -614,6 +675,45 @@ Die KI trifft keine endgültigen Entscheidungen: generierte Empfehlungen sind Vo
 - **Adversariales Review als Standard** — ein zweiter, unabhängiger KI-Agent prüft jeden grösseren Diff.
 - **Belegpflicht** — übernommene Vorschläge müssen in Spec, ADR oder Commit nachvollziehbar sein.
 - **Domänenregeln immer testen** — dedizierte Test-Suites; das 70-%-Branch-Gate hält die Disziplin durch.
+
+### 14.6 Beobachtungen aus der Praxis
+
+Über das Projekt hinweg haben sich mehrere Muster wiederholt:
+
+- **Präzision zahlt sich aus.** Je genauer der Prompt, desto besser das Ergebnis. Teils muss man hartnäckig bleiben, bis die KI umsetzt, was man will — und was man glaubte, ihr klar gesagt zu haben.
+- **KI als Sparring-Partner.** Für mich als Backend-Entwickler mit geringem Angular-Wissen war die KI ein wertvoller Gesprächspartner, um Frontend-Vorstellungen zu klären und Stil-Alternativen abzuwägen.
+- **Solide Vorarbeit ist entscheidend.** Nachträgliche Architektur-Refactorings dauern lange und kosten viele Tokens. Die tragenden Entscheidungen (Backend-, Frontend-, Systemarchitektur) müssen früh in einem Dokument festgehalten sein. Das `CLAUDE.md` wird damit zum zentralen Steuerungsinstrument des Architekten — inklusive einer Definition of Done —, damit ein ganzes Team gleichwertigen Code erzeugt.
+- **Tickets brauchen mehr Sorgfalt.** Tasks/Tickets sollten aus einem Template entstehen und deutlich sorgfältiger formuliert sein als bei rein menschlicher Bearbeitung; die KI kann beim Erstellen helfen.
+- **Neue Architektenaufgaben.** Neben den klassischen FA/NFA gehört künftig das Setzen von „Pflöcken" (Rahmenbedingungen/Guardrails für die KI) dazu — sowie die laufende Überwachung, dass diese Richtlinien eingehalten werden. Dafür kann ein zweites LLM unterstützen (vgl. adversariales Review, §14.5).
+- **Review-Disziplin unter Druck.** Bei sehr grossen Diffs (vor allem im Frontend) stiess das manuelle Review an seine Grenzen — die Tragweite war allein im Review kaum noch erfassbar. Konsequenz: Issues müssen kleiner werden und automatisierte Tests gewinnen weiter an Bedeutung, sonst geht der Überblick verloren.
+
+### 14.7 Konkrete Beispiele — akzeptiert und korrigiert
+
+Ergänzend zu den Vetos (§14.1–14.3) zeigen zwei belegte Situationen den Umgang mit KI-Vorschlägen:
+
+- **Akzeptiert — strukturierter LLM-Output statt selbstgebautem Parser.** Für die KI-Match-Analyse schlug die KI vor, die LLM-Antwort nicht als Text zu parsen, sondern über Spring AI direkt in ein typisiertes Java-Objekt zu mappen (`ChatClient….entity(MatchAnalysisResult.class)`). Der Vorschlag wurde unverändert übernommen: Er macht den fragilen String-Parser überflüssig und erzwingt die Antwortstruktur (begründet in ADR-10). → Commit `e02ee0b` (`OpenAiLlmAdapter.java`).
+- **Korrigiert — NullPointer in der Statistik.** Der generierte `MatchStatisticsService` griff beim Iterieren über alle Punkte auf `pointType` zu. Die später eingeführten „Quick-Points" (schnelle Punkterfassung ohne Attribut, vgl. FA-06) haben aber keinen `pointType` → NullPointerException. Korrektur: Guard-Klausel (solche Punkte zählen nur zum Stand und überspringen die Attribution) plus Regressionstest. → Commit `9e35106` (+6 Zeilen Service, +17 Zeilen Test).
+
+### 14.8 Geeignete und kritische Projekte für den KI-Einsatz
+
+KI ist ein mächtiges Werkzeug für Implementierung und Architekturfindung, hat aber klare Grenzen. Besonders wirksam ist sie bei Projekten mit etabliertem, 
+gut dokumentiertem Tech-Stack und klar umrissenen, in kleine Tickets zerlegten Aufgaben. Zurückhaltender wäre ich in zwei Fällen:
+
+- **Reguliertes Umfeld.** In der höchsten Kritikalitätsstufe („Fehlverhalten gefährdet Menschenleben" — Medizintechnik, Maschinensteuerungen) würde ich KI nur mit sehr strikten Guards und lückenloser menschlicher Verifikation einsetzen.
+- **Exotischer Tech-Stack oder brandneue Versionen.** Direkt nach dem Release von Spring Boot 4 kam die KI mit der neuen Version noch nicht zurecht und wich auf die ältere aus. Erst Wochen später gelang die Migration. Bei wenig verbreiteten Frameworks fehlt der KI schlicht die Datenbasis. Hier ist mehr manuelle Führung nötig.
+
+### 14.9 Gefahren und offene Fragen
+
+- **Kompetenzaufbau.** Unerfahrene Entwickler setzen Tickets mit KI schneller um, aber nicht zwangsläufig besser da sie noch nicht über das Wissen verfügen was gut oder weniger gut ist. Dir Frage für die Zukunft lautet "Wie bilden wir Juniors zu Seniors aus, wenn weniger Code selbst geschrieben wird?" Müssen sie künftig nur noch Code lesen können oder genügt das alleinige Verständnis für einen guten Aufbau, für gute Tickets und Architektur-Trade-offs zu entscheiden?
+- **Kontrollverlust.** Das Gefühl „das ist mein Code" schwindet. Bleibt die KI stecken, wird die manuelle Fehlersuche aufwendiger, weil man sich erst in den generierten Code einarbeiten muss. Evt. kommt hier dann in Zukunft auch KI (anderes LLM) zum Einsatz was das Gefühl dann noch verstärkt.
+- **Ethik und Regulatorik.** Wie weit darf KI in stark regulierten oder sicherheitskritischen Bereichen eingesetzt werden, und wie gehen wir mit den gesellschaftlichen Folgen um (Entscheidungshoheit, Überwachung, wegfallende Tätigkeiten)? Diese Fragen bleiben bewusst über den Projektrahmen hinaus offen.
+- **Arbeitsplatzverlust, Wertschätzung.** Wozu brauche ich noch einen teuren SW-Ingenieur/Architekten. Ich lasse die KI schreiben die ist schneller und billiger. Die Architektur interessiert mich nicht ich will Ergebnisse. Solchen Manager-Gedanken werden wir uns stellen müssen, wie es Berichten aus den Medien bereits zeigen.    
+
+### 14.10 Fazit
+
+KI wird aus der Softwareentwicklung nicht mehr wegzudenken sein und bald so selbstverständlich genutzt werden wie heute die Code-Completion in der IDE. 
+Software-Ingenieure bleiben nötig, aber ihre Arbeit verschiebt sich: weg vom reinen Codieren, hin zu Dokumentation, präziser Ticket-Formulierung und Architekturentscheidungen. 
+Für dieses Projekt hat sich die Kombination aus solider Vorarbeit (SAD, `CLAUDE.md`), klar delegierbaren Aufgaben und konsequent menschlicher Verifikation der kritischen Teile bewährt.
 
 ---
 
