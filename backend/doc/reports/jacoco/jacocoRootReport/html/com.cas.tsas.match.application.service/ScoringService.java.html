@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ScoringService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tsas-backend</a> &gt; <a href="index.source.html" class="el_package">com.cas.tsas.match.application.service</a> &gt; <span class="el_source">ScoringService.java</span></div><h1>ScoringService.java</h1><pre class="source lang-java linenums">package com.cas.tsas.match.application.service;
+
+import com.cas.tsas.match.domain.model.Match;
+import com.cas.tsas.match.domain.model.MatchScore;
+import com.cas.tsas.match.domain.model.MatchStatus;
+import org.springframework.stereotype.Component;
+
+/**
+ * Implements tennis scoring rules.
+ * Points: 0 -&gt; 15 -&gt; 30 -&gt; 40 -&gt; Deuce -&gt; Advantage -&gt; Game
+ * Tiebreak: first to 7 with 2-point lead (or 10 for match tiebreak)
+ * Short Set: games to win = 4, tiebreak at 3:3
+ * Normal Set: win at 6 with 2-game lead, or 7:5, tiebreak at 6:6
+ */
+@Component
+<span class="fc" id="L16">public class ScoringService {</span>
+
+    /**
+     * Apply a point to the score and return the updated score.
+     * The score object is mutated in place and returned.
+     */
+    public MatchScore applyPoint(Match match, MatchScore score, boolean player1Scored) {
+<span class="fc bfc" id="L23" title="All 2 branches covered.">        if (score.isDone()) {</span>
+<span class="fc" id="L24">            return score;</span>
+        }
+
+<span class="fc" id="L27">        boolean isTiebreakActive = isTiebreak(match, score);</span>
+<span class="fc" id="L28">        boolean isMatchTiebreakActive = isMatchTiebreak(match, score);</span>
+
+<span class="fc bfc" id="L30" title="All 4 branches covered.">        if (isTiebreakActive || isMatchTiebreakActive) {</span>
+<span class="fc" id="L31">            applyTiebreakPoint(match, score, player1Scored, isMatchTiebreakActive);</span>
+        } else {
+<span class="fc" id="L33">            applyRegularPoint(match, score, player1Scored);</span>
+        }
+
+<span class="fc" id="L36">        return score;</span>
+    }
+
+    private void applyRegularPoint(Match match, MatchScore score, boolean player1Scored) {
+        // Handle deuce/advantage
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        if (score.isDeuce()) {</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">            if (score.getIsAdvantagePlayer1() == null) {</span>
+                // At deuce, grant advantage
+<span class="fc" id="L44">                score.setIsAdvantagePlayer1(player1Scored);</span>
+            } else {
+<span class="fc" id="L46">                boolean advantageP1 = score.getIsAdvantagePlayer1();</span>
+<span class="pc bpc" id="L47" title="2 of 8 branches missed.">                if ((player1Scored &amp;&amp; advantageP1) || (!player1Scored &amp;&amp; !advantageP1)) {</span>
+                    // Advantage player wins the game
+<span class="fc" id="L49">                    awardGame(match, score, player1Scored);</span>
+                } else {
+                    // Back to deuce
+<span class="fc" id="L52">                    score.setIsAdvantagePlayer1(null);</span>
+                }
+            }
+<span class="fc" id="L55">            return;</span>
+        }
+
+        // Normal point progression
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (player1Scored) {</span>
+<span class="fc" id="L60">            int pts = score.getPointsPlayer1();</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">            if (pts &lt; 3) {</span>
+<span class="fc" id="L62">                score.setPointsPlayer1(pts + 1);</span>
+            } else {
+                // pts == 3 means 40
+<span class="fc bfc" id="L65" title="All 2 branches covered.">                if (score.getPointsPlayer2() == 3) {</span>
+                    // Both at 40: deuce
+<span class="fc" id="L67">                    score.setDeuce(true);</span>
+<span class="fc" id="L68">                    score.setIsAdvantagePlayer1(null);</span>
+                } else {
+<span class="fc" id="L70">                    awardGame(match, score, true);</span>
+                }
+            }
+<span class="fc" id="L73">        } else {</span>
+<span class="fc" id="L74">            int pts = score.getPointsPlayer2();</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">            if (pts &lt; 3) {</span>
+<span class="fc" id="L76">                score.setPointsPlayer2(pts + 1);</span>
+            } else {
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">                if (score.getPointsPlayer1() == 3) {</span>
+<span class="nc" id="L79">                    score.setDeuce(true);</span>
+<span class="nc" id="L80">                    score.setIsAdvantagePlayer1(null);</span>
+                } else {
+<span class="fc" id="L82">                    awardGame(match, score, false);</span>
+                }
+            }
+        }
+<span class="fc" id="L86">    }</span>
+
+    private void awardGame(Match match, MatchScore score, boolean player1Scored) {
+        // Reset points
+<span class="fc" id="L90">        score.setPointsPlayer1(0);</span>
+<span class="fc" id="L91">        score.setPointsPlayer2(0);</span>
+<span class="fc" id="L92">        score.setDeuce(false);</span>
+<span class="fc" id="L93">        score.setIsAdvantagePlayer1(null);</span>
+
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        if (player1Scored) {</span>
+<span class="fc" id="L96">            score.setGamesPlayer1(score.getGamesPlayer1() + 1);</span>
+        } else {
+<span class="fc" id="L98">            score.setGamesPlayer2(score.getGamesPlayer2() + 1);</span>
+        }
+
+<span class="fc" id="L101">        checkSetWon(match, score);</span>
+<span class="fc" id="L102">        rotateServe(score);</span>
+<span class="fc" id="L103">    }</span>
+
+    private void checkSetWon(Match match, MatchScore score) {
+<span class="fc" id="L106">        int g1 = score.getGamesPlayer1();</span>
+<span class="fc" id="L107">        int g2 = score.getGamesPlayer2();</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">        int winsNeeded = match.isShortSet() ? 4 : 6;</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        int tiebreakAt = match.isShortSet() ? 3 : 6;</span>
+
+<span class="fc" id="L111">        boolean setWonByP1 = false;</span>
+<span class="fc" id="L112">        boolean setWonByP2 = false;</span>
+
+<span class="pc bpc" id="L114" title="1 of 4 branches missed.">        if (g1 &gt;= winsNeeded &amp;&amp; g1 - g2 &gt;= 2) {</span>
+<span class="fc" id="L115">            setWonByP1 = true;</span>
+<span class="pc bpc" id="L116" title="5 of 6 branches missed.">        } else if (g1 == winsNeeded + 1 &amp;&amp; g2 == winsNeeded - 1 &amp;&amp; !match.isShortSet()) {</span>
+            // 7:5 case for normal sets
+<span class="nc" id="L118">            setWonByP1 = true;</span>
+<span class="pc bpc" id="L119" title="1 of 4 branches missed.">        } else if (g2 &gt;= winsNeeded &amp;&amp; g2 - g1 &gt;= 2) {</span>
+<span class="fc" id="L120">            setWonByP2 = true;</span>
+<span class="pc bpc" id="L121" title="5 of 6 branches missed.">        } else if (g2 == winsNeeded + 1 &amp;&amp; g1 == winsNeeded - 1 &amp;&amp; !match.isShortSet()) {</span>
+            // 5:7 case for normal sets
+<span class="nc" id="L123">            setWonByP2 = true;</span>
+<span class="pc bpc" id="L124" title="3 of 4 branches missed.">        } else if (g1 == tiebreakAt + 1 &amp;&amp; g2 == tiebreakAt) {</span>
+            // Won tiebreak game: player1 won tiebreak
+<span class="nc" id="L126">            setWonByP1 = true;</span>
+<span class="pc bpc" id="L127" title="3 of 4 branches missed.">        } else if (g2 == tiebreakAt + 1 &amp;&amp; g1 == tiebreakAt) {</span>
+<span class="nc" id="L128">            setWonByP2 = true;</span>
+        }
+
+<span class="fc bfc" id="L131" title="All 2 branches covered.">        if (setWonByP1) {</span>
+<span class="fc" id="L132">            awardSet(match, score, true);</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">        } else if (setWonByP2) {</span>
+<span class="fc" id="L134">            awardSet(match, score, false);</span>
+        }
+<span class="fc" id="L136">    }</span>
+
+    private void awardSet(Match match, MatchScore score, boolean player1Scored) {
+<span class="fc bfc" id="L139" title="All 2 branches covered.">        if (player1Scored) {</span>
+<span class="fc" id="L140">            score.setSetsPlayer1(score.getSetsPlayer1() + 1);</span>
+        } else {
+<span class="fc" id="L142">            score.setSetsPlayer2(score.getSetsPlayer2() + 1);</span>
+        }
+<span class="fc" id="L144">        score.setGamesPlayer1(0);</span>
+<span class="fc" id="L145">        score.setGamesPlayer2(0);</span>
+<span class="fc" id="L146">        score.setCurrentSet(score.getCurrentSet() + 1);</span>
+
+        // Check if match tiebreak should be played next
+<span class="fc" id="L149">        int s1 = score.getSetsPlayer1();</span>
+<span class="fc" id="L150">        int s2 = score.getSetsPlayer2();</span>
+<span class="fc" id="L151">        int required = match.getSetsToWin();</span>
+
+<span class="fc bfc" id="L153" title="All 2 branches covered.">        if (s1 &gt;= required) {</span>
+<span class="fc" id="L154">            score.setDone(true);</span>
+<span class="fc" id="L155">            score.setWinner(&quot;PLAYER1&quot;);</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">        } else if (s2 &gt;= required) {</span>
+<span class="fc" id="L157">            score.setDone(true);</span>
+<span class="fc" id="L158">            score.setWinner(&quot;PLAYER2&quot;);</span>
+        }
+        // If match tiebreak and sets are 1:1 (setsToWin=2) or 2:2 (setsToWin=3), next set is match tiebreak
+        // That is handled in isMatchTiebreak check
+<span class="fc" id="L162">    }</span>
+
+    private void applyTiebreakPoint(Match match, MatchScore score, boolean player1Scored, boolean isMatchTiebreak) {
+<span class="fc bfc" id="L165" title="All 2 branches covered.">        int target = isMatchTiebreak ? 10 : 7;</span>
+
+<span class="pc bpc" id="L167" title="1 of 2 branches missed.">        if (player1Scored) {</span>
+<span class="fc" id="L168">            score.setPointsPlayer1(score.getPointsPlayer1() + 1);</span>
+        } else {
+<span class="nc" id="L170">            score.setPointsPlayer2(score.getPointsPlayer2() + 1);</span>
+        }
+
+<span class="fc" id="L173">        int p1 = score.getPointsPlayer1();</span>
+<span class="fc" id="L174">        int p2 = score.getPointsPlayer2();</span>
+
+<span class="fc bfc" id="L176" title="All 4 branches covered.">        boolean p1Won = p1 &gt;= target &amp;&amp; p1 - p2 &gt;= 2;</span>
+<span class="pc bpc" id="L177" title="3 of 4 branches missed.">        boolean p2Won = p2 &gt;= target &amp;&amp; p2 - p1 &gt;= 2;</span>
+
+<span class="pc bpc" id="L179" title="1 of 4 branches missed.">        if (p1Won || p2Won) {</span>
+<span class="fc" id="L180">            score.setPointsPlayer1(0);</span>
+<span class="fc" id="L181">            score.setPointsPlayer2(0);</span>
+<span class="fc" id="L182">            score.setDeuce(false);</span>
+<span class="fc" id="L183">            score.setIsAdvantagePlayer1(null);</span>
+
+<span class="fc bfc" id="L185" title="All 2 branches covered.">            if (isMatchTiebreak) {</span>
+                // Match tiebreak counts as winning the last set
+<span class="pc bpc" id="L187" title="1 of 2 branches missed.">                if (p1Won) {</span>
+<span class="fc" id="L188">                    score.setSetsPlayer1(score.getSetsPlayer1() + 1);</span>
+<span class="fc" id="L189">                    score.setWinner(&quot;PLAYER1&quot;);</span>
+                } else {
+<span class="nc" id="L191">                    score.setSetsPlayer2(score.getSetsPlayer2() + 1);</span>
+<span class="nc" id="L192">                    score.setWinner(&quot;PLAYER2&quot;);</span>
+                }
+<span class="fc" id="L194">                score.setGamesPlayer1(0);</span>
+<span class="fc" id="L195">                score.setGamesPlayer2(0);</span>
+<span class="fc" id="L196">                score.setCurrentSet(score.getCurrentSet() + 1);</span>
+<span class="fc" id="L197">                score.setDone(true);</span>
+            } else {
+                // Regular tiebreak: award a game win to complete the set
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">                if (p1Won) {</span>
+<span class="fc" id="L201">                    score.setGamesPlayer1(score.getGamesPlayer1() + 1);</span>
+<span class="fc" id="L202">                    awardSet(match, score, true);</span>
+                } else {
+<span class="nc" id="L204">                    score.setGamesPlayer2(score.getGamesPlayer2() + 1);</span>
+<span class="nc" id="L205">                    awardSet(match, score, false);</span>
+                }
+<span class="fc" id="L207">                rotateServe(score);</span>
+            }
+        }
+<span class="fc" id="L210">    }</span>
+
+    /**
+     * Returns true if we are in a regular tiebreak (not match tiebreak).
+     */
+    private boolean isTiebreak(Match match, MatchScore score) {
+<span class="pc bpc" id="L216" title="1 of 2 branches missed.">        if (score.isDone()) return false;</span>
+
+<span class="fc bfc" id="L218" title="All 2 branches covered.">        int tiebreakAt = match.isShortSet() ? 3 : 6;</span>
+<span class="fc" id="L219">        int g1 = score.getGamesPlayer1();</span>
+<span class="fc" id="L220">        int g2 = score.getGamesPlayer2();</span>
+
+        // If both players have reached the tiebreak threshold, we're in a tiebreak
+        // But only if it's NOT a match tiebreak situation
+<span class="fc bfc" id="L224" title="All 4 branches covered.">        if (g1 == tiebreakAt &amp;&amp; g2 == tiebreakAt) {</span>
+<span class="pc bpc" id="L225" title="1 of 2 branches missed.">            return !isMatchTiebreakSet(match, score);</span>
+        }
+<span class="fc" id="L227">        return false;</span>
+    }
+
+    /**
+     * Returns true if we are in a match tiebreak (10-point super tiebreak).
+     */
+    private boolean isMatchTiebreak(Match match, MatchScore score) {
+<span class="fc bfc" id="L234" title="All 2 branches covered.">        if (!match.isMatchTiebreak()) return false;</span>
+<span class="pc bpc" id="L235" title="1 of 2 branches missed.">        if (score.isDone()) return false;</span>
+<span class="fc" id="L236">        return isMatchTiebreakSet(match, score);</span>
+    }
+
+    private boolean isMatchTiebreakSet(Match match, MatchScore score) {
+<span class="fc bfc" id="L240" title="All 2 branches covered.">        if (!match.isMatchTiebreak()) return false;</span>
+<span class="fc" id="L241">        int required = match.getSetsToWin();</span>
+<span class="fc" id="L242">        int s1 = score.getSetsPlayer1();</span>
+<span class="fc" id="L243">        int s2 = score.getSetsPlayer2();</span>
+        // Match tiebreak: when sets are (required-1):(required-1)
+<span class="pc bpc" id="L245" title="2 of 4 branches missed.">        return s1 == required - 1 &amp;&amp; s2 == required - 1;</span>
+    }
+
+    private void rotateServe(MatchScore score) {
+<span class="fc bfc" id="L249" title="All 2 branches covered.">        if (score.getServingPlayer() != null) {</span>
+<span class="fc bfc" id="L250" title="All 2 branches covered.">            score.setServingPlayer(score.getServingPlayer() == 1 ? 2 : 1);</span>
+        }
+<span class="fc" id="L252">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

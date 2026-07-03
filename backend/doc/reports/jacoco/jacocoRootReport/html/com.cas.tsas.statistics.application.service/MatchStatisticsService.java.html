@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MatchStatisticsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tsas-backend</a> &gt; <a href="index.source.html" class="el_package">com.cas.tsas.statistics.application.service</a> &gt; <span class="el_source">MatchStatisticsService.java</span></div><h1>MatchStatisticsService.java</h1><pre class="source lang-java linenums">package com.cas.tsas.statistics.application.service;
+
+import com.cas.tsas.match.application.port.out.LoadPointsByMatchPort;
+import com.cas.tsas.match.domain.model.Direction;
+import com.cas.tsas.match.domain.model.Point;
+import com.cas.tsas.match.domain.model.PointType;
+import com.cas.tsas.match.domain.model.StrokeType;
+import com.cas.tsas.statistics.application.port.in.ComputeMatchStatisticsUseCase;
+import com.cas.tsas.statistics.domain.PointAttribution;
+import com.cas.tsas.statistics.domain.model.DirectionDistribution;
+import com.cas.tsas.statistics.domain.model.MatchStatistics;
+import com.cas.tsas.statistics.domain.model.PlayerStatistics;
+import com.cas.tsas.statistics.domain.model.StrokeDistribution;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+/**
+ * Computes match statistics on the fly from the recorded points; nothing is persisted.
+ *
+ * &lt;p&gt;Each point is attributed to a player via {@link PointAttribution} and the raw counts are
+ * accumulated per player, then derived into the {@link MatchStatistics} aggregate.
+ */
+@Service
+public class MatchStatisticsService implements ComputeMatchStatisticsUseCase {
+
+    private final LoadPointsByMatchPort loadPointsByMatchPort;
+
+<span class="fc" id="L33">    public MatchStatisticsService(LoadPointsByMatchPort loadPointsByMatchPort) {</span>
+<span class="fc" id="L34">        this.loadPointsByMatchPort = loadPointsByMatchPort;</span>
+<span class="fc" id="L35">    }</span>
+
+    /**
+     * Loads all points of the match and accumulates per-player statistics in a single pass.
+     *
+     * &lt;p&gt;For each point the attributed player gets its winner/error/ace/double-fault count
+     * bumped and its stroke/direction distribution updated. Serve attempts feed the 1st/2nd
+     * serve percentages (a 2nd serve counts as &quot;in&quot; unless it was a double fault). Break points
+     * are credited to the returner when the server lost the point. Points with no point type
+     * (untyped score entries) only contribute to {@code pointsWon}.
+     */
+    @Override
+    public MatchStatistics compute(UUID matchId) {
+<span class="fc" id="L48">        List&lt;Point&gt; points = loadPointsByMatchPort.loadPointsByMatch(matchId);</span>
+<span class="fc" id="L49">        Accumulator acc1 = new Accumulator(1);</span>
+<span class="fc" id="L50">        Accumulator acc2 = new Accumulator(2);</span>
+<span class="fc" id="L51">        int breakPointsTotal = 0;</span>
+
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        for (Point p : points) {</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">            if (p.getPointType() == null) {</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">                if (p.getWinner() == 1) acc1.pointsWon++;</span>
+<span class="fc" id="L56">                else acc2.pointsWon++;</span>
+<span class="fc" id="L57">                continue;</span>
+            }
+
+<span class="fc" id="L60">            int attribTo = PointAttribution.attributingPlayer(p);</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">            Accumulator attribAcc = attribTo == 1 ? acc1 : acc2;</span>
+<span class="fc" id="L62">            attribAcc.countAttributed(p);</span>
+
+<span class="fc bfc" id="L64" title="All 2 branches covered.">            if (p.getWinner() == 1) {</span>
+<span class="fc" id="L65">                acc1.pointsWon++;</span>
+            } else {
+<span class="fc" id="L67">                acc2.pointsWon++;</span>
+            }
+
+<span class="fc bfc" id="L70" title="All 2 branches covered.">            if (p.getStrokeType() != null) {</span>
+<span class="fc" id="L71">                attribAcc.strokes.merge(p.getStrokeType(), 1, Integer::sum);</span>
+            }
+<span class="fc bfc" id="L73" title="All 2 branches covered.">            if (p.getDirection() != null) {</span>
+<span class="fc" id="L74">                attribAcc.directions.merge(p.getDirection(), 1, Integer::sum);</span>
+            }
+
+<span class="fc bfc" id="L77" title="All 4 branches covered.">            if (p.getServingPlayer() != null &amp;&amp; p.getServeAttempt() != null) {</span>
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">                Accumulator serverAcc = p.getServingPlayer() == 1 ? acc1 : acc2;</span>
+<span class="fc" id="L79">                serverAcc.serveAttemptsTotal++;</span>
+<span class="fc bfc" id="L80" title="All 2 branches covered.">                if (p.getServeAttempt() == 1) {</span>
+<span class="fc" id="L81">                    serverAcc.firstServesIn++;</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">                } else if (p.getServeAttempt() == 2) {</span>
+<span class="fc" id="L83">                    serverAcc.secondServesPlayed++;</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">                    if (p.getPointType() != PointType.DOUBLE_FAULT) {</span>
+<span class="fc" id="L85">                        serverAcc.secondServesIn++;</span>
+                    }
+                }
+            }
+
+<span class="pc bpc" id="L90" title="1 of 4 branches missed.">            if (p.isBreakPoint() &amp;&amp; p.getServingPlayer() != null) {</span>
+<span class="fc" id="L91">                breakPointsTotal++;</span>
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">                Accumulator serverAcc = p.getServingPlayer() == 1 ? acc1 : acc2;</span>
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">                Accumulator returnerAcc = p.getServingPlayer() == 1 ? acc2 : acc1;</span>
+<span class="fc" id="L94">                serverAcc.breakPointsFaced++;</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">                if (p.getWinner() != p.getServingPlayer()) {</span>
+<span class="fc" id="L96">                    returnerAcc.breakPointsWon++;</span>
+                }
+            }
+<span class="fc" id="L99">        }</span>
+
+<span class="fc" id="L101">        return new MatchStatistics(matchId, acc1.toStats(), acc2.toStats(),</span>
+<span class="fc" id="L102">                points.size(), breakPointsTotal, Instant.now());</span>
+    }
+
+    /** Mutable per-player tally of raw counters collected while iterating the points. */
+    private static final class Accumulator {
+        final int playerNumber;
+        int pointsWon, winners, unforcedErrors, forcedErrors, aces, doubleFaults;
+        int breakPointsWon, breakPointsFaced;
+        int serveAttemptsTotal, firstServesIn, secondServesPlayed, secondServesIn;
+<span class="fc" id="L111">        final Map&lt;StrokeType, Integer&gt; strokes = new EnumMap&lt;&gt;(StrokeType.class);</span>
+<span class="fc" id="L112">        final Map&lt;Direction, Integer&gt; directions = new EnumMap&lt;&gt;(Direction.class);</span>
+
+<span class="fc" id="L114">        Accumulator(int n) {</span>
+<span class="fc" id="L115">            this.playerNumber = n;</span>
+<span class="fc" id="L116">        }</span>
+
+        /** Increments the counter matching the point type; NET/OUT outcomes are only reflected
+         *  in the stroke/direction distribution, not in a dedicated counter. */
+        void countAttributed(Point p) {
+<span class="pc bpc" id="L121" title="2 of 6 branches missed.">            switch (p.getPointType()) {</span>
+<span class="fc" id="L122">                case WINNER -&gt; winners++;</span>
+<span class="fc" id="L123">                case UNFORCED_ERROR -&gt; unforcedErrors++;</span>
+<span class="nc" id="L124">                case FORCED_ERROR -&gt; forcedErrors++;</span>
+<span class="fc" id="L125">                case ACE -&gt; aces++;</span>
+<span class="fc" id="L126">                case DOUBLE_FAULT -&gt; doubleFaults++;</span>
+                case NET, OUT_LONG, OUT_SIDE -&gt; { /* tracked via stroke/direction distribution */ }
+            }
+<span class="fc" id="L129">        }</span>
+
+        /** Derives the serve percentages from the raw counters and builds the immutable
+         *  {@link PlayerStatistics}; percentages default to 0 when no serves were attempted. */
+        PlayerStatistics toStats() {
+<span class="fc bfc" id="L134" title="All 2 branches covered.">            double firstPct = serveAttemptsTotal == 0 ? 0.0 : (double) firstServesIn / serveAttemptsTotal;</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">            double secondPct = secondServesPlayed == 0 ? 0.0 : (double) secondServesIn / secondServesPlayed;</span>
+<span class="fc" id="L136">            return new PlayerStatistics(</span>
+                    playerNumber, pointsWon, winners, unforcedErrors, forcedErrors,
+                    aces, doubleFaults, firstPct, secondPct, breakPointsWon, breakPointsFaced,
+<span class="fc" id="L139">                    new StrokeDistribution(Map.copyOf(strokes)),</span>
+<span class="fc" id="L140">                    new DirectionDistribution(Map.copyOf(directions)));</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

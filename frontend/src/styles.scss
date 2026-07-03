@@ -1,0 +1,78 @@
+@use '@angular/material' as mat;
+
+$theme: mat.define-theme((
+  color: (
+    theme-type: light,
+    primary: mat.$blue-palette,
+    tertiary: mat.$blue-palette,
+  ),
+  typography: (
+    plain-family: ('Inter', system-ui, sans-serif),
+    brand-family: ('Inter', system-ui, sans-serif),
+  ),
+));
+
+:root {
+  @include mat.all-component-themes($theme);
+
+  /* ===== Design tokens — TSaS „Daylight · Hard Court" ===== */
+  /* Flächen / Struktur */
+  --surface-bg: #F8FAFC;
+  --surface-card: #FFFFFF;
+  --surface-muted: #EEF2F6;
+  --border: #E2E8F0;
+
+  /* Text */
+  --text: #0F172A;
+  --text-muted: #64748B;
+  --text-subtle: #94A3B8;
+
+  /* Marke / Akzent (Hard Court Blau) */
+  --brand: #2563EB;
+  --brand-strong: #1D4ED8;
+  --brand-soft: #EFF6FF;
+  --brand-border: #BFDBFE;
+
+  /* Status (fix) */
+  --success: #16A34A;
+  --danger: #DC2626;
+  --warning: #D97706;
+
+  /* Form */
+  --radius-card: 14px;
+  --radius-control: 10px;
+  --radius-pill: 99px;
+  --shadow-card: 0 4px 14px rgba(15, 23, 42, .05);
+  --shadow-pop: 0 10px 28px rgba(15, 23, 42, .12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, 'Helvetica Neue', sans-serif;
+  background: var(--surface-bg);
+  color: var(--text);
+}
+
+a {
+  text-decoration: none;
+}
+
+/* Head-to-Head Spieler-Auswahl: helles Dropdown-Panel auf Tokens
+   (Overlay liegt ausserhalb der Komponente, daher global per panelClass gescoped) */
+.h2h-panel.mat-mdc-select-panel {
+  background: var(--surface-card);
+}
+.h2h-panel .mat-mdc-option .mdc-list-item__primary-text {
+  color: var(--text);
+}
+.h2h-panel .mat-mdc-option:hover:not(.mdc-list-item--disabled),
+.h2h-panel .mat-mdc-option.mat-mdc-option-active {
+  background: var(--brand-soft);
+}
+.h2h-panel .mat-mdc-option.mdc-list-item--selected:not(.mat-mdc-option-multiple) {
+  background: var(--brand-soft);
+}

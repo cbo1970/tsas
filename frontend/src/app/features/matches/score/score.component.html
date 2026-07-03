@@ -1,0 +1,211 @@
+<div class="scoring-page">
+
+  @if (!matchData()) {
+    <div class="loading">Lade Match...</div>
+  }
+
+  @if (matchData()) {
+
+    <!-- ── Score Header ── -->
+    <div class="score-header">
+
+      <!-- Row 1: Names + Games -->
+      <div class="header-grid">
+        <div class="player-half-left">
+          <span class="player-name" [class.serving]="servingPlayer() === 1">
+            @if (servingPlayer() === 1) { 🎾 } {{ player1Name() }}
+          </span>
+        </div>
+        <div class="score-center">
+          <span class="games-num" [class.winning]="matchData()!.score.setsPlayer1 > matchData()!.score.setsPlayer2">
+            {{ matchData()!.score.gamesPlayer1 }}
+          </span>
+          <span class="sep">:</span>
+          <span class="games-num" [class.winning]="matchData()!.score.setsPlayer2 > matchData()!.score.setsPlayer1">
+            {{ matchData()!.score.gamesPlayer2 }}
+          </span>
+        </div>
+        <div class="player-half-right">
+          <span class="player-name" [class.serving]="servingPlayer() === 2">
+            {{ player2Name() }} @if (servingPlayer() === 2) { 🎾 }
+          </span>
+        </div>
+      </div>
+
+      <!-- Row 2: Points (clickable) -->
+      <div class="header-grid" style="margin-top:4px;">
+        <div class="pts-label">PUNKTE</div>
+        <div class="score-center">
+          <button class="pts-btn p1"
+                  data-testid="quick-score-p1"
+                  (click)="recordQuickPoint(1)">
+            {{ formatPoints(matchData()!.score, true) }}
+          </button>
+          <span class="sep" style="font-size:22px;">:</span>
+          <button class="pts-btn"
+                  data-testid="quick-score-p2"
+                  (click)="recordQuickPoint(2)">
+            {{ formatPoints(matchData()!.score, false) }}
+          </button>
+        </div>
+        <div class="pts-label">PUNKTE</div>
+      </div>
+
+      <!-- Row 3: Set history -->
+      <div class="set-history">{{ setHistoryText() }}</div>
+
+      <!-- Actions -->
+      <div class="header-actions">
+        <button mat-icon-button (click)="goToMatches()">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <button mat-icon-button data-testid="edit-score-btn" (click)="openEditDialog()">
+          <mat-icon>edit</mat-icon>
+        </button>
+        @if (matchData()!.status !== 'COMPLETED') {
+          <button mat-mini-fab color="warn" data-testid="end-match-btn" (click)="endMatch()">
+            <mat-icon>stop</mat-icon>
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- ── Observation Panels ── -->
+    @if (matchData()!.status !== 'COMPLETED') {
+      <div class="panels-area">
+
+        <!-- ── Player 1 Panel ── -->
+        <div class="obs-panel" [class.serving]="servingPlayer() === 1" data-testid="panel-p1">
+          <div class="section-label">SERVICE (Kontext)</div>
+          <div class="ctx-row">
+            <button class="ctx-btn"
+                    [class.active]="serviceContextP1() === 1"
+                    data-testid="p1-service-1"
+                    (click)="toggleService(1, 1)">1. Service</button>
+            <button class="ctx-btn"
+                    [class.active]="serviceContextP1() === 2"
+                    data-testid="p1-service-2"
+                    (click)="toggleService(1, 2)">2. Service</button>
+          </div>
+
+          <div class="section-label green">→ PUNKT FÜR {{ player1Name() }}</div>
+          <div class="obs-row-2">
+            <button class="obs-btn win-btn"
+                    data-testid="p1-ace"
+                    (click)="recordObservation(1, 'ACE')">🎯 Ass</button>
+            <button class="obs-btn win-btn"
+                    data-testid="p1-winner"
+                    (click)="recordObservation(1, 'WINNER')">🏆 Winner</button>
+          </div>
+
+          <div class="section-label red">→ PUNKT FÜR {{ player2Name() }}</div>
+          <div class="obs-row-1">
+            <button class="obs-btn err-btn"
+                    data-testid="p1-df"
+                    (click)="recordObservation(1, 'DOUBLE_FAULT')"><span class="ico-y">✕</span> DF</button>
+          </div>
+          <div class="obs-row-3">
+            <button class="obs-btn err-btn err-sm"
+                    data-testid="p1-forced"
+                    (click)="recordObservation(1, 'FORCED_ERROR')">💨 Forced</button>
+            <button class="obs-btn err-btn err-sm"
+                    data-testid="p1-unforced"
+                    (click)="recordObservation(1, 'UNFORCED_ERROR')">😓 Unforced</button>
+            <button class="obs-btn err-btn err-sm"
+                    data-testid="p1-net"
+                    (click)="recordObservation(1, 'NET')">🎾 Netz</button>
+          </div>
+
+          <div class="section-label">SCHLAGART (Kontext)</div>
+          <div class="ctx-row">
+            <button class="ctx-btn"
+                    [class.active]="strokeTypeP1() === 'FOREHAND'"
+                    (click)="toggleStroke(1, 'FOREHAND')">Vorhand</button>
+            <button class="ctx-btn"
+                    [class.active]="strokeTypeP1() === 'BACKHAND'"
+                    (click)="toggleStroke(1, 'BACKHAND')">Rückhand</button>
+          </div>
+        </div>
+
+        <!-- ── Player 2 Panel ── -->
+        <div class="obs-panel" [class.serving]="servingPlayer() === 2" data-testid="panel-p2">
+          <div class="section-label">SERVICE (Kontext)</div>
+          <div class="ctx-row">
+            <button class="ctx-btn"
+                    [class.active]="serviceContextP2() === 1"
+                    data-testid="p2-service-1"
+                    (click)="toggleService(2, 1)">1. Service</button>
+            <button class="ctx-btn"
+                    [class.active]="serviceContextP2() === 2"
+                    data-testid="p2-service-2"
+                    (click)="toggleService(2, 2)">2. Service</button>
+          </div>
+
+          <div class="section-label green">→ PUNKT FÜR {{ player2Name() }}</div>
+          <div class="obs-row-2">
+            <button class="obs-btn win-btn"
+                    data-testid="p2-ace"
+                    (click)="recordObservation(2, 'ACE')">🎯 Ass</button>
+            <button class="obs-btn win-btn"
+                    data-testid="p2-winner"
+                    (click)="recordObservation(2, 'WINNER')">🏆 Winner</button>
+          </div>
+
+          <div class="section-label red">→ PUNKT FÜR {{ player1Name() }}</div>
+          <div class="obs-row-1">
+            <button class="obs-btn err-btn"
+                    data-testid="p2-df"
+                    (click)="recordObservation(2, 'DOUBLE_FAULT')"><span class="ico-y">✕</span> DF</button>
+          </div>
+          <div class="obs-row-3">
+            <button class="obs-btn err-btn err-sm"
+                    data-testid="p2-forced"
+                    (click)="recordObservation(2, 'FORCED_ERROR')">💨 Forced</button>
+            <button class="obs-btn err-btn err-sm"
+                    data-testid="p2-unforced"
+                    (click)="recordObservation(2, 'UNFORCED_ERROR')">😓 Unforced</button>
+            <button class="obs-btn err-btn err-sm"
+                    data-testid="p2-net"
+                    (click)="recordObservation(2, 'NET')">🎾 Netz</button>
+          </div>
+
+          <div class="section-label">SCHLAGART (Kontext)</div>
+          <div class="ctx-row">
+            <button class="ctx-btn"
+                    [class.active]="strokeTypeP2() === 'FOREHAND'"
+                    (click)="toggleStroke(2, 'FOREHAND')">Vorhand</button>
+            <button class="ctx-btn"
+                    [class.active]="strokeTypeP2() === 'BACKHAND'"
+                    (click)="toggleStroke(2, 'BACKHAND')">Rückhand</button>
+          </div>
+        </div>
+
+        <!-- ── Coach Notes (volle Breite, direkt unter den Panels) ── -->
+        <details class="coach-notes">
+          <summary>{{ 'playerNotes.title' | translate }}</summary>
+          @if (matchData(); as m) {
+            <app-player-notes [matchId]="m.id" />
+          }
+        </details>
+
+      </div>
+    }
+
+    <!-- ── Winner overlay (completed match) ── -->
+    @if (matchData()!.score.isDone) {
+      <div class="winner-overlay">
+        <div class="winner-card">
+          <div class="winner-text">🏆 Sieger: {{ getWinnerName() }}</div>
+          <div class="final-score">
+            {{ matchData()!.score.setsPlayer1 }} : {{ matchData()!.score.setsPlayer2 }} Sätze
+          </div>
+          <button mat-raised-button color="primary" (click)="goToMatches()">
+            Zurück zur Übersicht
+          </button>
+        </div>
+      </div>
+    }
+
+  }
+
+</div>

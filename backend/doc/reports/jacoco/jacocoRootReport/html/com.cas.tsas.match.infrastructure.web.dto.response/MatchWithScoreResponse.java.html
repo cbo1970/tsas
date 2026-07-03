@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MatchWithScoreResponse.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tsas-backend</a> &gt; <a href="index.source.html" class="el_package">com.cas.tsas.match.infrastructure.web.dto.response</a> &gt; <span class="el_source">MatchWithScoreResponse.java</span></div><h1>MatchWithScoreResponse.java</h1><pre class="source lang-java linenums">package com.cas.tsas.match.infrastructure.web.dto.response;
+
+import com.cas.tsas.match.domain.model.Match;
+import com.cas.tsas.match.domain.model.MatchScore;
+import com.cas.tsas.match.domain.model.MatchStatus;
+
+import java.util.UUID;
+
+<span class="fc" id="L9">public record MatchWithScoreResponse(</span>
+        UUID id,
+        UUID player1Id,
+        UUID player2Id,
+        int setsToWin,
+        boolean matchTiebreak,
+        boolean shortSet,
+        MatchStatus status,
+        MatchScoreResponse score
+) {
+    public static MatchWithScoreResponse from(Match match, MatchScore matchScore) {
+<span class="fc" id="L20">        return new MatchWithScoreResponse(</span>
+<span class="fc" id="L21">                match.getId(),</span>
+<span class="fc" id="L22">                match.getPlayer1Id(),</span>
+<span class="fc" id="L23">                match.getPlayer2Id(),</span>
+<span class="fc" id="L24">                match.getSetsToWin(),</span>
+<span class="fc" id="L25">                match.isMatchTiebreak(),</span>
+<span class="fc" id="L26">                match.isShortSet(),</span>
+<span class="fc" id="L27">                match.getStatus(),</span>
+<span class="fc" id="L28">                MatchScoreResponse.from(matchScore)</span>
+        );
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

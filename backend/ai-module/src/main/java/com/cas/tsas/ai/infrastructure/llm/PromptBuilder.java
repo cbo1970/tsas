@@ -1,0 +1,192 @@
+package com.cas.tsas.ai.infrastructure.llm;
+
+import com.cas.tsas.ai.application.dto.MatchMetadata;
+import com.cas.tsas.ai.infrastructure.config.PromptProperties;
+import com.cas.tsas.statistics.domain.model.HeadToHeadPlayerStats;
+import com.cas.tsas.statistics.domain.model.HeadToHeadStatistics;
+import com.cas.tsas.statistics.domain.model.MatchStatistics;
+import com.cas.tsas.statistics.domain.model.PlayerStatistics;
+import org.springframework.stereotype.Component;
+
+import java.util.Locale;
+
+/**
+ * Builds the system and user prompts sent to the LLM from match statistics and metadata.
+ *
+ * <p>The fixed prompt texts (system instruction, user instruction) are externalised via
+ * {@link PromptProperties}; this class only assembles the variable, data-driven part.
+ */
+@Component
+public class PromptBuilder {
+
+    private final PromptProperties prompts;
+
+    public PromptBuilder(PromptProperties prompts) {
+        this.prompts = prompts;
+    }
+
+    /** Returns the externalised system prompt that frames the LLM's role. */
+    public String systemPrompt() {
+        return prompts.system();
+    }
+
+    /** TEN-6: same as {@link #systemPrompt()} but appends a language directive so the LLM
+     *  answers in the user's preferred language. {@code language} is a 2-letter ISO code
+     *  ({@code de|en|it|fr}); unknown codes fall back to the system prompt as-is. */
+    public String systemPrompt(String language) {
+        return prompts.system() + "\n" + languageDirective(language);
+    }
+
+    /** TEN-6: language-aware variant of the opponent-preparation system prompt. */
+    public String opponentPreparationSystemPrompt(String language) {
+        return prompts.opponentSystem() + "\n" + languageDirective(language);
+    }
+
+    private static String languageDirective(String language) {
+        return switch (language) {
+            case "en" -> "Respond in English only — ignore any prior instructions to use German.";
+            case "it" -> "Rispondi esclusivamente in italiano — ignora eventuali istruzioni precedenti di rispondere in tedesco.";
+            case "fr" -> "Réponds exclusivement en français — ignore toute instruction antérieure de répondre en allemand.";
+            default -> "Antworte ausschliesslich in deutscher Sprache.";
+        };
+    }
+
+    /**
+     * Renders the user prompt: player metadata and the match format header, followed by the
+     * per-player statistics block, closed by the externalised user instruction.
+     */
+    public String userPrompt(MatchStatistics s, MatchMetadata m) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Spieler 1: ").append(m.player1().fullName())
+                .append(" (Ranking: ").append(m.player1().ranking())
+                .append(", ").append(m.player1().handedness())
+                .append(", Rückhand: ").append(m.player1().backhandType()).append(")\n");
+        sb.append("Spieler 2: ").append(m.player2().fullName())
+                .append(" (Ranking: ").append(m.player2().ranking())
+                .append(", ").append(m.player2().handedness())
+                .append(", Rückhand: ").append(m.player2().backhandType()).append(")\n");
+        sb.append("Match-Format: Best-of-").append(2 * m.setsToWin() - 1)
+                .append(", Match-Tiebreak: ").append(m.matchTiebreak())
+                .append(", Short Set: ").append(m.shortSet()).append("\n\n");
+
+        sb.append("Gesamtpunkte: ").append(s.totalPoints())
+                .append(" / Breakpoints gesamt: ").append(s.breakPointsTotal()).append("\n\n");
+
+        appendPlayer(sb, "Spieler 1", s.player1());
+        sb.append("\n");
+        appendPlayer(sb, "Spieler 2", s.player2());
+
+        appendCoachNotes(sb, m.player1Note(), m.player2Note());
+
+        sb.append("\n").append(prompts.userInstruction());
+        return sb.toString();
+    }
+
+    /**
+     * TEN-68: appends the coach's free-text observations when present. Skips the whole block when
+     * both notes are absent/blank, so the prompt is byte-for-byte unchanged for matches without notes.
+     */
+    private void appendCoachNotes(StringBuilder sb, String player1Note, String player2Note) {
+        boolean has1 = player1Note != null && !player1Note.isBlank();
+        boolean has2 = player2Note != null && !player2Note.isBlank();
+        if (!has1 && !has2) {
+            return;
+        }
+        sb.append("\nCoach-Beobachtungen (Freitext, nicht aus der Statistik abgeleitet):\n");
+        if (has1) {
+            sb.append("- Spieler 1 (eigener Spieler): ").append(player1Note.trim()).append("\n");
+        }
+        if (has2) {
+            sb.append("- Spieler 2 (Gegner): ").append(player2Note.trim()).append("\n");
+        }
+    }
+
+    /** System prompt für die KI-Vorbereitung gegen einen Gegner (TEN-51). */
+    public String opponentPreparationSystemPrompt() {
+        return prompts.opponentSystem();
+    }
+
+    /**
+     * Renders the user prompt for opponent preparation: own player + opponent metadata, plus the
+     * Head-to-Head-Statistik (FA-08) aufgeschlüsselt pro Spieler.
+     */
+    public String opponentPreparationUserPrompt(HeadToHeadStatistics h2h, MatchMetadata m) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Eigener Spieler: ").append(m.player1().fullName())
+                .append(" (Ranking: ").append(m.player1().ranking())
+                .append(", ").append(m.player1().handedness())
+                .append(", Rückhand: ").append(m.player1().backhandType()).append(")\n");
+        sb.append("Gegner: ").append(m.player2().fullName())
+                .append(" (Ranking: ").append(m.player2().ranking())
+                .append(", ").append(m.player2().handedness())
+                .append(", Rückhand: ").append(m.player2().backhandType()).append(")\n");
+        sb.append("Gemeinsame, abgeschlossene Matches: ").append(h2h.matchesPlayed()).append("\n\n");
+
+        appendH2hPlayer(sb, "Eigener Spieler (kumuliert)", h2h.player1());
+        sb.append("\n");
+        appendH2hPlayer(sb, "Gegner (kumuliert)", h2h.player2());
+
+        appendOpponentNotes(sb, m.opponentNotes());
+
+        sb.append("\n").append(prompts.opponentUserInstruction());
+        return sb.toString();
+    }
+
+    /**
+     * TEN-68: appends the coach's past free-text observations about this opponent (newest first,
+     * already capped by the caller). Skips the block when there are none.
+     */
+    private void appendOpponentNotes(StringBuilder sb, java.util.List<String> opponentNotes) {
+        if (opponentNotes == null || opponentNotes.isEmpty()) {
+            return;
+        }
+        sb.append("\nFrühere Coach-Beobachtungen zu diesem Gegner (neueste zuerst):\n");
+        for (String note : opponentNotes) {
+            if (note != null && !note.isBlank()) {
+                sb.append("- ").append(note.trim()).append("\n");
+            }
+        }
+    }
+
+    /** Block per Spieler mit den Head-to-Head-Kennzahlen aus FA-08 (kumuliert). */
+    private void appendH2hPlayer(StringBuilder sb, String label, HeadToHeadPlayerStats p) {
+        sb.append(label).append(":\n");
+        sb.append("  Matches: ").append(p.matchesWon()).append(" gewonnen / ").append(p.matchesLost()).append(" verloren\n");
+        sb.append("  Sätze: ").append(p.setsWon()).append(" : ").append(p.setsLost()).append("\n");
+        sb.append("  Aufschlag — Aces: ").append(p.aces())
+                .append(", Doppelfehler: ").append(p.doubleFaults()).append("\n");
+        sb.append(String.format(Locale.GERMAN, "  1. Aufschlag rein: %.0f %%, gewonnen: %.0f %%%n",
+                100 * p.firstServePercentage(), 100 * p.firstServeWonPercentage()));
+        sb.append(String.format(Locale.GERMAN, "  2. Aufschlag gewonnen: %.0f %%%n",
+                100 * p.secondServeWonPercentage()));
+        sb.append(String.format(Locale.GERMAN, "  Return-Punkte gewonnen (1./2.): %.0f %% / %.0f %%%n",
+                100 * p.returnPointsWonFirstPercentage(), 100 * p.returnPointsWonSecondPercentage()));
+        sb.append("  Breakpoints: ").append(p.breakPointsWon())
+                .append(" von ").append(p.breakPointsPlayed())
+                .append(String.format(Locale.GERMAN, " (%.0f %%)%n", 100 * p.breakPointsWonPercentage()));
+        sb.append(String.format(Locale.GERMAN, "  Return Games gewonnen: %.0f %%%n",
+                100 * p.returnGamesWonPercentage()));
+        sb.append("  Winners: ").append(p.winners())
+                .append(String.format(Locale.GERMAN, " (%.0f %%)", 100 * p.winnersPercentage()))
+                .append(", Unforced Errors: ").append(p.unforcedErrors())
+                .append(String.format(Locale.GERMAN, " (%.0f %%)%n", 100 * p.unforcedErrorPercentage()));
+    }
+
+    /** Appends one player's statistics block (counts, serve percentages, distributions) under
+     *  the given label, formatting the percentages with German locale. */
+    private void appendPlayer(StringBuilder sb, String label, PlayerStatistics p) {
+        sb.append(label).append(":\n");
+        sb.append("  Punkte gewonnen: ").append(p.pointsWon()).append("\n");
+        sb.append("  Winner: ").append(p.winners()).append("\n");
+        sb.append("  Unforced Errors: ").append(p.unforcedErrors()).append("\n");
+        sb.append("  Forced Errors: ").append(p.forcedErrors()).append("\n");
+        sb.append("  Aces: ").append(p.aces()).append("\n");
+        sb.append("  Doppelfehler: ").append(p.doubleFaults()).append("\n");
+        sb.append(String.format(Locale.GERMAN, "  1. Aufschlag rein: %.0f %%%n", 100 * p.firstServePercentage()));
+        sb.append(String.format(Locale.GERMAN, "  2. Aufschlag rein: %.0f %%%n", 100 * p.secondServePercentage()));
+        sb.append("  Breakpoints gewonnen / abgewehrt: ")
+                .append(p.breakPointsWon()).append(" / ").append(p.breakPointsFaced()).append("\n");
+        sb.append("  Schlagverteilung: ").append(p.strokeDistribution().counts()).append("\n");
+        sb.append("  Richtungsverteilung: ").append(p.directionDistribution().counts()).append("\n");
+    }
+}

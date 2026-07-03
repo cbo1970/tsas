@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PlayerService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tsas-backend</a> &gt; <a href="index.source.html" class="el_package">com.cas.tsas.player.application.service</a> &gt; <span class="el_source">PlayerService.java</span></div><h1>PlayerService.java</h1><pre class="source lang-java linenums">package com.cas.tsas.player.application.service;
+
+import com.cas.tsas.player.application.port.in.CreatePlayerUseCase;
+import com.cas.tsas.player.application.port.in.DeletePlayerUseCase;
+import com.cas.tsas.player.application.port.in.SearchPlayerUseCase;
+import com.cas.tsas.player.application.port.in.UpdatePlayerUseCase;
+import com.cas.tsas.player.application.port.out.DeletePlayerPort;
+import com.cas.tsas.player.application.port.out.FindActiveMatchPort;
+import com.cas.tsas.player.application.port.out.HasMatchesPort;
+import com.cas.tsas.player.application.port.out.LoadPlayerPort;
+import com.cas.tsas.player.application.port.out.SavePlayerPort;
+import com.cas.tsas.player.domain.exception.PlayerHasMatchesException;
+import com.cas.tsas.player.domain.exception.PlayerNotFoundException;
+import com.cas.tsas.player.domain.model.Player;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+/**
+ * Implements the player use cases (create, search, update, delete). Deletion
+ * is guarded against players that participate in matches, in which case
+ * deactivation (soft delete) is offered instead. Match-related lookups are
+ * delegated to ports implemented by the match module.
+ */
+@Service
+@Transactional
+public class PlayerService implements CreatePlayerUseCase, SearchPlayerUseCase, UpdatePlayerUseCase, DeletePlayerUseCase {
+
+    private final LoadPlayerPort loadPlayerPort;
+    private final SavePlayerPort savePlayerPort;
+    private final DeletePlayerPort deletePlayerPort;
+    private final HasMatchesPort hasMatchesPort;
+    private final FindActiveMatchPort findActiveMatchPort;
+
+    public PlayerService(LoadPlayerPort loadPlayerPort, SavePlayerPort savePlayerPort,
+                         DeletePlayerPort deletePlayerPort, HasMatchesPort hasMatchesPort,
+<span class="fc" id="L41">                         FindActiveMatchPort findActiveMatchPort) {</span>
+<span class="fc" id="L42">        this.loadPlayerPort = loadPlayerPort;</span>
+<span class="fc" id="L43">        this.savePlayerPort = savePlayerPort;</span>
+<span class="fc" id="L44">        this.deletePlayerPort = deletePlayerPort;</span>
+<span class="fc" id="L45">        this.hasMatchesPort = hasMatchesPort;</span>
+<span class="fc" id="L46">        this.findActiveMatchPort = findActiveMatchPort;</span>
+<span class="fc" id="L47">    }</span>
+
+    @Override
+    public Player createPlayer(CreatePlayerCommand command) {
+<span class="fc" id="L51">        Player player = new Player(</span>
+                null,
+<span class="fc" id="L53">                command.firstName(),</span>
+<span class="fc" id="L54">                command.lastName(),</span>
+<span class="fc" id="L55">                command.gender(),</span>
+<span class="fc" id="L56">                command.handedness(),</span>
+<span class="fc" id="L57">                command.backhandType(),</span>
+<span class="fc" id="L58">                command.ranking(),</span>
+<span class="fc" id="L59">                command.nationality(),</span>
+<span class="fc" id="L60">                command.birthDate()</span>
+        );
+<span class="fc" id="L62">        return savePlayerPort.savePlayer(player);</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Player findById(UUID id) {
+<span class="fc" id="L68">        return loadPlayerPort.loadPlayer(id)</span>
+<span class="fc" id="L69">                .orElseThrow(() -&gt; new PlayerNotFoundException(id));</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List&lt;Player&gt; findAll() {
+<span class="fc" id="L75">        return loadPlayerPort.loadAllPlayers();</span>
+    }
+
+    /**
+     * Returns, for each of the given players that has one, the id of their
+     * currently active match (players without an active match are omitted).
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Map&lt;UUID, UUID&gt; findActiveMatchIdsByPlayerIds(Set&lt;UUID&gt; playerIds) {
+<span class="fc" id="L85">        return findActiveMatchPort.findActiveMatchIdsByPlayerIds(playerIds);</span>
+    }
+
+    @Override
+    public Player updatePlayer(UpdatePlayerCommand command) {
+<span class="fc" id="L90">        Player player = loadPlayerPort.loadPlayer(command.id())</span>
+<span class="fc" id="L91">                .orElseThrow(() -&gt; new PlayerNotFoundException(command.id()));</span>
+<span class="fc" id="L92">        player.setFirstName(command.firstName());</span>
+<span class="fc" id="L93">        player.setLastName(command.lastName());</span>
+<span class="fc" id="L94">        player.setGender(command.gender());</span>
+<span class="fc" id="L95">        player.setHandedness(command.handedness());</span>
+<span class="fc" id="L96">        player.setBackhandType(command.backhandType());</span>
+<span class="fc" id="L97">        player.setRanking(command.ranking());</span>
+<span class="fc" id="L98">        player.setNationality(command.nationality());</span>
+<span class="fc" id="L99">        player.setBirthDate(command.birthDate());</span>
+<span class="fc" id="L100">        return savePlayerPort.savePlayer(player);</span>
+    }
+
+    @Override
+    public boolean hasMatches(UUID id) {
+<span class="fc" id="L105">        return hasMatchesPort.existsByPlayerId(id);</span>
+    }
+
+    /**
+     * Hard-deletes a player. Refused when the player is referenced by any match
+     * (to preserve match history); use {@link #deactivatePlayer(UUID)} instead.
+     *
+     * @throws PlayerHasMatchesException if the player participates in any match
+     * @throws PlayerNotFoundException if no such player exists
+     */
+    @Override
+    public void deletePlayer(UUID id) {
+<span class="fc bfc" id="L117" title="All 2 branches covered.">        if (hasMatchesPort.existsByPlayerId(id)) {</span>
+<span class="fc" id="L118">            throw new PlayerHasMatchesException(id);</span>
+        }
+<span class="fc" id="L120">        loadPlayerPort.loadPlayer(id).orElseThrow(() -&gt; new PlayerNotFoundException(id));</span>
+<span class="fc" id="L121">        deletePlayerPort.deletePlayer(id);</span>
+<span class="fc" id="L122">    }</span>
+
+    /**
+     * Soft-deletes a player by setting {@code active = false}, keeping the
+     * record (and its match history) intact.
+     *
+     * @throws PlayerNotFoundException if no such player exists
+     */
+    @Override
+    public void deactivatePlayer(UUID id) {
+<span class="fc" id="L132">        Player player = loadPlayerPort.loadPlayer(id)</span>
+<span class="fc" id="L133">                .orElseThrow(() -&gt; new PlayerNotFoundException(id));</span>
+<span class="fc" id="L134">        player.setActive(false);</span>
+<span class="fc" id="L135">        savePlayerPort.savePlayer(player);</span>
+<span class="fc" id="L136">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

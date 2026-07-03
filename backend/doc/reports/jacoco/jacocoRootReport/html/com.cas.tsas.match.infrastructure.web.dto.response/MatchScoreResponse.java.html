@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MatchScoreResponse.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tsas-backend</a> &gt; <a href="index.source.html" class="el_package">com.cas.tsas.match.infrastructure.web.dto.response</a> &gt; <span class="el_source">MatchScoreResponse.java</span></div><h1>MatchScoreResponse.java</h1><pre class="source lang-java linenums">package com.cas.tsas.match.infrastructure.web.dto.response;
+
+import com.cas.tsas.match.domain.model.MatchScore;
+
+import java.util.UUID;
+
+<span class="fc" id="L7">public record MatchScoreResponse(</span>
+        UUID id,
+        UUID matchId,
+        int pointsPlayer1,
+        int pointsPlayer2,
+        int gamesPlayer1,
+        int gamesPlayer2,
+        int setsPlayer1,
+        int setsPlayer2,
+        boolean isDeuce,
+        Boolean isAdvantagePlayer1,
+        int currentSet,
+        boolean isDone,
+        String winner,
+        int acesPlayer1,
+        int acesPlayer2,
+        Integer servingPlayer
+) {
+    public static MatchScoreResponse from(MatchScore score) {
+<span class="fc" id="L26">        return new MatchScoreResponse(</span>
+<span class="fc" id="L27">                score.getId(),</span>
+<span class="fc" id="L28">                score.getMatchId(),</span>
+<span class="fc" id="L29">                score.getPointsPlayer1(),</span>
+<span class="fc" id="L30">                score.getPointsPlayer2(),</span>
+<span class="fc" id="L31">                score.getGamesPlayer1(),</span>
+<span class="fc" id="L32">                score.getGamesPlayer2(),</span>
+<span class="fc" id="L33">                score.getSetsPlayer1(),</span>
+<span class="fc" id="L34">                score.getSetsPlayer2(),</span>
+<span class="fc" id="L35">                score.isDeuce(),</span>
+<span class="fc" id="L36">                score.getIsAdvantagePlayer1(),</span>
+<span class="fc" id="L37">                score.getCurrentSet(),</span>
+<span class="fc" id="L38">                score.isDone(),</span>
+<span class="fc" id="L39">                score.getWinner(),</span>
+<span class="fc" id="L40">                score.getAcesPlayer1(),</span>
+<span class="fc" id="L41">                score.getAcesPlayer2(),</span>
+<span class="fc" id="L42">                score.getServingPlayer()</span>
+        );
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

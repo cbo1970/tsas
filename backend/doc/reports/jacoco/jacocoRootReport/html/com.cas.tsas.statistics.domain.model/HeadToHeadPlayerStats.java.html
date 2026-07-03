@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HeadToHeadPlayerStats.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tsas-backend</a> &gt; <a href="index.source.html" class="el_package">com.cas.tsas.statistics.domain.model</a> &gt; <span class="el_source">HeadToHeadPlayerStats.java</span></div><h1>HeadToHeadPlayerStats.java</h1><pre class="source lang-java linenums">package com.cas.tsas.statistics.domain.model;
+
+import java.util.UUID;
+
+/**
+ * Aggregated head-to-head statistics for one player across all matches against one opponent.
+ * Carries both raw counts and derived percentages so the API can present &quot;23 (45%)&quot;.
+ * Net points are intentionally not part of FA-08.
+ */
+<span class="fc" id="L10">public record HeadToHeadPlayerStats(</span>
+        UUID playerId,
+        // serve
+        double firstServePercentage,
+        double firstServeWonPercentage,
+        double secondServeWonPercentage,
+        int aces,
+        int doubleFaults,
+        // return
+        double returnPointsWonFirstPercentage,
+        double returnPointsWonSecondPercentage,
+        int breakPointsWon,
+        int breakPointsPlayed,
+        double breakPointsWonPercentage,
+        double returnGamesWonPercentage,
+        // rally — winnersPercentage / unforcedErrorPercentage are fractions of ALL recorded
+        // points across the shared matches (not of the player's own points)
+        int winners,
+        int unforcedErrors,
+        double winnersPercentage,
+        double unforcedErrorPercentage,
+        // balance (completed matches only)
+        int matchesWon,
+        int matchesLost,
+        int setsWon,
+        int setsLost
+) {}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

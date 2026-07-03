@@ -1,0 +1,53 @@
+<mat-toolbar>
+  <mat-icon>sports_tennis</mat-icon>
+  <span class="app-title">{{ 'app.title' | translate }}</span>
+  <span class="spacer"></span>
+  <a mat-button routerLink="/players" routerLinkActive="active-link">
+    <mat-icon>people</mat-icon> {{ 'app.nav.players' | translate }}
+  </a>
+  <a mat-button routerLink="/matches/new" routerLinkActive="active-link">
+    <mat-icon>add_circle</mat-icon> {{ 'app.nav.newMatch' | translate }}
+  </a>
+  <button mat-button [matMenuTriggerFor]="langMenu" data-cy="lang-menu-trigger" [attr.aria-label]="'app.language.label' | translate">
+    <span class="flag" aria-hidden="true">{{ currentFlag() }}</span>
+    {{ language.current().toUpperCase() }}
+  </button>
+  <mat-menu #langMenu="matMenu">
+    @for (l of languages; track l.code) {
+      <button mat-menu-item [attr.data-cy]="'lang-' + l.code" (click)="switchLanguage(l.code)">
+        <span class="flag" aria-hidden="true">{{ l.flag }}</span>
+        <span>{{ l.label }}</span>
+      </button>
+    }
+  </mat-menu>
+  @if (authService.isAdmin()) {
+    <mat-chip class="admin-badge" data-cy="admin-badge" highlighted>
+      <mat-icon matChipAvatar>shield</mat-icon>
+      ADMIN
+    </mat-chip>
+  }
+  @if (userName()) {
+    <span class="user-name">{{ userName() }}</span>
+    <button mat-icon-button [matMenuTriggerFor]="userMenu" data-cy="user-menu-trigger" [attr.aria-label]="'app.menu.ariaLabel' | translate">
+      <mat-icon>account_circle</mat-icon>
+    </button>
+    <mat-menu #userMenu="matMenu">
+      <button mat-menu-item data-cy="export-my-data" (click)="exportMyData()">
+        <mat-icon>file_download</mat-icon>
+        <span>{{ 'app.menu.exportData' | translate }}</span>
+      </button>
+      <button mat-menu-item class="danger-item" data-cy="delete-my-data" (click)="deleteMyData()">
+        <mat-icon>delete_forever</mat-icon>
+        <span>{{ 'app.menu.deleteData' | translate }}</span>
+      </button>
+      <mat-divider />
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>{{ 'app.menu.logout' | translate }}</span>
+      </button>
+    </mat-menu>
+  }
+</mat-toolbar>
+<main>
+  <router-outlet />
+</main>

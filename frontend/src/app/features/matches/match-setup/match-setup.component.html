@@ -1,0 +1,64 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1>{{ 'matchSetup.title' | translate }}</h1>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <form [formGroup]="form" class="setup-form">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>{{ 'matchSetup.player1' | translate }}</mat-label>
+          <input matInput [formControl]="player1Input"
+                 [matAutocomplete]="auto1"
+                 placeholder="Name eintippen…">
+          <mat-autocomplete #auto1="matAutocomplete"
+                            [displayWith]="displayPlayer.bind(this)"
+                            (optionSelected)="onPlayer1Selected($event.option.value)">
+            @for (p of filtered1(); track p.id) {
+              <mat-option [value]="p">{{ p.lastName }} {{ p.firstName }}</mat-option>
+            }
+          </mat-autocomplete>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>{{ 'matchSetup.player2' | translate }}</mat-label>
+          <input matInput [formControl]="player2Input"
+                 [matAutocomplete]="auto2"
+                 placeholder="Name eintippen…">
+          <mat-autocomplete #auto2="matAutocomplete"
+                            [displayWith]="displayPlayer.bind(this)"
+                            (optionSelected)="onPlayer2Selected($event.option.value)">
+            @for (p of filtered2(); track p.id) {
+              <mat-option [value]="p">{{ p.lastName }} {{ p.firstName }}</mat-option>
+            }
+          </mat-autocomplete>
+        </mat-form-field>
+
+        <div class="form-row">
+          <label class="form-label">{{ 'matchSetup.setsToWin' | translate }}</label>
+          <mat-radio-group formControlName="setsToWin" class="radio-group">
+            <mat-radio-button [value]="2">2</mat-radio-button>
+            <mat-radio-button [value]="3">3</mat-radio-button>
+          </mat-radio-group>
+        </div>
+
+        <div class="form-row toggle-row">
+          <span>{{ 'matchSetup.matchTiebreak' | translate }}</span>
+          <mat-slide-toggle formControlName="matchTiebreak"></mat-slide-toggle>
+        </div>
+
+        <div class="form-row toggle-row">
+          <span>{{ 'matchSetup.shortSet' | translate }}</span>
+          <mat-slide-toggle formControlName="shortSet"></mat-slide-toggle>
+        </div>
+
+        <div class="actions">
+          <button mat-raised-button color="primary" (click)="startMatch()"
+                  [disabled]="form.invalid || loading()">
+            {{ 'matchSetup.start' | translate }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

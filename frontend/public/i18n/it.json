@@ -1,0 +1,254 @@
+{
+  "app": {
+    "title": "TSaS – Tennis Score & Statistic",
+    "nav": {
+      "players": "Giocatori",
+      "newMatch": "Nuovo match"
+    },
+    "menu": {
+      "exportData": "Esporta i miei dati",
+      "deleteData": "Elimina i dati del mio account",
+      "logout": "Esci",
+      "ariaLabel": "Menu utente"
+    },
+    "language": {
+      "label": "Lingua",
+      "de": "Tedesco",
+      "en": "Inglese",
+      "it": "Italiano",
+      "fr": "Francese"
+    },
+    "confirm": {
+      "deleteData": "Vuoi davvero eliminare definitivamente tutti i tuoi dati (giocatori, match, punti, analisi)?"
+    },
+    "toast": {
+      "exportDone": "Esportazione avviata — il file verrà scaricato.",
+      "exportFailed": "Esportazione non riuscita.",
+      "deleteDone": "Dati eliminati.",
+      "deleteFailed": "Eliminazione non riuscita."
+    }
+  },
+  "common": {
+    "save": "Salva",
+    "cancel": "Annulla",
+    "delete": "Elimina",
+    "edit": "Modifica",
+    "close": "Chiudi",
+    "back": "Indietro",
+    "loading": "Caricamento …",
+    "yes": "Sì",
+    "no": "No",
+    "ok": "OK"
+  },
+  "players": {
+    "title": "Giocatori",
+    "newPlayer": "Nuovo giocatore",
+    "edit": "Modifica giocatore",
+    "scope": {
+      "mine": "I miei",
+      "all": "Tutti i proprietari"
+    },
+    "table": {
+      "name": "Nome",
+      "ranking": "Classifica",
+      "gender": "Genere",
+      "handedness": "Mano dominante",
+      "backhand": "Rovescio",
+      "owner": "Proprietario",
+      "actions": "Azioni"
+    },
+    "form": {
+      "firstName": "Nome",
+      "lastName": "Cognome",
+      "gender": "Genere",
+      "ranking": "Classifica",
+      "handedness": "Mano dominante",
+      "backhandType": "Tipo di rovescio",
+      "nationality": "Nazionalità",
+      "birthDate": "Data di nascita"
+    },
+    "gender": {
+      "MALE": "Maschio",
+      "FEMALE": "Femmina"
+    },
+    "handedness": {
+      "RIGHT": "Destra",
+      "LEFT": "Sinistra"
+    },
+    "backhand": {
+      "ONE_HANDED": "A una mano",
+      "TWO_HANDED": "A due mani"
+    },
+    "actions": {
+      "headToHead": "Head-to-head",
+      "deactivate": "Disattiva",
+      "deleteHard": "Elimina definitivamente"
+    },
+    "empty": "Nessun giocatore registrato.",
+    "emptySearch": "Nessun giocatore trovato.",
+    "search": "Cerca…",
+    "confirm": {
+      "delete": "Eliminare definitivamente il giocatore {{name}}?",
+      "deactivate": "Disattivare il giocatore {{name}}? I dati rimangono per lo storico dei match."
+    },
+    "errors": {
+      "deletionBlocked": "Il giocatore partecipa ad almeno un match — eliminazione non possibile. Disattivare invece?"
+    }
+  },
+  "matchSetup": {
+    "title": "Nuovo match",
+    "player1": "Giocatore 1",
+    "player2": "Giocatore 2",
+    "setsToWin": "Set da vincere",
+    "matchTiebreak": "Match tiebreak nel set decisivo",
+    "shortSet": "Set breve (primo a 4)",
+    "start": "Inizia match",
+    "errors": {
+      "samePlayer": "I due giocatori devono essere diversi.",
+      "missingPlayer": "Seleziona entrambi i giocatori."
+    }
+  },
+  "score": {
+    "title": "Punteggio",
+    "currentSet": "Set attuale",
+    "set": "Set",
+    "tiebreak": "Tiebreak",
+    "matchTiebreak": "Match tiebreak",
+    "deuce": "Parità",
+    "advantage": "Vantaggio {{player}}",
+    "serving": "Al servizio",
+    "switchServer": "Cambia battitore",
+    "edit": "Modifica punteggio",
+    "end": "Termina match",
+    "endWalkover": "Termina per walkover",
+    "pointDialog": {
+      "title": "Punto per {{player}}",
+      "pointType": "Tipo di punto",
+      "stroke": "Colpo",
+      "direction": "Direzione",
+      "serveAttempt": "Servizio",
+      "firstServe": "Prima",
+      "secondServe": "Seconda",
+      "remark": "Nota (opzionale)",
+      "save": "Registra punto"
+    },
+    "endDialog": {
+      "title": "Termina match",
+      "walkover": "Walkover (un giocatore si ritira)",
+      "winner": "Vincitore",
+      "confirmFinish": "Terminare davvero il match?",
+      "confirmWalkover": "Registrare walkover per {{player}}?"
+    },
+    "pointType": {
+      "WINNER": "Vincente",
+      "UNFORCED_ERROR": "Errore non forzato",
+      "FORCED_ERROR": "Errore forzato",
+      "ACE": "Ace",
+      "DOUBLE_FAULT": "Doppio fallo",
+      "NET": "Rete",
+      "OUT_LONG": "Out (lungo)",
+      "OUT_WIDE": "Out (laterale)"
+    },
+    "stroke": {
+      "FOREHAND": "Dritto",
+      "BACKHAND": "Rovescio",
+      "SERVE": "Servizio",
+      "VOLLEY": "Volée",
+      "OVERHEAD": "Smash",
+      "DROPSHOT": "Smorzata",
+      "LOB": "Pallonetto"
+    },
+    "direction": {
+      "CROSS_COURT": "Incrociato",
+      "DOWN_THE_LINE": "Lungolinea",
+      "DOWN_THE_MIDDLE": "Centrale",
+      "T": "T",
+      "BODY": "Corpo"
+    }
+  },
+  "statistics": {
+    "title": "Statistiche",
+    "totalPoints": "Punti totali",
+    "winnersCount": "Vincenti",
+    "unforcedErrorsCount": "Errori non forzati",
+    "forcedErrorsCount": "Errori forzati",
+    "acesCount": "Ace",
+    "doubleFaultsCount": "Doppi falli",
+    "firstServePct": "Prima",
+    "secondServePct": "Seconda",
+    "breakPoints": "Break point",
+    "strokeDistribution": "Distribuzione dei colpi",
+    "directionDistribution": "Distribuzione delle direzioni"
+  },
+  "h2h": {
+    "title": "Head-to-head",
+    "selectPlayer1": "Giocatore 1",
+    "selectPlayer2": "Giocatore 2",
+    "matchesPlayed": "{{count}} match",
+    "matchesLabel": "match",
+    "sectionMatchBalance": "Bilancio match",
+    "sectionServe": "Servizio",
+    "sectionReturn": "Risposta",
+    "sectionRally": "Scambio",
+    "labels": {
+      "winsLosses": "Vittorie : Sconfitte",
+      "setBalance": "Bilancio set",
+      "firstServePct": "Prima %",
+      "firstServeWonPct": "Prima vinta %",
+      "secondServeWonPct": "Seconda vinta %",
+      "aces": "Ace",
+      "doubleFaults": "Doppi falli",
+      "returnFirstPct": "Punti in risposta prima %",
+      "returnSecondPct": "Punti in risposta seconda %",
+      "breakPoints": "Break point",
+      "returnGamesWonPct": "Game in risposta vinti %",
+      "winners": "Vincenti",
+      "unforcedErrors": "Errori non forzati"
+    },
+    "emptyHint": "Seleziona due giocatori diversi.",
+    "preparation": {
+      "button": "Richiedi preparazione AI contro {{opponent}}",
+      "thinking": "L'AI sta pensando …",
+      "sectionProfile": "Profilo {{opponent}}",
+      "sectionObservations": "Osservazioni dal head-to-head",
+      "sectionServe": "Strategia di servizio",
+      "sectionReturn": "Strategia di risposta",
+      "sectionRecos": "Raccomandazioni",
+      "meta": "Modello: {{model}} • Base: {{matches}} match in comune"
+    }
+  },
+  "analysis": {
+    "title": "Analisi match",
+    "generate": "Genera analisi AI",
+    "regenerate": "Rigenera",
+    "generating": "Generazione analisi …",
+    "keyMoments": "Momenti chiave",
+    "ownStrengths": "Punti di forza propri",
+    "ownWeaknesses": "Punti deboli propri",
+    "opponentStrengths": "Punti di forza dell'avversario",
+    "opponentWeaknesses": "Punti deboli dell'avversario",
+    "recommendations": "Raccomandazioni",
+    "model": "Modello",
+    "generatedAt": "Generata il",
+    "noAnalysis": "Nessuna analisi disponibile per questo match.",
+    "review": {
+      "accept": "Accetta",
+      "reject": "Rifiuta",
+      "reset": "Reimposta",
+      "notePlaceholder": "Motivo (facoltativo)"
+    },
+    "errors": {
+      "matchNotCompleted": "Il match non è ancora concluso.",
+      "insufficientData": "Il match ha troppo pochi punti per un'analisi.",
+      "llmFailed": "L'AI non è riuscita a produrre un'analisi."
+    }
+  },
+  "playerNotes": {
+    "title": "Note del coach",
+    "roleOwn": "proprio giocatore",
+    "roleOpponent": "avversario",
+    "placeholder": "Osservazioni su questo giocatore …",
+    "save": "Salva",
+    "saved": "salvato"
+  }
+}

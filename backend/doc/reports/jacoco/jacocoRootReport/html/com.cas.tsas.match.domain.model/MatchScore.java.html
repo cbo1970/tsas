@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MatchScore.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tsas-backend</a> &gt; <a href="index.source.html" class="el_package">com.cas.tsas.match.domain.model</a> &gt; <span class="el_source">MatchScore.java</span></div><h1>MatchScore.java</h1><pre class="source lang-java linenums">package com.cas.tsas.match.domain.model;
+
+import java.util.UUID;
+
+/**
+ * Domain entity representing the running score of a match: current points, games and
+ * sets per player, plus deuce/advantage state, the active set, the serving player and
+ * the final winner once decided. Mutated incrementally by {@code ScoringService} as
+ * points are applied. Pure POJO — no framework dependencies.
+ *
+ * &lt;p&gt;Expected invariants: counters are non-negative, {@code currentSet} ≥ 1,
+ * {@code servingPlayer} ∈ {1, 2, null}, {@code winner} ∈ {&quot;PLAYER1&quot;, &quot;PLAYER2&quot;, null},
+ * and {@code isAdvantagePlayer1} is only meaningful while {@code isDeuce} is true. These
+ * are upheld by the scoring logic rather than enforced per setter, since the score is
+ * built up through many small mutations.
+ */
+public class MatchScore {
+
+    private UUID id;
+    private UUID matchId;
+    private int pointsPlayer1;
+    private int pointsPlayer2;
+    private int gamesPlayer1;
+    private int gamesPlayer2;
+    private int setsPlayer1;
+    private int setsPlayer2;
+    private boolean isDeuce;
+    private Boolean isAdvantagePlayer1;
+    private int currentSet;
+    private boolean isDone;
+    private String winner;
+    private int acesPlayer1;
+    private int acesPlayer2;
+    private Integer servingPlayer;
+
+<span class="nc" id="L36">    public MatchScore() {}</span>
+
+    public MatchScore(UUID id, UUID matchId,
+                      int pointsPlayer1, int pointsPlayer2,
+                      int gamesPlayer1, int gamesPlayer2,
+                      int setsPlayer1, int setsPlayer2,
+                      boolean isDeuce, Boolean isAdvantagePlayer1,
+                      int currentSet, boolean isDone, String winner,
+                      int acesPlayer1, int acesPlayer2,
+<span class="fc" id="L45">                      Integer servingPlayer) {</span>
+<span class="fc" id="L46">        this.id = id;</span>
+<span class="fc" id="L47">        this.matchId = matchId;</span>
+<span class="fc" id="L48">        this.pointsPlayer1 = pointsPlayer1;</span>
+<span class="fc" id="L49">        this.pointsPlayer2 = pointsPlayer2;</span>
+<span class="fc" id="L50">        this.gamesPlayer1 = gamesPlayer1;</span>
+<span class="fc" id="L51">        this.gamesPlayer2 = gamesPlayer2;</span>
+<span class="fc" id="L52">        this.setsPlayer1 = setsPlayer1;</span>
+<span class="fc" id="L53">        this.setsPlayer2 = setsPlayer2;</span>
+<span class="fc" id="L54">        this.isDeuce = isDeuce;</span>
+<span class="fc" id="L55">        this.isAdvantagePlayer1 = isAdvantagePlayer1;</span>
+<span class="fc" id="L56">        this.currentSet = currentSet;</span>
+<span class="fc" id="L57">        this.isDone = isDone;</span>
+<span class="fc" id="L58">        this.winner = winner;</span>
+<span class="fc" id="L59">        this.acesPlayer1 = acesPlayer1;</span>
+<span class="fc" id="L60">        this.acesPlayer2 = acesPlayer2;</span>
+<span class="fc" id="L61">        this.servingPlayer = servingPlayer;</span>
+<span class="fc" id="L62">    }</span>
+
+<span class="fc" id="L64">    public UUID getId() { return id; }</span>
+<span class="nc" id="L65">    public void setId(UUID id) { this.id = id; }</span>
+
+<span class="fc" id="L67">    public UUID getMatchId() { return matchId; }</span>
+<span class="nc" id="L68">    public void setMatchId(UUID matchId) { this.matchId = matchId; }</span>
+
+<span class="fc" id="L70">    public int getPointsPlayer1() { return pointsPlayer1; }</span>
+<span class="fc" id="L71">    public void setPointsPlayer1(int pointsPlayer1) { this.pointsPlayer1 = pointsPlayer1; }</span>
+
+<span class="fc" id="L73">    public int getPointsPlayer2() { return pointsPlayer2; }</span>
+<span class="fc" id="L74">    public void setPointsPlayer2(int pointsPlayer2) { this.pointsPlayer2 = pointsPlayer2; }</span>
+
+<span class="fc" id="L76">    public int getGamesPlayer1() { return gamesPlayer1; }</span>
+<span class="fc" id="L77">    public void setGamesPlayer1(int gamesPlayer1) { this.gamesPlayer1 = gamesPlayer1; }</span>
+
+<span class="fc" id="L79">    public int getGamesPlayer2() { return gamesPlayer2; }</span>
+<span class="fc" id="L80">    public void setGamesPlayer2(int gamesPlayer2) { this.gamesPlayer2 = gamesPlayer2; }</span>
+
+<span class="fc" id="L82">    public int getSetsPlayer1() { return setsPlayer1; }</span>
+<span class="fc" id="L83">    public void setSetsPlayer1(int setsPlayer1) { this.setsPlayer1 = setsPlayer1; }</span>
+
+<span class="fc" id="L85">    public int getSetsPlayer2() { return setsPlayer2; }</span>
+<span class="fc" id="L86">    public void setSetsPlayer2(int setsPlayer2) { this.setsPlayer2 = setsPlayer2; }</span>
+
+<span class="fc" id="L88">    public boolean isDeuce() { return isDeuce; }</span>
+<span class="fc" id="L89">    public void setDeuce(boolean deuce) { isDeuce = deuce; }</span>
+
+<span class="fc" id="L91">    public Boolean getIsAdvantagePlayer1() { return isAdvantagePlayer1; }</span>
+<span class="fc" id="L92">    public void setIsAdvantagePlayer1(Boolean isAdvantagePlayer1) { this.isAdvantagePlayer1 = isAdvantagePlayer1; }</span>
+
+<span class="fc" id="L94">    public int getCurrentSet() { return currentSet; }</span>
+<span class="fc" id="L95">    public void setCurrentSet(int currentSet) { this.currentSet = currentSet; }</span>
+
+<span class="fc" id="L97">    public boolean isDone() { return isDone; }</span>
+<span class="fc" id="L98">    public void setDone(boolean done) { isDone = done; }</span>
+
+<span class="fc" id="L100">    public String getWinner() { return winner; }</span>
+<span class="fc" id="L101">    public void setWinner(String winner) { this.winner = winner; }</span>
+
+<span class="fc" id="L103">    public int getAcesPlayer1() { return acesPlayer1; }</span>
+<span class="fc" id="L104">    public void setAcesPlayer1(int acesPlayer1) { this.acesPlayer1 = acesPlayer1; }</span>
+
+<span class="fc" id="L106">    public int getAcesPlayer2() { return acesPlayer2; }</span>
+<span class="nc" id="L107">    public void setAcesPlayer2(int acesPlayer2) { this.acesPlayer2 = acesPlayer2; }</span>
+
+<span class="fc" id="L109">    public Integer getServingPlayer() { return servingPlayer; }</span>
+<span class="fc" id="L110">    public void setServingPlayer(Integer servingPlayer) { this.servingPlayer = servingPlayer; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

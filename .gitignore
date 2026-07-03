@@ -1,0 +1,14 @@
+# PostgreSQL data volume (Podman / Docker)
+volume/
+
+# macOS
+.DS_Store
+
+# Git worktrees
+.worktrees/
+.claude/
+.idea/
+.superpowers/
+
+# TEN-26 runbook result artifacts (generated, contain live OpenAI output)
+doc/runbooks/ten-26-results/

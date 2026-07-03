@@ -1,0 +1,97 @@
+{
+  "realm": "tsas",
+  "enabled": true,
+  "loginTheme": "tsas",
+  "registrationAllowed": true,
+  "registrationEmailAsUsername": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "verifyEmail": true,
+  "smtpServer": {
+    "host":           "${KC_SMTP_HOST:mailhog}",
+    "port":           "${KC_SMTP_PORT:1025}",
+    "from":           "${KC_SMTP_FROM:noreply@tsas.local}",
+    "fromDisplayName":"${KC_SMTP_FROM_NAME:TSaS}",
+    "replyTo":        "${KC_SMTP_REPLY_TO:noreply@tsas.local}",
+    "replyToDisplayName": "TSaS",
+    "envelopeFrom":   "${KC_SMTP_ENVELOPE_FROM:noreply@tsas.local}",
+    "starttls":       "${KC_SMTP_STARTTLS:false}",
+    "ssl":            "${KC_SMTP_SSL:false}",
+    "auth":           "${KC_SMTP_AUTH:false}",
+    "user":           "${KC_SMTP_USER:}",
+    "password":       "${KC_SMTP_PASSWORD:}"
+  },
+  "roles": {
+    "realm": [
+      {
+        "name": "default-roles-tsas",
+        "composite": true,
+        "composites": {
+          "realm": ["COACH"]
+        },
+        "clientRole": false,
+        "containerId": "tsas"
+      },
+      { "name": "COACH", "description": "Default role: standard coach access" },
+      { "name": "ADMIN", "description": "Full access across all owners" }
+    ]
+  },
+  "users": [
+    {
+      "username": "coach",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "coach@tsas.local",
+      "firstName": "Dev",
+      "lastName": "Coach",
+      "credentials": [
+        { "type": "password", "value": "coach", "temporary": false }
+      ],
+      "realmRoles": ["COACH"]
+    }
+  ],
+  "accessTokenLifespan": 900,
+  "ssoSessionMaxLifespan": 2592000,
+  "clients": [
+    {
+      "clientId": "tsas-frontend",
+      "name": "TSaS Frontend",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:4200/*",
+        "https://localhost:4200/*",
+        "https://localhost/*"
+      ],
+      "webOrigins": [
+        "http://localhost:4200",
+        "https://localhost:4200",
+        "https://localhost"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "protocolMappers": [
+        {
+          "name": "audience-tsas-frontend",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "tsas-frontend",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true",
+            "lightweight.claim": "false"
+          }
+        }
+      ]
+    }
+  ]
+}

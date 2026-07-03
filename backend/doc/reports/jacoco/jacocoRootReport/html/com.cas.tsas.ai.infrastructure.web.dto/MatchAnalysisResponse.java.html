@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MatchAnalysisResponse.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tsas-backend</a> &gt; <a href="index.source.html" class="el_package">com.cas.tsas.ai.infrastructure.web.dto</a> &gt; <span class="el_source">MatchAnalysisResponse.java</span></div><h1>MatchAnalysisResponse.java</h1><pre class="source lang-java linenums">package com.cas.tsas.ai.infrastructure.web.dto;
+
+import com.cas.tsas.ai.domain.model.AnalysisStatus;
+import com.cas.tsas.ai.domain.model.MatchAnalysis;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+<span class="fc" id="L10">public record MatchAnalysisResponse(</span>
+        UUID matchId,
+        AnalysisStatus status,
+        String keyMoments,
+        String ownStrengths,
+        String ownWeaknesses,
+        String opponentStrengths,
+        String opponentWeaknesses,
+        List&lt;RecommendationResponse&gt; recommendations,
+        String modelUsed,
+        Instant generatedAt,
+        String errorMessage
+) {
+
+    public static MatchAnalysisResponse from(MatchAnalysis a) {
+<span class="pc bpc" id="L25" title="1 of 2 branches missed.">        List&lt;RecommendationResponse&gt; recs = a.getRecommendations() == null</span>
+<span class="nc" id="L26">                ? List.of()</span>
+<span class="fc" id="L27">                : a.getRecommendations().stream()</span>
+<span class="fc" id="L28">                        .map(r -&gt; new RecommendationResponse(r.priority(), r.title(), r.detail()))</span>
+<span class="fc" id="L29">                        .toList();</span>
+<span class="fc" id="L30">        return new MatchAnalysisResponse(</span>
+<span class="fc" id="L31">                a.getMatchId(),</span>
+<span class="fc" id="L32">                a.getStatus(),</span>
+<span class="fc" id="L33">                a.getKeyMoments(),</span>
+<span class="fc" id="L34">                a.getOwnStrengths(),</span>
+<span class="fc" id="L35">                a.getOwnWeaknesses(),</span>
+<span class="fc" id="L36">                a.getOpponentStrengths(),</span>
+<span class="fc" id="L37">                a.getOpponentWeaknesses(),</span>
+                recs,
+<span class="fc" id="L39">                a.getModelUsed(),</span>
+<span class="fc" id="L40">                a.getGeneratedAt(),</span>
+<span class="fc" id="L41">                a.getErrorMessage());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

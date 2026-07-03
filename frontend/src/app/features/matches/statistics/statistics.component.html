@@ -1,0 +1,176 @@
+<div class="page">
+
+  <!-- Spielernamen -->
+  <div class="player-row">
+    <div class="player-name">{{ p1Name() }}</div>
+    <div></div>
+    <div class="player-name">{{ p2Name() }}</div>
+  </div>
+
+  <!-- Set-Scores -->
+  <div class="set-scores">
+    @for (set of setScores(); track $index) {
+      <div class="set-row" data-testid="set-row">
+        <div class="badge" [ngClass]="{ winner: set.p1 > set.p2 }" data-testid="badge-p1">
+          <span>{{ set.p1 }}</span>
+        </div>
+        <div class="set-label">Satz {{ $index + 1 }}</div>
+        <div class="badge" [ngClass]="{ winner: set.p2 > set.p1 }" data-testid="badge-p2">
+          <span>{{ set.p2 }}</span>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="divider"></div>
+
+  @if (stats(); as s) {
+    @let a = activeStats()!;
+
+    @if (sets().length > 0) {
+      <div class="set-tabs">
+        <button type="button" class="set-tab" [class.active]="selectedView() === 'total'"
+                data-testid="set-tab-total" (click)="selectView('total')">Gesamt</button>
+        @for (set of sets(); track set.setNumber) {
+          <button type="button" class="set-tab" [class.active]="selectedView() === set.setNumber"
+                  [attr.data-testid]="'set-tab-' + set.setNumber" (click)="selectView(set.setNumber)">Satz {{ set.setNumber }}</button>
+        }
+      </div>
+    }
+
+    <div class="stat-grid">
+
+      <!-- Gewonnene Punkte -->
+      <span class="val val-left">{{ a.p1.pointsWon }}</span>
+      <div data-testid="stat-row">
+        <div class="stat-label">Gewonnene Punkte</div>
+        <div class="bar">
+          <div class="bar-p1" [style.flex]="a.p1.pointsWon"></div>
+          <div class="bar-p2" [style.flex]="a.p2.pointsWon"></div>
+        </div>
+      </div>
+      <span class="val val-right" [ngClass]="{ leading: a.p2.pointsWon > a.p1.pointsWon }">{{ a.p2.pointsWon }}</span>
+
+      <!-- Asse -->
+      <span class="val val-left" data-testid="val-p1-aces">{{ a.p1.aces }}</span>
+      <div data-testid="stat-row">
+        <div class="stat-label">Asse</div>
+        <div class="bar">
+          <div class="bar-p1" [style.flex]="a.p1.aces || 1"></div>
+          <div class="bar-p2" [style.flex]="a.p2.aces || 1"></div>
+        </div>
+      </div>
+      <span class="val val-right" [ngClass]="{ leading: a.p2.aces > a.p1.aces }" data-testid="val-p2-aces">{{ a.p2.aces }}</span>
+
+      <!-- Winners -->
+      <span class="val val-left">{{ a.p1.winners }}</span>
+      <div data-testid="stat-row">
+        <div class="stat-label">Winners</div>
+        <div class="bar">
+          <div class="bar-p1" [style.flex]="a.p1.winners || 1"></div>
+          <div class="bar-p2" [style.flex]="a.p2.winners || 1"></div>
+        </div>
+      </div>
+      <span class="val val-right" [ngClass]="{ leading: a.p2.winners > a.p1.winners }">{{ a.p2.winners }}</span>
+
+      <!-- Forced Errors -->
+      <span class="val val-right" [ngClass]="{ leading: a.p1.forcedErrors <= a.p2.forcedErrors }">{{ a.p1.forcedErrors }}</span>
+      <div data-testid="stat-row">
+        <div class="stat-label">Forced Errors</div>
+        <div class="bar">
+          <div [class]="a.p1.forcedErrors <= a.p2.forcedErrors ? 'bar-good' : 'bar-err'" [style.flex]="a.p1.forcedErrors || 1"></div>
+          <div [class]="a.p2.forcedErrors <= a.p1.forcedErrors ? 'bar-good' : 'bar-err'" [style.flex]="a.p2.forcedErrors || 1"></div>
+        </div>
+      </div>
+      <span class="val val-right" [ngClass]="{ leading: a.p2.forcedErrors <= a.p1.forcedErrors }">{{ a.p2.forcedErrors }}</span>
+
+      <!-- Unforced Errors -->
+      <span class="val val-right" [ngClass]="{ leading: a.p1.unforcedErrors <= a.p2.unforcedErrors }">{{ a.p1.unforcedErrors }}</span>
+      <div data-testid="stat-row">
+        <div class="stat-label">Unforced Errors</div>
+        <div class="bar">
+          <div [class]="a.p1.unforcedErrors <= a.p2.unforcedErrors ? 'bar-good' : 'bar-err'" [style.flex]="a.p1.unforcedErrors || 1"></div>
+          <div [class]="a.p2.unforcedErrors <= a.p1.unforcedErrors ? 'bar-good' : 'bar-err'" [style.flex]="a.p2.unforcedErrors || 1"></div>
+        </div>
+      </div>
+      <span class="val val-right" [ngClass]="{ leading: a.p2.unforcedErrors <= a.p1.unforcedErrors }">{{ a.p2.unforcedErrors }}</span>
+
+      <!-- Doppelfehler -->
+      <span class="val val-right" [ngClass]="{ leading: a.p1.doubleFaults <= a.p2.doubleFaults }">{{ a.p1.doubleFaults }}</span>
+      <div data-testid="stat-row">
+        <div class="stat-label">Doppelfehler</div>
+        <div class="bar">
+          <div [class]="a.p1.doubleFaults <= a.p2.doubleFaults ? 'bar-good' : 'bar-err'" [style.flex]="a.p1.doubleFaults || 1"></div>
+          <div [class]="a.p2.doubleFaults <= a.p1.doubleFaults ? 'bar-good' : 'bar-err'" [style.flex]="a.p2.doubleFaults || 1"></div>
+        </div>
+      </div>
+      <span class="val val-right" [ngClass]="{ leading: a.p2.doubleFaults <= a.p1.doubleFaults }">{{ a.p2.doubleFaults }}</span>
+
+      <div style="grid-column:span 3" class="divider"></div>
+
+      <!-- 1. Aufschlag % -->
+      <span class="val val-left" data-testid="val-p1-first-serve">{{ pct(a.p1.firstServePercentage) }}</span>
+      <div data-testid="stat-row">
+        <div class="stat-label">1. Aufschlag %</div>
+        <div class="bar">
+          <div class="bar-p1" [style.flex]="a.p1.firstServePercentage * 100 || 1"></div>
+          <div class="bar-p2" [style.flex]="a.p2.firstServePercentage * 100 || 1"></div>
+        </div>
+      </div>
+      <span class="val val-right" [ngClass]="{ leading: a.p2.firstServePercentage > a.p1.firstServePercentage }" data-testid="val-p2-first-serve">{{ pct(a.p2.firstServePercentage) }}</span>
+
+      <!-- 2. Aufschlag % -->
+      <span class="val val-left">{{ pct(a.p1.secondServePercentage) }}</span>
+      <div data-testid="stat-row">
+        <div class="stat-label">2. Aufschlag %</div>
+        <div class="bar">
+          <div class="bar-p1" [style.flex]="a.p1.secondServePercentage * 100 || 1"></div>
+          <div class="bar-p2" [style.flex]="a.p2.secondServePercentage * 100 || 1"></div>
+        </div>
+      </div>
+      <span class="val val-right" [ngClass]="{ leading: a.p2.secondServePercentage > a.p1.secondServePercentage }">{{ pct(a.p2.secondServePercentage) }}</span>
+
+      <!-- Break Points -->
+      <span class="val val-left" data-testid="val-p1-break-points">{{ a.p1.breakPointsWon }}/{{ a.p1.breakPointsFaced }}</span>
+      <div data-testid="stat-row">
+        <div class="stat-label">Break Points</div>
+        <div class="bar">
+          <div class="bar-p1" [style.flex]="a.p1.breakPointsFaced || 1"></div>
+          <div class="bar-p2" [style.flex]="a.p2.breakPointsFaced || 1"></div>
+        </div>
+      </div>
+      <span class="val val-right" data-testid="val-p2-break-points">{{ a.p2.breakPointsWon }}/{{ a.p2.breakPointsFaced }}</span>
+
+      <div style="grid-column:span 3" class="divider"></div>
+
+      <!-- Vorhand / Rückhand -->
+      <span class="val val-left" style="font-size:11px;">VH {{ pct(a.p1.forehandPercentage) }}</span>
+      <div data-testid="stat-row">
+        <div class="stat-label">Vorhand / Rückhand</div>
+        <div class="bar">
+          <div class="bar-p1" [style.flex]="a.p1.forehandPercentage * 100 || 1"></div>
+          <div class="bar-p2" [style.flex]="a.p2.forehandPercentage * 100 || 1"></div>
+        </div>
+      </div>
+      <span class="val val-right" style="font-size:11px;">VH {{ pct(a.p2.forehandPercentage) }}</span>
+
+      <span class="val val-left" style="color:var(--text-subtle);font-size:11px;">RH {{ pct(1 - a.p1.forehandPercentage) }}</span>
+      <div></div>
+      <span class="val val-right" style="font-size:11px;">RH {{ pct(1 - a.p2.forehandPercentage) }}</span>
+
+    </div>
+  }
+
+  <div class="back-row">
+    <button mat-flat-button color="primary" data-testid="analysis-btn" (click)="goToAnalysis()">
+      Taktische Analyse
+    </button>
+  </div>
+
+  <div class="back-row">
+    <button mat-flat-button data-testid="back-btn" (click)="goBack()">
+      Zur Spielerübersicht
+    </button>
+  </div>
+
+</div>

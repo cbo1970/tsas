@@ -1,0 +1,26 @@
+import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  component: {
+    devServer: {
+      framework: 'angular',
+      bundler: 'webpack',
+      options: {
+        projectConfig: {
+          root: '',
+          sourceRoot: 'src',
+          buildOptions: {
+            tsConfig: 'tsconfig.cy.json',
+            polyfills: [],
+            assets: [],
+            styles: ['src/styles.scss'],
+            scripts: [],
+          },
+        },
+      },
+    },
+    specPattern: 'src/**/*.cy.ts',
+    supportFile: 'cypress/support/component.ts',
+    indexHtmlFile: 'cypress/support/component-index.html',
+  },
+});

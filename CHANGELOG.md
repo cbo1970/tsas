@@ -1,0 +1,95 @@
+# Changelog
+
+Alle nennenswerten Änderungen an TSaS (Tennis Score and Statistic) werden in dieser Datei dokumentiert.
+
+Das Format orientiert sich an [Keep a Changelog 1.1.0](https://keepachangelog.com/de/1.1.0/) und die Versionierung folgt [Semantic Versioning 2.0.0](https://semver.org/lang/de/). Solange die Major-Version `0.x` ist, gelten MINOR-Erhöhungen als potenziell breaking (Pre-1.0-Konvention).
+
+## [Unreleased]
+
+### Added
+- Mehrsprachigkeit (TEN-6, FA-21) — Vier UI-Sprachen: Deutsch (Default), Englisch, Italienisch, Französisch. Sprach-Picker in der Toolbar oben rechts mit Landesflagge pro Eintrag. ngx-translate 18 mit JSON-Locale-Files unter `frontend/public/i18n/{de,en,it,fr}.json`. Persistenz pro Nutzer in der neuen Tabelle `user_preferences` (V9-Migration, Primärschlüssel = Keycloak-`sub`, CHECK-Constraint auf die vier unterstützten Codes); Endpoints `GET`/`PUT /api/user-preferences`. Initialisierung beim App-Boot via `LanguageService` (Backend → `localStorage`-Fallback → `de`-Default). KI-Antworten (FA-11 Postmortem, FA-20 Vorbereitung) folgen der gewählten Sprache: `PromptBuilder` hängt eine sprachspezifische Direktive an den System-Prompt, `UserLanguagePort` im `ai-module` liefert die Sprache (Adapter im `app`-Modul). Hinweis: Locale-Keys sind für alle Templates definiert (vier vollständige JSON-Files); in dieser PR sind Toolbar, Players-Liste, Match-Setup, Head-to-Head (inkl. KI-Vorbereitungs-Karte) und Match-Analyse umgestellt. Die übrigen Screens (Score-Erfassung, Statistics, Dialoge) folgen inkrementell — Framework + Keys + Backend-Lokalisierung sind in dieser PR vollständig.
+- KI-Vorbereitung gegen einen Gegner (TEN-51, FA-20, Roadmap V2) — neuer Endpoint `POST /api/players/{ownPlayerId}/opponent-preparation/{opponentId}` generiert eine vorausschauende taktische Vorbereitung auf Basis der Head-to-Head-Statistik. Antwort enthält `opponentProfile`, `tacticalObservations`, `serveStrategy`, `returnStrategy` und 3–5 priorisierte Empfehlungen. Nicht persistiert (Head-to-Head ändert sich pro Match). LLM-Adapter (`LlmClientPort.generateOpponentPreparation`) wiederverwendet die OpenAI/Fake-Implementierungen aus FA-11; Prompts via `tsas.ai.prompt.opponentSystem` / `tsas.ai.prompt.opponentUserInstruction` extern überschreibbar. Rate-Limit teilt sich denselben Bucket wie die FA-11-Analyse (TEN-64). Im Frontend ist der Aufruf direkt auf der Head-to-Head-Seite verankert mit Spinner-Feedback und Ergebnis-Karte; 4 ITs in `OpponentPreparationControllerIT` decken Erfolgsfall + 404/422/400 ab.
+- Semantic Versioning + CHANGELOG eingeführt (TEN-67) — `allprojects { version = "0.1.0" }` im Backend, `0.1.0` im Frontend, ADR-14 im SAD §9.
+- Admin-UI im Frontend (TEN-65) — `AuthService` exponiert `roles`, `isAdmin`, `userId` als Signals aus dem Access-Token. Toolbar zeigt rotes `ADMIN`-Chip; Spieler-Liste hat für Admins einen Scope-Toggle „Meine / Alle Owner" (Default `Meine`, client-seitiger Filter auf `ownerId === userId`). Coaches sehen den Toggle nicht. `PlayerResponse` und `MatchResponse` enthalten neu `ownerId`. Cypress-Tests prüfen Admin-vs-Coach-Sicht; Vitest-Spec für `AuthService.roles`/`isAdmin`/`userId` ergänzt.
+- DSGVO-Workflow für Recht auf Löschung + Datenübertragbarkeit (TEN-66, FA-18/FA-19) — Backend `DataExportController` im `app`-Modul mit `GET /api/dataexport/export` (Art. 20, vollständiger JSON-Snapshot inkl. Header mit `userId`/`exportedAt`/`format`) und `DELETE /api/dataexport` (Art. 17, transaktionale Löschung in FK-Reihenfolge points → match_scores → match_analysis cascade → matches → players; Antwort mit Counts pro Aggregat). Frontend-Toolbar zeigt Benutzermenü (`account_circle`) mit „Daten exportieren" (Download als `tsas-export-YYYY-MM-DD.json`), „Konto-Daten löschen" (mit Bestätigungsdialog) und „Abmelden". `DataExportApiIT` testet Export + Delete + Cross-Tenant-Isolation. Datenschutzerklärung unter `doc/datenschutz/datenschutzerklaerung.md`.
+- Dokumentation: SAD (arc42) auf aktuellen Stand gebracht — neue Diagramme **Whitebox Gesamtsystem** (§5.1) und **Benutzer-Authentifizierung** (§6.3, Sequenz), **Datenmodell** als Krähenfuss-ER neu gezeichnet; **ADR-15** (nginx liefert die Angular-SPA aus) und **ADR-16** (MailHog im Dev, echtes SMTP in Prod); Health-Checks-Tabelle im README; Word-Export `doc/sad/TSaS_SAD.md`/`.docx` und druckbares Eigenständigkeits-PDF.
+
+### Changed
+- Dokumentations-Struktur konsolidiert: `docs/` in `doc/` zusammengeführt (Superpowers-Specs/Plans unter `doc/superpowers/`, Runbooks unter `doc/runbooks/`). `CLAUDE.md` und `README` aktualisiert (Multi-Modul-Layout, Angular-21-Frontend, H2 nur im `test`-Profil / Integrationstests via Testcontainers-PostgreSQL, Keycloak persistiert in Postgres statt H2-Volume). SAD-Inhalt überarbeitet: **FA-06** korrigiert (nur `winner` ist Pflicht — „Quick-Points"), §14 um Praxis-Reflexionen (KI-Erfahrungen) erweitert, diverse Passagen sprachlich geglättet.
+
+### Removed
+- Veraltete Dokumentation entfernt: abgelöste SAD-Version `TSaS_SAD_arc42_1` und das generierte `arc42_2.docx`-Build-Artefakt, obsolete Planungs-/Design-Dateien (`Feature_GAP.md`, `ToDo.md`, `TSaS_SAD_Luecken.md`, alte Scoring-/DB-Diagramme, `doc/deployment/`-Entwürfe, `doc/ui/`-Screenshots) sowie verwaistes IntelliJ-`out/`-Build-Output.
+
+### Fixed
+- Hibernate-SQL-Logs nicht mehr als INFO im `local`-Profil — `spring.jpa.show-sql` von `true` auf `false`. Jede Page-Navigation rauschte vorher die Konsole zu. Auf DEBUG-Level (`org.hibernate.SQL`) sind die Statements weiterhin verfügbar; in `application-local.yml` als kommentierter Block dokumentiert.
+- Backfill und NOT-NULL-Constraint auf primitive-typisierten Spalten von `match_scores` (V8-Migration). DBs, die vor der Flyway-Einführung aus Hibernate's auto-DDL entstanden, hatten die Spalten ohne NOT-NULL-Constraint; V1 markierte sich nur als „applied", ohne nachträglich zu härten. Beim Laden eines `MatchScoreJpaEntity` mit NULL-Wert in `aces_player*` (oder anderen `int`/`boolean`-Feldern) warf Hibernate `IllegalArgumentException` — der DSGVO-Datenexport (TEN-66) hat dies bei Bestandsdaten getriggert (HTTP 400). V8 backfillt sämtliche NULL-Werte auf die V1-Defaults (`0` / `FALSE` / `1` für `current_set`) und setzt `NOT NULL` + `DEFAULT` für alle elf betroffenen Spalten.
+
+### Security
+- Globaler `@RestControllerAdvice` mit RFC-7807 + Sanitization (TEN-61, STRIDE I5+I6) — `CommonExceptionHandler` erweitert um `ResponseStatusException` (Status aus Exception), `DataIntegrityViolationException` → 409 mit generischer Detail-Zeile (Original-SQL wird intern via WARN geloggt, nicht im Response-Body), `AccessDeniedException` → 403, sowie Catch-all für `RuntimeException`/`Error` → 500 ohne Stack-Trace. Klasse erbt jetzt von `ResponseEntityExceptionHandler`, damit Spring-Framework-Exceptions (`HttpMessageNotReadableException`, `HandlerMethodValidationException` etc.) ihre korrekten 4xx-Codes behalten. Ergänzend `server.error.include-message=never`/`include-stacktrace=never`/`include-binding-errors=never`/`include-exception=false` in `application.yml` als Sicherheitsnetz für Springs Whitelabel-Fallback. 7 Unit-Tests in `CommonExceptionHandlerTest` asserten konkret, dass weder SQL noch UUIDs noch Klassennamen in der `detail`-Zeile auftauchen.
+- Test-Profil-Guard gegen versehentliche Aktivierung in Prod (TEN-57, STRIDE E2) — `SecurityConfigLocal` aus `auth-module/src/main/` entfernt und als `TestProfileSecurityConfig` nach `auth-module/src/testFixtures/` verschoben (nicht mehr im Boot-Jar). Neuer `TestProfileGuard` als `EnvironmentPostProcessor` (registriert via `META-INF/spring/org.springframework.boot.env.EnvironmentPostProcessor.imports`) bricht den Boot mit `IllegalStateException` ab, wenn das `test`-Profil mit `prod`/`production`/`docker` kombiniert ist oder `spring.datasource.url` nicht auf eine In-Memory-H2-URL zeigt. `@PostConstruct`-Warning-Log bei aktivem `permitAll`-Bean. 8 Unit-Tests decken alle Kombinationen ab.
+- TLS + Secret-Hygiene Compose-Overlay (TEN-58, STRIDE T1+S3+S4+I3+D6) — neuer `docker/compose.prod.yml` schichtet sich auf den Dev-Compose und macht den Stack produktionsnah: TLS-terminierender nginx (`docker/frontend/nginx.prod.conf`, Container 8443 → Host 443, Port 8080 → 301-Redirect), Keycloak im `start`-Modus mit eigener Postgres-DB (Init-Script `docker/db/init/01-create-keycloak-db.sh`), alle Credentials/Secrets als `${VAR:?…}` required (keine Defaults), Mailhog entfernt, Backend-Port nicht mehr exponiert. Vorlage `.env.prod.example`; README + SAD §7.1.4 dokumentieren Aktivierung, TLS-Cert-Bereitstellung und Smoke-Verifikation.
+- JWT-Audience-Validierung im `JwtDecoder` (TEN-56, STRIDE S1) — `JwtClaimValidator("aud", a -> a != null && a.contains("tsas-frontend"))` ergänzt zum bestehenden Issuer-Validator über `DelegatingOAuth2TokenValidator`. Ohne diesen Check wäre jedes Token aus der `tsas`-Realm — auch eins für einen anderen Client — als gültig akzeptiert worden. Erwartete Audience konfigurierbar via `tsas.security.expected-audience` (Default `tsas-frontend`); Keycloak liefert das `aud`-Claim per `oidc-audience-mapper` auf dem `tsas-frontend`-Client. Unit-Tests decken 5 Pfade ab (Match, Match-in-Liste, Mismatch, leere Liste, kein Claim).
+- Container-Hardening nach STRIDE E5 (TEN-63): Backend-Image läuft als UID 10001 (`app`), Frontend wechselt auf `nginxinc/nginx-unprivileged:alpine` (UID 101, Container-Port 8080). `docker/compose.yml` aktiviert `read_only: true` (ausser Keycloak-Dev-Stack), `tmpfs` für `/tmp` und Service-spezifische Schreibpfade, `cap_drop: [ALL]`, `security_opt: [no-new-privileges:true]` sowie `mem_limit`/`cpus`-Limits pro Service. Healthchecks in den Dockerfiles. Frontend-Host-Port 80 mappt auf Container 8080.
+- Security-Header im nginx nach STRIDE T1 (TEN-62): `Strict-Transport-Security`, `Content-Security-Policy` (mit Keycloak-Whitelist für OAuth2/PKCE), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` und ein restriktiver `Permissions-Policy`-Block. Vererbt sich auch über die `/api/`-Proxy-Location und den SPA-`try_files`-Fallback.
+- Rate-Limits + E-Mail-Verifizierung gegen finanziellen DoS auf KI-Analyse-Endpoint (TEN-64, STRIDE D1+D2+S2): Per-User-Token-Bucket (Bucket4j 8.14) im Backend mit 5/Tag und 1/Min Default, `X-RateLimit-*`-Headern und HTTP 429 + Retry-After + ProblemDetail bei Überlauf; Micrometer-Counter `tsas.ai.calls.total{outcome,user}` exponiert via Actuator; Per-IP-`limit_req_zone` im nginx (5r/m, burst 5) auf `^/api/matches/[^/]+/analysis$`; Keycloak-Realm mit `verifyEmail: true` + SMTP-Konfig gegen einen lokalen Mailhog-Container (UI auf `http://localhost:8025`). SMTP-Felder im Realm-Export sind über `${KC_SMTP_*:default}`-Platzhalter parametrisiert — Prod-Wechsel via `.env`-Override (z. B. Sendgrid: `KC_SMTP_HOST=smtp.sendgrid.net`, `KC_SMTP_AUTH=true`, `KC_SMTP_USER`, `KC_SMTP_PASSWORD`).
+
+## [0.1.0] – 2026-06-23
+
+Erstes versioniertes Release des MVP — Web-App für Tennis-Score-Erfassung, Statistiken und KI-Match-Analyse, ausgeliefert via Docker Compose.
+
+### Added
+
+**Backend (Spring Boot 4, Java 25, Clean Architecture, Gradle Multi-Module)**
+- Spieler-CRUD inklusive Soft-Delete (TEN-55, FA-03/04/12/13).
+- Match-Lebenszyklus: Erstellen, Beenden, Walkover, manuelle Spielstand-Korrektur, Aufschläger setzen (FA-05/14/15/16).
+- Punkterfassung Punkt-für-Punkt mit ITF-Scoring (Punkte/Spiele/Sätze, Tiebreak, Match-Tiebreak, Short Set, Break-Point-Erkennung) im `ScoringService` (FA-06/07).
+- Head-to-Head-Statistik und Match-Einzel-Statistik aggregiert aus `points` (TEN-14, TEN-46, FA-08/17).
+- KI-Match-Analyse (Postmortem) via Spring AI 2.x mit OpenAI `gpt-4o-mini` als Default, strukturiertem JSON-Output und deterministischem Fallback-Adapter (TEN-15, TEN-26, FA-11).
+- Frontend-Komponenten für die KI-Analyse mit Spinner, Empfehlungs-Anzeige und HTTP-Code-spezifischer Fehlerbehandlung (TEN-28).
+- Owner-Binding und RBAC: Spieler und Matches sind mandantengebunden über `owner_id` (JWT-Sub), `COACH`- und `ADMIN`-Rollen aus dem Keycloak-Realm (TEN-55).
+- JPA-Auditing-Felder (`created_at`, `created_by`, `updated_at`, `updated_by`) auf Player/Match/Point sowie Correlation-ID-Servlet-Filter für strukturiertes Logging (TEN-59).
+- Bean Validation auf REST-DTOs: `@Size`-Limits auf Player-/RecordPoint-Feldern und typisierte Enums (TEN-60).
+- OpenAPI 3-Vertrag via springdoc-openapi unter `/v3/api-docs` und `/swagger-ui.html`, Security-Scheme `bearer-jwt` (TEN-61).
+- ArchitectureTest setzt Schichten- und Modulgrenzen (Domain framework-frei, einwärts gerichtete Abhängigkeiten) im Build-Gate durch.
+- Flyway-Migrationen V1–V7 als alleinige Schema-Quelle (Boot-Hibernate auf `validate` bzw. `none`).
+- JaCoCo-Coverage-Gate (85 % Line / 70 % Branch) modulübergreifend aggregiert; an `check` gekoppelt; aggregierter Report bei jedem CI-Lauf als Build-Artifact (TEN-37).
+- GitHub-Actions-Workflows `backend-ci.yml` und `frontend-ci.yml` als required status checks auf `develop`/`main`.
+
+**Frontend (Angular 21)**
+- Standalone-App mit `angular-oauth2-oidc` 20 (PKCE-S256, APP_INITIALIZER-basierter Login-Flow vor Routing).
+- Court-Scoring-Panel mit Inline-Scoring und Touch-optimiertem UI (TEN-32).
+- Match-Analyse-Route `/matches/:id/analysis` (TEN-28).
+- Statistiken-Seite (Match-Einzelstatistik, Head-to-Head).
+- Cypress Component Tests + Vitest Unit Tests, beide in der CI.
+- Externe HTML-Templates statt Inline-Templates (TEN-34).
+
+**Auth + Deployment**
+- Keycloak 26.6.1 mit Realm-Export `tsas` (PKCE-Public-Client, Self-Registration, Realm-Rollen `COACH`/`ADMIN`) (TEN-5).
+- Docker-Compose-Stack: PostgreSQL 16, Keycloak, Backend, Nginx-Frontend; HTTPS via selbstsigniertem Zertifikat.
+
+**Dokumentation**
+- SAD nach arc42 in Deutsch (`doc/sad/TSaS_SAD_arc42_1.md`) mit 17 funktionalen Anforderungen, 10 SMART-NfAs, 13 ADRs, Bausteinsicht, Laufzeitsicht mit zwei PlantUML-Sequenzdiagrammen, Verteilungssicht, Datenmodell, Querschnitts-Konzepten (TEN-47, TEN-61).
+- STRIDE-Threat-Analyse (`doc/sad/TSaS_STRIDE_Threat_Analysis.md`).
+- KI-Werkzeuge-Kapitel + Eigenständigkeitserklärung + Reflexion mit drei Veto-Entscheidungen (TEN-61).
+- Cloud-Deployment-Proposal (`doc/deployment/`).
+- Plan-/Spec-Sammlung unter `docs/superpowers/` als Beleg für den Spec-Plan-Implementierungs-Workflow.
+
+### Changed
+- Scoring-Konsolidierung: ursprünglich als eigenständiges `scoring-module` geplant, in `match-module` integriert (ADR-12).
+- Gemeinsames lesendes Domänenmodell statt Anti-Corruption-DTO-Mapping an jeder Modulgrenze (ADR-13).
+- Fehlerantworten folgen RFC 7807 `ProblemDetail` statt eines Ad-hoc-Formats; zentrale `@RestControllerAdvice`s pro Bereich.
+
+### Security
+- Alle API-Endpunkte (ausser `/actuator/health`, `/actuator/info`, `/v3/api-docs/**`, `/swagger-ui/**`) erfordern ein gültiges OAuth2-Bearer-Token aus dem Keycloak-Realm `tsas` (FA-02, QZ-05).
+- Cross-Tenant-Schutz über `owner_id` mit End-to-End-Tests gegen Cross-Tenant-404 (TEN-55).
+- Audit-Spalten ermöglichen Nachvollziehbarkeit von Datenänderungen (TEN-59).
+
+### Known Issues
+- STRIDE-Befund S1 (`aud`-Prüfung im JwtDecoder) noch offen — Mitigation in Folge-Ticket.
+- Self-Registration ohne E-Mail-Verifizierung (TEN-64).
+- AI-Endpoint ohne Rate-Limit (TEN-64).
+- Container laufen aktuell als Root (TEN-63).
+- Lokales `MatchAnalysisControllerIT` schlägt fehl, wenn `OPENAI_API_KEY` in der Shell gesetzt ist (Env-Leak in Spring-Boot-Relaxed-Binding) — CI nicht betroffen.
+
+[Unreleased]: https://github.com/cbo1970/tsas/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/cbo1970/tsas/releases/tag/v0.1.0

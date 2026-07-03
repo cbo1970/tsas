@@ -1,0 +1,61 @@
+<h2 mat-dialog-title>{{ player ? 'Spieler bearbeiten' : 'Neuer Spieler' }}</h2>
+<mat-dialog-content>
+  <form [formGroup]="form" class="dialog-form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Vorname</mat-label>
+      <input matInput formControlName="firstName" />
+      @if (form.get('firstName')?.hasError('required') && form.get('firstName')?.touched) {
+        <mat-error>Vorname ist erforderlich</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nachname</mat-label>
+      <input matInput formControlName="lastName" />
+      @if (form.get('lastName')?.hasError('required') && form.get('lastName')?.touched) {
+        <mat-error>Nachname ist erforderlich</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Geschlecht</mat-label>
+      <mat-select formControlName="gender">
+        <mat-option value="MALE">Männlich</mat-option>
+        <mat-option value="FEMALE">Weiblich</mat-option>
+        <mat-option value="OTHER">Divers</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Spielhand</mat-label>
+      <mat-select formControlName="handedness">
+        <mat-option value="RIGHT">Rechts</mat-option>
+        <mat-option value="LEFT">Links</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Backhand</mat-label>
+      <mat-select formControlName="backhandType">
+        <mat-option value="TWO_HANDED">Zweihändig</mat-option>
+        <mat-option value="ONE_HANDED">Einhändig</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Ranking (optional)</mat-label>
+      <input matInput type="text" formControlName="ranking" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nationalität (optional)</mat-label>
+      <input matInput formControlName="nationality" />
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Abbrechen</button>
+  <button mat-raised-button color="primary" (click)="save()" [disabled]="form.invalid">
+    Speichern
+  </button>
+</mat-dialog-actions>

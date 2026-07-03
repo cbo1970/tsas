@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GlobalExceptionHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tsas-backend</a> &gt; <a href="index.source.html" class="el_package">com.cas.tsas.app.infrastructure.web</a> &gt; <span class="el_source">GlobalExceptionHandler.java</span></div><h1>GlobalExceptionHandler.java</h1><pre class="source lang-java linenums">package com.cas.tsas.app.infrastructure.web;
+
+import com.cas.tsas.match.domain.exception.MatchNotFoundException;
+import com.cas.tsas.player.domain.exception.PlayerNotFoundException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+/**
+ * Behandelt die modulübergreifenden „nicht gefunden&quot;-Domain-Exceptions der fachlichen Module
+ * (Player, Match) → HTTP 404. Querschnittliche Fälle (Konflikte, Validierung, ungültige
+ * Argumente) übernimmt der {@code CommonExceptionHandler} im common-module; AI-spezifische
+ * Fälle der {@code AiExceptionHandler}. Alle Antworten folgen RFC 7807 ({@link ProblemDetail}).
+ */
+@RestControllerAdvice
+<span class="fc" id="L17">public class GlobalExceptionHandler {</span>
+
+    @ExceptionHandler(PlayerNotFoundException.class)
+    public ProblemDetail handlePlayerNotFound(PlayerNotFoundException ex) {
+<span class="fc" id="L21">        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());</span>
+    }
+
+    @ExceptionHandler(MatchNotFoundException.class)
+    public ProblemDetail handleMatchNotFound(MatchNotFoundException ex) {
+<span class="fc" id="L26">        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

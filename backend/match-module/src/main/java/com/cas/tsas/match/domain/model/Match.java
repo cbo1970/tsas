@@ -1,0 +1,60 @@
+package com.cas.tsas.match.domain.model;
+
+import java.util.UUID;
+
+/**
+ * Domain entity representing a tennis match (Begegnung) between two players. Holds the
+ * match configuration: {@code setsToWin} (sets required to win — 2 for best-of-3, 3 for
+ * best-of-5), whether a match tie-break replaces the final set, whether short sets are
+ * played, and the current {@link MatchStatus}. The live score is kept separately in
+ * {@link MatchScore}. Pure POJO — no framework dependencies.
+ */
+public class Match {
+
+    private UUID id;
+    private UUID ownerId;
+    private UUID player1Id;
+    private UUID player2Id;
+    private int setsToWin;
+    private boolean matchTiebreak;
+    private boolean shortSet;
+    private MatchStatus status;
+
+    public Match() {}
+
+    public Match(UUID id, UUID ownerId, UUID player1Id, UUID player2Id, int setsToWin,
+                 boolean matchTiebreak, boolean shortSet, MatchStatus status) {
+        this.id = id;
+        this.ownerId = ownerId;
+        this.player1Id = player1Id;
+        this.player2Id = player2Id;
+        this.setsToWin = setsToWin;
+        this.matchTiebreak = matchTiebreak;
+        this.shortSet = shortSet;
+        this.status = status;
+    }
+
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
+
+    public UUID getOwnerId() { return ownerId; }
+    public void setOwnerId(UUID ownerId) { this.ownerId = ownerId; }
+
+    public UUID getPlayer1Id() { return player1Id; }
+    public void setPlayer1Id(UUID player1Id) { this.player1Id = player1Id; }
+
+    public UUID getPlayer2Id() { return player2Id; }
+    public void setPlayer2Id(UUID player2Id) { this.player2Id = player2Id; }
+
+    public int getSetsToWin() { return setsToWin; }
+    public void setSetsToWin(int setsToWin) { this.setsToWin = setsToWin; }
+
+    public boolean isMatchTiebreak() { return matchTiebreak; }
+    public void setMatchTiebreak(boolean matchTiebreak) { this.matchTiebreak = matchTiebreak; }
+
+    public boolean isShortSet() { return shortSet; }
+    public void setShortSet(boolean shortSet) { this.shortSet = shortSet; }
+
+    public MatchStatus getStatus() { return status; }
+    public void setStatus(MatchStatus status) { this.status = status; }
+}

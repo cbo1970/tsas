@@ -1,0 +1,128 @@
+<mxfile host="Electron" agent="tsas-sad-gen">
+  <diagram id="TSaS_Backend_CleanArchitecture" name="TSaS_Backend_CleanArchitecture">
+    <mxGraphModel dx="1358" dy="982" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1260" pageHeight="860" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="n2" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontStyle=1;fontSize=18;" value="TSaS Backend – Clean Architecture (Klassen-Detail)" vertex="1">
+          <mxGeometry height="30" width="760" x="40" y="12" as="geometry" />
+        </mxCell>
+        <mxCell id="n3" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#555555;" value="Abhängigkeiten zeigen stets nach innen: Infrastructure → Application → Domain. Die Domain kennt keine äusseren Schichten." vertex="1">
+          <mxGeometry height="20" width="1000" x="40" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n4" parent="1" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#EAF2FB;strokeColor=#6C8EBF;verticalAlign=top;align=left;fontStyle=1;fontSize=13;spacingLeft=10;spacingTop=6;dashed=0;" value="infrastructure" vertex="1">
+          <mxGeometry height="190" width="1150" x="40" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="n5" parent="1" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=11;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;" value="&lt;b&gt;web — REST-Adapter&lt;/b&gt;&lt;br&gt;&lt;br&gt;• &lt;b&gt;Player&lt;/b&gt;Controller&lt;br&gt;• MatchController&lt;br&gt;• MatchStatisticsController&lt;br&gt;• HeadToHeadController&lt;br&gt;• MatchAnalysisController" vertex="1">
+          <mxGeometry height="140" width="250" x="60" y="105" as="geometry" />
+        </mxCell>
+        <mxCell id="n6" parent="1" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=11;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;" value="&lt;b&gt;persistence — JPA-Adapter&lt;/b&gt;&lt;br&gt;&lt;br&gt;• &lt;b&gt;Player&lt;/b&gt;PersistenceAdapter&lt;br&gt;• MatchPersistenceAdapter&lt;br&gt;• PointPersistenceAdapter&lt;br&gt;• MatchScorePersistenceAdapter&lt;br&gt;• MatchAnalysisPersistenceAdapter&lt;br&gt;• *JpaRepository «Spring Data»" vertex="1">
+          <mxGeometry height="140" width="250" x="330" y="105" as="geometry" />
+        </mxCell>
+        <mxCell id="n7" parent="1" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;" value="&lt;b&gt;llm — AI-Adapter&lt;/b&gt;&lt;br&gt;&lt;br&gt;• OpenAiLlmAdapter@ConditionalOnExpression&lt;br&gt;• FakeLlmClientAdapter (deterministischer Fallback)" vertex="1">
+          <mxGeometry height="140" width="280" x="880" y="105" as="geometry" />
+        </mxCell>
+        <mxCell id="n8" parent="1" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=11;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;" value="&lt;b&gt;security / config&lt;/b&gt;&lt;br&gt;&lt;br&gt;• SecurityConfig (OAuth2 Resource Server)&lt;br&gt;• CorsConfig&lt;br&gt;• AiModuleConfig" vertex="1">
+          <mxGeometry height="140" width="240" x="610" y="105" as="geometry" />
+        </mxCell>
+        <mxCell id="n9" parent="1" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#EAF7E9;strokeColor=#82B366;verticalAlign=top;align=left;fontStyle=1;fontSize=13;spacingLeft=10;spacingTop=6;dashed=0;" value="application" vertex="1">
+          <mxGeometry height="270" width="1150" x="40" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="n10" parent="1" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;" value="&lt;b&gt;port/in&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &lt;/b&gt;&lt;b style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;Use Cases&lt;/b&gt;&lt;div&gt;&lt;br&gt;&lt;b&gt;Player&lt;/b&gt;: Create · Update · Delete · Search&lt;br&gt;Match: Create · Get · RecordPoint ·&lt;br&gt;   SetScore · EndMatch · SetServingPlayer&lt;br&gt;Statistics: ComputeMatch ·&lt;br&gt;   ComputeHeadToHead&lt;br&gt;AI: Generate · Get MatchAnalysis&lt;/div&gt;" vertex="1">
+          <mxGeometry height="140" width="270" x="60" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="n11" parent="1" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;" value="&lt;b&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;services&lt;/b&gt;&lt;br&gt;&lt;br&gt;• &lt;b&gt;Player&lt;/b&gt;Service&lt;br&gt;• MatchService&lt;br&gt;• ScoringService&lt;br&gt;• MatchStatisticsService&lt;br&gt;• HeadToHeadStatisticsService&lt;br&gt;• MatchAnalysisService" vertex="1">
+          <mxGeometry height="140" width="200" x="530" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="n12" parent="1" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;align=left;verticalAlign=top;spacingLeft=8;spacingTop=4;" value="&lt;b&gt;port/out&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Ports&lt;br&gt;&lt;/b&gt;&lt;br&gt;• LoadPlayerPort · SavePlayerPort · DeletePlayerPort&lt;br&gt;• HasMatchesPort · FindActiveMatchPort&lt;br&gt;• LoadMatchPort · SaveMatchPort&lt;br&gt;• Load/SaveMatchScorePort · SavePointPort&lt;br&gt;• LoadPointsByMatchPort · CountPointsInGamePort&lt;br&gt;• LoadMatchesByPlayersPort&lt;br&gt;• LlmClientPort&lt;br&gt;• Load/SaveMatchAnalysisPort" vertex="1">
+          <mxGeometry height="150" width="310" x="845" y="365" as="geometry" />
+        </mxCell>
+        <mxCell id="n13" parent="1" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#FFF3E6;strokeColor=#D79B00;verticalAlign=top;align=left;fontStyle=1;fontSize=13;spacingLeft=10;spacingTop=6;dashed=0;" value="domain  (keine Framework-Abhängigkeiten)" vertex="1">
+          <mxGeometry height="170" width="1150" x="40" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="n14" parent="1" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=12;align=center;" value="Player&#xa;+ Gender, Handedness,&#xa;   BackhandType" vertex="1">
+          <mxGeometry height="110" width="220" x="60" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="n15" parent="1" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=12;align=center;" value="Match · Point · MatchScore&#xa;+ MatchStatus, PointType,&#xa;   StrokeType, Direction" vertex="1">
+          <mxGeometry height="110" width="280" x="315" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="n16" parent="1" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=12;align=center;" value="MatchStatistics ·&#xa;HeadToHeadStatistics&#xa;+ Stroke/DirectionDistribution" vertex="1">
+          <mxGeometry height="110" width="270" x="630" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="n17" parent="1" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=12;align=center;" value="MatchAnalysis&#xa;+ Recommendation,&#xa;   AnalysisStatus" vertex="1">
+          <mxGeometry height="110" width="220" x="935" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="n18" edge="1" parent="1" source="n5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;orthogonalLoop=1;html=1;fontSize=10;labelBackgroundColor=#FFFFFF;endArrow=block;strokeColor=#555555;fontColor=#333333;" target="n10" value="calls">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="185" y="330" />
+              <mxPoint x="185" y="330" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n19" edge="1" parent="1" source="n11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;orthogonalLoop=1;html=1;fontSize=10;labelBackgroundColor=#FFFFFF;endArrow=block;endFill=0;dashed=1;strokeColor=#6c8ebf;fontColor=#333333;" target="n10" value="implements">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n20" edge="1" parent="1" source="n11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;orthogonalLoop=1;html=1;fontSize=10;labelBackgroundColor=#FFFFFF;endArrow=block;strokeColor=#555555;fontColor=#333333;" target="n12" value="uses">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n21" edge="1" parent="1" source="n6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;orthogonalLoop=1;html=1;fontSize=10;labelBackgroundColor=#FFFFFF;endArrow=block;endFill=0;dashed=1;strokeColor=#000000;fontColor=#333333;" value="implements">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="475" y="280" />
+              <mxPoint x="950" y="280" />
+              <mxPoint x="950" y="369" />
+            </Array>
+            <mxPoint x="950" y="368" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n23" edge="1" parent="1" source="n11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;orthogonalLoop=1;html=1;fontSize=10;labelBackgroundColor=#FFFFFF;endArrow=block;strokeColor=#555555;fontColor=#333333;" target="n15" value="uses Domain">
+          <mxGeometry relative="1" y="-10" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n24" edge="1" parent="1" source="n11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;jettySize=auto;orthogonalLoop=1;html=1;fontSize=10;labelBackgroundColor=#FFFFFF;endArrow=block;strokeColor=#555555;fontColor=#333333;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="n14" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="630" y="580" />
+              <mxPoint x="170" y="580" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cOYZNNhCZX12TFYUFSkg-3" edge="1" parent="1" source="n7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;curved=0;dashed=1;endArrow=block;endFill=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1040" y="280" />
+              <mxPoint x="1070" y="280" />
+              <mxPoint x="1070" y="365" />
+            </Array>
+            <mxPoint x="1070" y="365" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cOYZNNhCZX12TFYUFSkg-4" connectable="0" parent="cOYZNNhCZX12TFYUFSkg-3" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;span style=&quot;color: rgb(51, 51, 51); font-size: 10px;&quot;&gt;implements&lt;/span&gt;&lt;br style=&quot;color: rgb(51, 51, 51); font-size: 10px;&quot;&gt;&lt;span style=&quot;color: rgb(51, 51, 51); font-size: 10px;&quot;&gt;LlmClientPort&lt;/span&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.2127" y="-1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="2xODWeFzXFXtiCKlaWfI-3" connectable="0" parent="1" style="group" value="" vertex="1">
+          <mxGeometry height="90" width="310" x="40" y="810" as="geometry" />
+        </mxCell>
+        <mxCell id="2xODWeFzXFXtiCKlaWfI-1" parent="2xODWeFzXFXtiCKlaWfI-3" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#BBBBBB;verticalAlign=top;align=left;fontStyle=1;fontSize=13;spacingLeft=10;spacingTop=6;dashed=0;" value="Legende" vertex="1">
+          <mxGeometry height="90" width="300" x="10" as="geometry" />
+        </mxCell>
+        <mxCell id="n25" parent="2xODWeFzXFXtiCKlaWfI-3" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#555555;" value="&lt;ul&gt;&lt;li&gt;«realize» (gestrichelt, offene Spitze) = implementiert&lt;/li&gt;&lt;li&gt;durchgezogen = benutzt&lt;/li&gt;&lt;/ul&gt;" vertex="1">
+          <mxGeometry height="50" width="280" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="2xODWeFzXFXtiCKlaWfI-5" connectable="0" parent="1" style="group" value="" vertex="1">
+          <mxGeometry height="140" width="480" x="390" y="810" as="geometry" />
+        </mxCell>
+        <mxCell id="2xODWeFzXFXtiCKlaWfI-6" parent="2xODWeFzXFXtiCKlaWfI-5" style="rounded=1;arcSize=3;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#BBBBBB;verticalAlign=top;align=left;fontStyle=1;fontSize=13;spacingLeft=10;spacingTop=6;dashed=0;" value="Zu lesen" vertex="1">
+          <mxGeometry height="140" width="364.52" x="15.48" as="geometry" />
+        </mxCell>
+        <mxCell id="2xODWeFzXFXtiCKlaWfI-4" parent="2xODWeFzXFXtiCKlaWfI-5" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=top;rounded=0;" value="&lt;b style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;Player&lt;/b&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;Controller ruft einen &lt;/span&gt;&lt;b style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;Player&lt;/b&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt; in-Port (Use Cases) auf dieser wird vom &lt;/span&gt;&lt;b style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;Player&lt;/b&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;Service implementiert. PlayerService nutzt diverse out-Ports z.B. den &lt;/span&gt;&lt;b style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;Player&lt;/b&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;PersistenceAdapter.&lt;/span&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Gleiches Muster für alle anderen Beziehungen&lt;/div&gt;" vertex="1">
+          <mxGeometry height="92" width="341.54" x="23.69" y="31" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

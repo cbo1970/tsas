@@ -1,0 +1,21 @@
+<div class="page">
+  <div class="title">Match-History @if (playerName()) { · {{ playerName() }} }</div>
+
+  @if (loaded() && entries().length === 0) {
+    <div class="empty" data-testid="history-empty">Noch keine abgeschlossenen Matches</div>
+  }
+
+  @for (e of entries(); track e.matchId) {
+    <div class="entry" data-testid="history-entry" (click)="openStatistics(e.matchId)">
+      <span class="opp">vs. {{ e.opponentName }}</span>
+      <span class="result" [class.won]="e.won" [class.lost]="!e.won">
+        {{ e.won ? 'S' : 'N' }} {{ e.setsWon }}:{{ e.setsLost }}
+      </span>
+      <span class="date">{{ e.completedAt | date:'dd.MM.yyyy HH:mm' }}</span>
+    </div>
+  }
+
+  <div class="back-row">
+    <button mat-button data-testid="back-btn" (click)="goBack()">Zur Spielerübersicht</button>
+  </div>
+</div>

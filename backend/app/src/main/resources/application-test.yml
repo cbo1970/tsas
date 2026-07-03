@@ -1,0 +1,42 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:tsasdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  ai:
+    openai:
+      api-key:   # leer → OpenAiLlmAdapter deaktiviert, FakeLlmClientAdapter übernimmt
+
+tsas:
+  ai:
+    min-points-for-analysis: 10
+    # Rate-limit defaults are loose for the shared IT context — the dedicated
+    # MatchAnalysisRateLimitIT overrides them via @TestPropertySource.
+    rate-limit:
+      per-day: 1000
+      per-minute: 100
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+  packages-to-scan: com.cas.tsas
+  paths-to-match: /api/**

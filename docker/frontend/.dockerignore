@@ -1,0 +1,5 @@
+node_modules
+dist
+.angular
+cypress/screenshots
+cypress/videos

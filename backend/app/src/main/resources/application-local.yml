@@ -1,0 +1,32 @@
+server:
+  ssl:
+    certificate: docker/keycloak/certs/localhost.pem
+    certificate-private-key: docker/keycloak/certs/localhost-key.pem
+
+spring:
+  jpa:
+    # `show-sql: true` routet jede Query über System.out und damit als INFO ins Logback —
+    # rauschte die Konsole bei jedem Page-Wechsel zu. Stattdessen `false`: Hibernate
+    # loggt SQL nur, wenn der Logger `org.hibernate.SQL` auf DEBUG gestellt ist
+    # (siehe `logging.level` unten — bei Bedarf temporär einkommentieren).
+    show-sql: false
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:18080/realms/tsas/protocol/openid-connect/certs
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level [%X{correlationId:-}] %logger{36} - %msg%n"
+  # Auf DEBUG stellen, wenn man die SQL-Statements + Bind-Parameter sehen will.
+  # level:
+  #   org.hibernate.SQL: DEBUG
+  #   org.hibernate.orm.jdbc.bind: TRACE
+
+tsas:
+  cors:
+    allowed-origins:
+      - "http://localhost:4200"
+      - "https://localhost:4200"

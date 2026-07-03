@@ -1,0 +1,59 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build, test & coverage gate
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      # ubuntu-latest ships a working Docker daemon, so Testcontainers starts the
+      # PostgreSQL container out of the box — none of the local rootless-Podman
+      # overrides (DOCKER_HOST / TESTCONTAINERS_RYUK_DISABLED) are needed here.
+      - name: Build, test & coverage gate
+        run: ./gradlew --no-daemon check
+
+      # Always produce the aggregate report, even when the gate fails, so the
+      # numbers are inspectable from the run artifacts.
+      - name: Generate aggregate coverage report
+        if: ${{ !cancelled() }}
+        run: ./gradlew --no-daemon jacocoRootReport
+
+      - name: Upload coverage report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: jacoco-coverage-report
+          path: backend/build/reports/jacoco/jacocoRootReport/
+          if-no-files-found: warn
+
+      - name: Upload test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results
+          path: backend/**/build/reports/tests/
+          if-no-files-found: ignore

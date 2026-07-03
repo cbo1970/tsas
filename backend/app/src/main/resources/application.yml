@@ -1,0 +1,86 @@
+server:
+  error:
+    # TEN-61 / STRIDE I5+I6 — Default-Error-Response soll keine internen Details leaken.
+    # Der globale @RestControllerAdvice (CommonExceptionHandler) liefert RFC 7807
+    # ProblemDetail; falls Spring's Whitelabel-Fallback je greift, bleiben Message und
+    # Stack-Trace versteckt.
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+    include-exception: false
+
+spring:
+  application:
+    name: tsas-backend
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/tsas}
+    username: ${DB_USERNAME:tsas}
+    password: ${DB_PASSWORD:tsas}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:https://localhost:8443/realms/tsas}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:https://localhost:8443/realms/tsas/protocol/openid-connect/certs}
+
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      chat:
+        options:
+          model: ${OPENAI_MODEL:gpt-4o-mini}
+          temperature: 0.4
+
+tsas:
+  ai:
+    min-points-for-analysis: ${TSAS_AI_MIN_POINTS:10}
+    # Per-user rate limit for POST /api/matches/{matchId}/analysis. Both bands
+    # must yield a token; defaults keep cost bounded for the MVP single-instance
+    # deployment. See AnalysisRateLimiter for the bucket semantics.
+    rate-limit:
+      per-day: ${TSAS_AI_RATE_LIMIT_PER_DAY:5}
+      per-minute: ${TSAS_AI_RATE_LIMIT_PER_MINUTE:1}
+    # LLM-Prompts sind externalisiert (siehe PromptProperties). Defaults liegen im Code und
+    # lassen sich hier oder per Umgebungsvariable überschreiben, z. B.:
+    # prompt:
+    #   system: ${TSAS_AI_PROMPT_SYSTEM:...}
+    #   user-instruction: ${TSAS_AI_PROMPT_USER_INSTRUCTION:...}
+
+  cors:
+    allowed-origins:
+      - "http://localhost:4200"
+      - "https://localhost:4200"
+      - "http://192.168.1.101:4200"
+      - "https://192.168.1.101:4200"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+  packages-to-scan: com.cas.tsas
+  paths-to-match: /api/**
