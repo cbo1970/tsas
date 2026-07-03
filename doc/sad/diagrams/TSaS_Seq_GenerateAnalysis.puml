@@ -1,7 +1,6 @@
 @startuml TSaS_Seq_GenerateAnalysis
 title KI-Match-Analyse generieren — Sequenz (Szenario §6.2)
 
-scale 1.3
 skinparam sequenceMessageAlign center
 skinparam shadowing false
 skinparam defaultFontName Helvetica
