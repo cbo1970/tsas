@@ -6,6 +6,10 @@ Das Format orientiert sich an [Keep a Changelog 1.1.0](https://keepachangelog.co
 
 ## [Unreleased]
 
+## [1.0.0] – 2026-07-04
+
+Erstes stabiles Release. Ab `1.0.0` gelten die strengen SemVer-Regeln — breaking changes nur noch bei einer MAJOR-Erhöhung (siehe ADR-14). Enthält alle seit `0.1.0` gesammelten Änderungen: Mehrsprachigkeit (DE/EN/IT/FR), KI-Gegner-Vorbereitung (Head-to-Head), Admin-UI, DSGVO-Workflow (Export + Löschung), gehärtete Container + Security-Header + Rate-Limits/E-Mail-Verifizierung, sowie eine umfassende Dokumentations- und SAD-Überarbeitung.
+
 ### Added
 - Mehrsprachigkeit (TEN-6, FA-21) — Vier UI-Sprachen: Deutsch (Default), Englisch, Italienisch, Französisch. Sprach-Picker in der Toolbar oben rechts mit Landesflagge pro Eintrag. ngx-translate 18 mit JSON-Locale-Files unter `frontend/public/i18n/{de,en,it,fr}.json`. Persistenz pro Nutzer in der neuen Tabelle `user_preferences` (V9-Migration, Primärschlüssel = Keycloak-`sub`, CHECK-Constraint auf die vier unterstützten Codes); Endpoints `GET`/`PUT /api/user-preferences`. Initialisierung beim App-Boot via `LanguageService` (Backend → `localStorage`-Fallback → `de`-Default). KI-Antworten (FA-11 Postmortem, FA-20 Vorbereitung) folgen der gewählten Sprache: `PromptBuilder` hängt eine sprachspezifische Direktive an den System-Prompt, `UserLanguagePort` im `ai-module` liefert die Sprache (Adapter im `app`-Modul). Hinweis: Locale-Keys sind für alle Templates definiert (vier vollständige JSON-Files); in dieser PR sind Toolbar, Players-Liste, Match-Setup, Head-to-Head (inkl. KI-Vorbereitungs-Karte) und Match-Analyse umgestellt. Die übrigen Screens (Score-Erfassung, Statistics, Dialoge) folgen inkrementell — Framework + Keys + Backend-Lokalisierung sind in dieser PR vollständig.
 - KI-Vorbereitung gegen einen Gegner (TEN-51, FA-20, Roadmap V2) — neuer Endpoint `POST /api/players/{ownPlayerId}/opponent-preparation/{opponentId}` generiert eine vorausschauende taktische Vorbereitung auf Basis der Head-to-Head-Statistik. Antwort enthält `opponentProfile`, `tacticalObservations`, `serveStrategy`, `returnStrategy` und 3–5 priorisierte Empfehlungen. Nicht persistiert (Head-to-Head ändert sich pro Match). LLM-Adapter (`LlmClientPort.generateOpponentPreparation`) wiederverwendet die OpenAI/Fake-Implementierungen aus FA-11; Prompts via `tsas.ai.prompt.opponentSystem` / `tsas.ai.prompt.opponentUserInstruction` extern überschreibbar. Rate-Limit teilt sich denselben Bucket wie die FA-11-Analyse (TEN-64). Im Frontend ist der Aufruf direkt auf der Head-to-Head-Seite verankert mit Spinner-Feedback und Ergebnis-Karte; 4 ITs in `OpponentPreparationControllerIT` decken Erfolgsfall + 404/422/400 ab.
@@ -91,5 +95,6 @@ Erstes versioniertes Release des MVP — Web-App für Tennis-Score-Erfassung, St
 - Container laufen aktuell als Root (TEN-63).
 - Lokales `MatchAnalysisControllerIT` schlägt fehl, wenn `OPENAI_API_KEY` in der Shell gesetzt ist (Env-Leak in Spring-Boot-Relaxed-Binding) — CI nicht betroffen.
 
-[Unreleased]: https://github.com/cbo1970/tsas/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/cbo1970/tsas/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/cbo1970/tsas/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/cbo1970/tsas/releases/tag/v0.1.0
