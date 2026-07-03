@@ -136,7 +136,7 @@ tsas/
 ├── frontend/                        # Angular 21 SPA (standalone, angular-oauth2-oidc + PKCE)
 ├── docker/                          # Compose stack (frontend/nginx, backend, db, keycloak, mailhog) + prod overlay
 ├── doc/
-│   ├── sad/                         # arc42 SAD (TSaS_SAD_arc42_2.md = current) + STRIDE analysis, diagrams
+│   ├── sad/                         # arc42 SAD — TSaS_SAD.md = maintainable source (TSaS_SAD.docx = pandoc export) + STRIDE, diagrams
 │   ├── superpowers/                 # Superpowers specs/ + plans/ (brainstorming & planning artifacts)
 │   └── runbooks/                    # Operational runbooks (e.g. AI-analysis smoke test)
 ├── .github/workflows/               # CI: backend-ci.yml, frontend-ci.yml
