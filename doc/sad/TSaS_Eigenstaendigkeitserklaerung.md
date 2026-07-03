@@ -3,6 +3,7 @@
 **Modul:** AISE — AI-Assisted Software Engineering · CAS · FFHS
 **Projekt:** Tennis Score and Statistic (TSaS)
 **Autor:** Christian Bonnhoff
+**GitHub:** https://github.com/cbo1970/tsas
 
 Ich, Christian Bonnhoff, bestätige hiermit, dass ich die vorliegende Projektarbeit selbstständig verfasst habe.
 
