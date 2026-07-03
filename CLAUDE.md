@@ -136,10 +136,16 @@ tsas/
 ├── frontend/                        # Angular 21 SPA (standalone, angular-oauth2-oidc + PKCE)
 ├── docker/                          # Compose stack (frontend/nginx, backend, db, keycloak, mailhog) + prod overlay
 ├── doc/
-│   └── sad/                         # arc42 SAD (TSaS_SAD_arc42_2.md = current) + STRIDE analysis, diagrams
+│   ├── sad/                         # arc42 SAD (TSaS_SAD_arc42_2.md = current) + STRIDE analysis, diagrams
+│   ├── superpowers/                 # Superpowers specs/ + plans/ (brainstorming & planning artifacts)
+│   └── runbooks/                    # Operational runbooks (e.g. AI-analysis smoke test)
 ├── .github/workflows/               # CI: backend-ci.yml, frontend-ci.yml
 └── CLAUDE.md
 ```
+
+**Superpowers workflow:** Spec and plan documents from brainstorming / writing-plans
+sessions live under `doc/superpowers/specs/` and `doc/superpowers/plans/` (moved from
+the former `docs/superpowers/`). Use this location for future superpowers sessions.
 
 Each backend module is internally layered per Clean Architecture / Ports & Adapters:
 `domain/` (model + exception, no framework deps) → `application/` (`port/in`, `port/out`, `service`)
