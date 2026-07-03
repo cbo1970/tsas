@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Builds TSaS_SAD_arc42_1.docx from the arc42 Markdown.
+"""Builds TSaS_SAD_arc42_2.docx from the arc42 Markdown.
 
 Pipeline:
   1. derive a Helvetica reference doc from pandoc's default (theme fonts swapped),
@@ -17,8 +17,8 @@ import os, re, subprocess, sys, tempfile, zipfile
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 DIAGRAMS = os.path.join(BASE, "diagrams")
-# Version stem: `python3 build_docx.py [N]` builds TSaS_SAD_arc42_{N}.{md,docx} (default 1).
-VER = sys.argv[1] if len(sys.argv) > 1 else "1"
+# Version stem: `python3 build_docx.py [N]` builds TSaS_SAD_arc42_{N}.{md,docx} (default 2).
+VER = sys.argv[1] if len(sys.argv) > 1 else "2"
 MD = os.path.join(BASE, f"TSaS_SAD_arc42_{VER}.md")
 OUT = os.path.join(BASE, f"TSaS_SAD_arc42_{VER}.docx")
 
