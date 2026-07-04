@@ -6,6 +6,9 @@ Das Format orientiert sich an [Keep a Changelog 1.1.0](https://keepachangelog.co
 
 ## [Unreleased]
 
+### Changed
+- Dokumentation: SAD ergänzt und korrigiert — einleitende Fliesstexte zu §3.1 (Fachlicher Kontext; Akteur-Tabelle um Mailserver und OpenAI LLM API ans Kontextdiagramm angeglichen) und §5.1 (Whitebox Gesamtsystem); Rechtschreib-/Grammatikkorrekturen im gesamten Dokument; leere Überschriften-Artefakte entfernt; kompaktes Inhaltsverzeichnis im Markdown. Docx-Export (`doc/sad/build_docx.py`) verbessert: manuell justierte Tabellen-Spaltenbreiten überleben den Rebuild, ein natives Word-Inhaltsverzeichnis (2 Ebenen, Auto-Update beim Öffnen) ersetzt die statische Linkliste, jedes Hauptkapitel beginnt auf einer neuen Seite. Signierte Eigenständigkeitserklärung als PDF unter `doc/sad/` abgelegt.
+
 ## [1.0.0] – 2026-07-04
 
 Erstes stabiles Release. Ab `1.0.0` gelten die strengen SemVer-Regeln — breaking changes nur noch bei einer MAJOR-Erhöhung (siehe ADR-14). Enthält alle seit `0.1.0` gesammelten Änderungen: Mehrsprachigkeit (DE/EN/IT/FR), KI-Gegner-Vorbereitung (Head-to-Head), Admin-UI, DSGVO-Workflow (Export + Löschung), gehärtete Container + Security-Header + Rate-Limits/E-Mail-Verifizierung, sowie eine umfassende Dokumentations- und SAD-Überarbeitung.
