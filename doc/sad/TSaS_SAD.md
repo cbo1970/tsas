@@ -13,137 +13,31 @@
 
 # Inhaltsverzeichnis
 
-[Software Architecture Document – Tennis Score and Statistic (TSaS) [1](#software-architecture-document-tennis-score-and-statistic-tsas)](#software-architecture-document-tennis-score-and-statistic-tsas)
+## Inhaltsverzeichnis
 
-[1. Einführung und Ziele [3](#einführung-und-ziele)](#einführung-und-ziele)
-
-[1.1 Aufgabenstellung [3](#aufgabenstellung)](#aufgabenstellung)
-
-[1.2 Qualitätsziele [3](#qualitätsziele)](#qualitätsziele)
-
-[1.3 Stakeholder [4](#stakeholder)](#stakeholder)
-
-[1.4 KI-Nutzen pro Kernfunktion [4](#ki-nutzen-pro-kernfunktion)](#ki-nutzen-pro-kernfunktion)
-
-[2. Randbedingungen [6](#_Toc234006225)](#_Toc234006225)
-
-[2.1 Technische Randbedingungen [6](#technische-randbedingungen)](#technische-randbedingungen)
-
-[2.2 Organisatorische Randbedingungen [7](#section)](#section)
-
-[3. Kontextabgrenzung [8](#_Toc234006228)](#_Toc234006228)
-
-[3.1 Fachlicher Kontext [8](#fachlicher-kontext)](#fachlicher-kontext)
-
-[3.2 Technischer Kontext [8](#technischer-kontext)](#technischer-kontext)
-
-[4. Lösungsstrategie [9](#_Toc234006231)](#_Toc234006231)
-
-[4.1 Architekturansatz: Modularer Monolith [9](#architekturansatz-modularer-monolith)](#architekturansatz-modularer-monolith)
-
-[4.2 Technologieentscheidungen [9](#technologieentscheidungen)](#technologieentscheidungen)
-
-[4.3 Release-Planung [10](#release-planung)](#release-planung)
-
-[5. Bausteinsicht [11](#bausteinsicht)](#bausteinsicht)
-
-[5.1 Whitebox Gesamtsystem [11](#whitebox-gesamtsystem)](#whitebox-gesamtsystem)
-
-[5.2 Backend-Module (Modularer Monolith) [11](#backend-module-modularer-monolith)](#backend-module-modularer-monolith)
-
-[5.3 Backend – Clean Architecture (Schichten & Ports) [14](#backend-clean-architecture-schichten-ports)](#backend-clean-architecture-schichten-ports)
-
-[6. Laufzeitsicht [15](#laufzeitsicht)](#laufzeitsicht)
-
-[6.1 Szenario: Punkt erfassen [15](#szenario-punkt-erfassen)](#szenario-punkt-erfassen)
-
-[6.2 Szenario: KI-gestützte Match-Analyse (Postmortem) [16](#szenario-ki-gestützte-match-analyse-postmortem)](#szenario-ki-gestützte-match-analyse-postmortem)
-
-[6.3 Szenario: Benutzer-Authentifizierung [17](#szenario-benutzer-authentifizierung)](#szenario-benutzer-authentifizierung)
-
-[7. Verteilungssicht [17](#verteilungssicht)](#verteilungssicht)
-
-[7.1 Infrastruktur [17](#infrastruktur)](#infrastruktur)
-
-[7.1.1 Container-Hardening (STRIDE E5) [19](#section-1)](#section-1)
-
-[7.1.2 Security-Header im nginx (STRIDE T1) [19](#security-header-im-nginx-stride-t1)](#security-header-im-nginx-stride-t1)
-
-[7.1.3 Rate-Limits + E-Mail-Verifizierung (STRIDE D1+D2+S2) [20](#section-2)](#section-2)
-
-[7.1.4 TLS & Secret-Hygiene im Prod-Overlay (STRIDE T1+S3+S4+I3+D6) [20](#_Toc234006248)](#_Toc234006248)
-
-[8. Querschnittliche Konzepte [21](#querschnittliche-konzepte)](#querschnittliche-konzepte)
-
-[8.1 Sicherheitskonzept [21](#sicherheitskonzept)](#sicherheitskonzept)
-
-[8.2 Persistenz [21](#persistenz)](#persistenz)
-
-[8.3 Fehlerbehandlung [22](#fehlerbehandlung)](#fehlerbehandlung)
-
-[8.4 Logging und Monitoring [23](#logging-und-monitoring)](#logging-und-monitoring)
-
-[8.5 Testkonzept [23](#testkonzept)](#testkonzept)
-
-[8.6 Continuous Integration / Build-Gate [24](#continuous-integration-build-gate)](#continuous-integration-build-gate)
-
-[8.7 Testergebnisse [24](#testergebnisse)](#testergebnisse)
-
-[9. Architekturentscheidungen [25](#_Toc234006257)](#_Toc234006257)
-
-[10. Qualitätsanforderungen [28](#_Toc234006258)](#_Toc234006258)
-
-[10.1 Funktionale Anforderungen (SMART) [28](#funktionale-anforderungen-smart)](#funktionale-anforderungen-smart)
-
-[10.2 Nicht-funktionale Anforderungen (SMART) [32](#nicht-funktionale-anforderungen-smart)](#nicht-funktionale-anforderungen-smart)
-
-[10.3 Abnahmekriterien je Kernfunktion [32](#abnahmekriterien-je-kernfunktion)](#abnahmekriterien-je-kernfunktion)
-
-[11. Datenmodell [34](#_Toc234006262)](#_Toc234006262)
-
-[11.1 Entitätenübersicht [35](#_Toc234006263)](#_Toc234006263)
-
-[12. Risiken und technische Schulden [36](#_Toc234006264)](#_Toc234006264)
-
-[13. KI-Werkzeuge im Projekt [37](#_Toc234006265)](#_Toc234006265)
-
-[13.1 Eingesetzte Werkzeuge [37](#eingesetzte-werkzeuge)](#eingesetzte-werkzeuge)
-
-[13.2 Einsatz pro Phase [38](#einsatz-pro-phase)](#einsatz-pro-phase)
-
-[13.3 Eigenständigkeit [38](#eigenständigkeit)](#eigenständigkeit)
-
-[14. Reflexion und Fazit [38](#reflexion-und-fazit)](#reflexion-und-fazit)
-
-[14.1 Veto 1 — Security-Konfiguration [39](#veto-1-security-konfiguration)](#veto-1-security-konfiguration)
-
-[14.2 Veto 2 — Architekturentscheidungen (ADRs) [39](#veto-2-architekturentscheidungen-adrs)](#veto-2-architekturentscheidungen-adrs)
-
-[14.3 Veto 3 — Tennis-Domänenregeln im Scoring [39](#veto-3-tennis-domänenregeln-im-scoring)](#veto-3-tennis-domänenregeln-im-scoring)
-
-[14.4 Human-in-the-Loop [39](#human-in-the-loop)](#human-in-the-loop)
-
-[14.5 Übertrag auf die künftige Arbeitsweise [39](#übertrag-auf-die-künftige-arbeitsweise)](#übertrag-auf-die-künftige-arbeitsweise)
-
-[14.6 Beobachtungen aus der Praxis [40](#beobachtungen-aus-der-praxis)](#beobachtungen-aus-der-praxis)
-
-[14.7 Konkrete Beispiele — akzeptiert und korrigiert [40](#konkrete-beispiele-akzeptiert-und-korrigiert)](#konkrete-beispiele-akzeptiert-und-korrigiert)
-
-[14.8 Geeignete und kritische Projekte für den KI-Einsatz [41](#geeignete-und-kritische-projekte-für-den-ki-einsatz)](#geeignete-und-kritische-projekte-für-den-ki-einsatz)
-
-[14.9 Gefahren und offene Fragen [41](#gefahren-und-offene-fragen)](#gefahren-und-offene-fragen)
-
-[14.10 Fazit [42](#fazit)](#fazit)
-
-[15. Glossar [42](#_Toc234006280)](#_Toc234006280)
+1. Einführung und Ziele
+2. Randbedingungen
+3. Kontextabgrenzung
+4. Lösungsstrategie
+5. Bausteinsicht
+6. Laufzeitsicht
+7. Verteilungssicht
+8. Querschnittliche Konzepte
+9. Architekturentscheidungen
+10. Qualitätsanforderungen
+11. Datenmodell
+12. Risiken und technische Schulden
+13. KI-Werkzeuge im Projekt
+14. Reflexion und Fazit
+15. Glossar
 
 ## 1. Einführung und Ziele
 
-Für die Vorbereitung auf ein Tennismatch fehlt eine Anwendung, mit der Eltern und Trainer Spielweise und Eigenheiten des eigenen Spielers und des Gegners erfassen und auswerten können. Diese Lücke schliesst **Tennis Score and Statistic (TSaS)**: eine Web-App (später zusätzlich iOS), mit der ein Match Punkt für Punkt mit fixen Attributen dokumentiert und statistisch ausgewertet wird. Zusätzlich kann mittels KI eine Matchanalyse durchgeführt werden um eine Strategie für zukünfige Matches gegen den gleichen Gegner zu entwickeln.
+Für die Vorbereitung auf ein Tennismatch fehlt eine Anwendung, mit der Eltern und Trainer Spielweise und Eigenheiten des eigenen Spielers und des Gegners erfassen und auswerten können. Diese Lücke schliesst **Tennis Score and Statistic (TSaS)**: eine Web-App (später zusätzlich iOS), mit der ein Match Punkt für Punkt mit fixen Attributen dokumentiert und statistisch ausgewertet wird. Zusätzlich kann mittels KI eine Matchanalyse durchgeführt werden, um eine Strategie für zukünftige Matches gegen den gleichen Gegner zu entwickeln.
 
 ### 1.1 Aufgabenstellung
 
-TSaS hält den Spielstand eines Tennismatches fest, dokumentiert jeden Punkt mit fixen Attributen und ermöglicht statistische Auswertungen. Ein Freitext Feld ermöglicht es dem Coach zusätzliche Angaben zu machen, welche dann der KI für die Matchanalyse mitgegeben werden.
+TSaS hält den Spielstand eines Tennismatches fest, dokumentiert jeden Punkt mit fixen Attributen und ermöglicht statistische Auswertungen. Ein Freitextfeld ermöglicht es dem Coach, zusätzliche Angaben zu machen, welche dann der KI für die Matchanalyse mitgegeben werden.
 
 ### 1.2 Qualitätsziele
 
@@ -200,8 +94,6 @@ Mit FA-20 wurde die zweite KI-Rolle (Gegner-Vorbereitung) implementiert.
 | RB-T06 | Architekturstil: **modularer Monolith** als Gradle-Multi-Module-Projekt nach **Clean Architecture** (Domain → Application → Infrastructure/Adapter, Abhängigkeiten nur einwärts; framework-freie Domäne). Modulübergreifendes **Verhalten** nur über Application-Layer-Interfaces (Ports & Adapters), keine Events. Stabile **Domänen-Wertobjekte** (`Point`, `Player`, `MatchStatistics`) dürfen modulübergreifend als lesendes Modell genutzt werden (ADR-13). Durchsetzung via `ArchitectureTest`. |
 | RB-T07 | Mailserver: Für die Entwicklung wurde MailHog verwendet, um E-Mail-Verifizierung und Passwort-Recovery zu testen. Für die Produktion muss dies durch einen transaktionalen Maildienst wie Mailgun oder SendGrid ersetzt werden. |
 
-### 
-
 ### 2.2 Organisatorische Randbedingungen
 
 - Selbsterklärend für Tennisspieler; Tennis-Fachbegriffe erlaubt.
@@ -214,6 +106,16 @@ Mit FA-20 wurde die zweite KI-Rolle (Gegner-Vorbereitung) implementiert.
 
 ### 3.1 Fachlicher Kontext
 
+TSaS unterstützt Trainer und Eltern bei der Vor- und Nachbereitung von Tennismatches. Sie sind die einzigen menschlichen Akteure des Systems: 
+Über den Browser verwalten sie Spielerprofile, erfassen ein Match Punkt für Punkt mit fixen Attributen und rufen daraus berechnete 
+Statistiken (z. B. Head-to-Head) sowie KI-gestützte Matchanalysen ab.
+
+Fachlich innerhalb der Systemgrenze liegen Spielstandführung nach ITF-Regelwerk, Punkteerfassung, Statistikberechnung und die 
+Aufbereitung der Analyse-Ergebnisse. Ausserhalb der Systemgrenze liegen die Identitätsverwaltung (Keycloak als IDP, 
+inkl. E-Mail-Verifizierung über einen Mailserver) und die eigentliche Sprachmodell-Inferenz für die Matchanalyse (OpenAI). 
+In späteren Versionen kommen weitere externe Systeme hinzu: Google als federated IDP (V2), die Swisstennis API für offizielle 
+Spieler- und Turnierdaten (V4) sowie ein Kamera-System zur automatischen Erfassung von Aufsprungpunkten (V5).
+
 ![TSaS – Fachlicher Kontext](diagrams/TSaS_Fachlicher_Kontext.svg)
 
 *Quelle: [`diagrams/TSaS_Fachlicher_Kontext.drawio`](diagrams/TSaS_Fachlicher_Kontext.drawio)*
@@ -222,6 +124,8 @@ Mit FA-20 wurde die zweite KI-Rolle (Gegner-Vorbereitung) implementiert.
 |----|----|
 | Trainer / Eltern | Erfassen Spielstände, rufen Statistiken ab, verwalten Spielerprofile. |
 | Keycloak (IDP) | Authentifizierung/Autorisierung via OAuth2/OIDC; ab V2 zusätzlich Google als federated IDP. |
+| Mailserver (SMTP) | Versand von E-Mail-Verifizierung und Passwort-Recovery durch Keycloak (Dev: MailHog, Prod: transaktionaler Maildienst, RB-T07). |
+| OpenAI LLM API | Sprachmodell-Inferenz für die KI-Matchanalyse (FA-11) und Gegner-Vorbereitung (FA-20) via Spring AI; deterministischer Fallback bei Nichtverfügbarkeit. |
 | Swisstennis API (V4+) | Zukünftiger Abruf offizieller Spieler-/Turnierdaten. |
 | Kamera-System (V5+) | Automatische Erfassung von Aufsprungpunkten („Hawk Eye very light”). |
 
@@ -249,7 +153,7 @@ Mit FA-20 wurde die zweite KI-Rolle (Gegner-Vorbereitung) implementiert.
 
 ### 4.1 Architekturansatz: Modularer Monolith
 
-Das Backend der Applikation wird für V1 als modularer Monolith implementiert da der Umfang noch zu gering ist, um die zusätzliche Komplexität einer Micorservice Architektur zu rechtfertigen. Ein modularer Monolith vereinfacht das Deployment, die Fehlerbehandlung und Recovery, wenn ein Service nicht verfügbar ist. Die interne Modularität erlaubt ein späteres Aufteilen in Services. Das Port-und-Adapter pattern erlaubt es, ein anderes Kommunikationsprotokoll zu implementieren ohne die Businesslogik zu änderen. Fürs Live Coaching in V2 wäre ein asynchroner Ablauf denkbar.
+Das Backend der Applikation wird für V1 als modularer Monolith implementiert, da der Umfang noch zu gering ist, um die zusätzliche Komplexität einer Microservice-Architektur zu rechtfertigen. Ein modularer Monolith vereinfacht das Deployment, die Fehlerbehandlung und Recovery, wenn ein Service nicht verfügbar ist. Die interne Modularität erlaubt ein späteres Aufteilen in Services. Das Port-und-Adapter-Pattern erlaubt es, ein anderes Kommunikationsprotokoll zu implementieren, ohne die Businesslogik zu ändern. Fürs Live Coaching in V2 wäre ein asynchroner Ablauf denkbar.
 
 ### 4.2 Technologieentscheidungen
 
@@ -276,6 +180,19 @@ Das Backend der Applikation wird für V1 als modularer Monolith implementiert da
 
 ### 5.1 Whitebox Gesamtsystem
 
+Auf Ebene 1 zerfällt das Gesamtsystem in vier eigenständige Bausteine, die als separate Container über Docker Compose 
+betrieben werden (siehe Kap. 7): das **Angular-Frontend** (SPA, via nginx ausgeliefert), das **Spring-Boot-Backend** 
+(REST-API als modularer Monolith), **PostgreSQL** als Persistenz sowie **Keycloak** als Identity Provider. 
+Diese Aufteilung trennt Präsentation, Fachlogik, Datenhaltung und Identitätsverwaltung; jeder Baustein ist unabhängig deploy- und skalierbar.
+
+Der Browser lädt die SPA über HTTPS und authentifiziert sich direkt bei Keycloak (OAuth2/OIDC mit PKCE). 
+Alle fachlichen Aufrufe gehen als REST/JSON mit Bearer-Token an das Backend, das die JWTs gegen den JWKS-Endpunkt von 
+Keycloak validiert. PostgreSQL hält sowohl die Applikationsdaten als auch den Keycloak-Realm (in getrennten Datenbanken). 
+Als externe Dienste kommen die OpenAI LLM API (via Spring AI, für die KI-Matchanalyse) und ein Mailserver (
+SMTP, für E-Mail-Verifizierung und Passwort-Recovery durch Keycloak) hinzu.
+
+Die interne Zerlegung des Backends in fachliche Module folgt in 5.2, die Schichtung innerhalb der Module in 5.3.
+
 ![TSaS – Whitebox Gesamtsystem](diagrams/TSaS_Whitebox_Gesamtsystem.svg)
 
 *Quelle: [`diagrams/TSaS_Whitebox_Gesamtsystem.drawio`](diagrams/TSaS_Whitebox_Gesamtsystem.drawio)*
@@ -287,7 +204,7 @@ Jedes Modul kapselt Domänenlogik, Repositories und REST-Endpunkte.
 | Modul | Verantwortlichkeit |
 |----|----|
 | `player-module` | Spielerprofile (Name, Geschlecht, Ranking, Spielhand, Backhand-Typ); CRUD + Suche. |
-| `match-module` | Matches mit Format (Gewinnsätze, Match-Tiebreak, Short Set), Sets/Spiele. **Umfasst Scoring** (`ScoringService`) sowie **Coach-Freitext-Notizen je Spieler**, FA-22). Das früher separate `scoring-module` ist hier konsolidiert (ADR-12). |
+| `match-module` | Matches mit Format (Gewinnsätze, Match-Tiebreak, Short Set), Sets/Spiele. **Umfasst Scoring** (`ScoringService`) sowie **Coach-Freitext-Notizen je Spieler** (FA-22). Das früher separate `scoring-module` ist hier konsolidiert (ADR-12). |
 | `statistics-module` | Statistiken (Head-to-Head, Winner%, UE%, First/Second Serve%, DF, Aces), on-the-fly aus `points` berechnet. (FA-8 und FA-17). |
 | `auth-module` | Keycloak-Integration: Token-Validierung, Rollenprüfung, Benutzerverwaltung. |
 | `ai-module` | KI-Analyse. Konsumiert `statistics-module`, `player-module` und `match-module`, ruft via `LlmClientPort` ein LLM und persistiert `MatchAnalysis` (1:1 zum Match). |
@@ -305,7 +222,7 @@ Jedes Modul ist intern nach Clean Architecture / Ports & Adapters aufgebaut; Abh
 - **Application** – Use-Case-Interfaces (`port/in`) mit `@Service`-Implementierungen (`PlayerService`, `ScoringService`, `MatchStatisticsService`, `MatchAnalysisService`, …) sowie Output-Ports (`port/out`, z. B. `LoadPlayerPort`, `LoadPointsByMatchPort`, `LlmClientPort`).
 - **Infrastructure** – Adapter: REST-Controller (`web`), JPA-Persistenz, LLM-Adapter (`OpenAiLlmAdapter`/`FakeLlmClientAdapter`), Security/Config.
 
-Die Austauschbarkeit der Adapter zeigt sich am `LlmClientPort`. Der produktiver `OpenAiLlmAdapter` und der deterministischer `FakeLlmClientAdapter` implementieren denselben Port — der Use Case bleibt unverändert. So kann der UseCase getestet werden.
+Die Austauschbarkeit der Adapter zeigt sich am `LlmClientPort`. Der produktive `OpenAiLlmAdapter` und der deterministische `FakeLlmClientAdapter` implementieren denselben Port — der Use Case bleibt unverändert. So kann der Use Case getestet werden.
 
 ![TSaS Backend – Clean Architecture (Klassen-Detail)](diagrams/TSaS_Backend_CleanArchitecture.svg)
 
@@ -346,7 +263,7 @@ Die Austauschbarkeit der Adapter zeigt sich am `LlmClientPort`. Der produktiver 
 
 ### 6.3 Szenario: Benutzer-Authentifizierung
 
-Das folgende Diagramm zeigt den Ablauf einer OAuth2 Autorisation / Authentifikation mit PKCE
+Das folgende Diagramm zeigt den Ablauf einer OAuth2-Autorisierung / Authentifizierung mit PKCE.
 
 ![TSaS – Benutzer-Authentifizierung (Sequenz)](diagrams/TSaS_Seq_Authentication.svg)
 
@@ -368,8 +285,6 @@ Deployment via Docker Compose.
 | `backend` | Spring Boot API (Java 25) | 8080 | UID 10001; im Prod-Setup nur intern erreichbar. |
 | `db` | PostgreSQL 16 | 5432 (intern) | Persistentes Volume, kein Port-Mapping nach aussen. |
 | `keycloak` | Keycloak 26 | 8443 (HTTPS), 18080 (HTTP, JWKS) | Realm `tsas` wird beim Start importiert. |
-
-### 
 
 ### 7.1.1 Container-Hardening (STRIDE E5)
 
@@ -397,8 +312,6 @@ Der nginx setzt auf jeder Antwort (Server-Scope, `always`) folgende Header:
 | `X-Content-Type-Options` | `nosniff` | Kein MIME-Sniffing. |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` | Kein Referrer-Leak. |
 | `Permissions-Policy` | `camera=(), microphone=(), geolocation=(), …` | Sperrt ungenutzte Browser-APIs. |
-
-### 
 
 ### 7.1.3 Rate-Limits und E-Mail-Verifizierung (STRIDE D1+D2+S2)
 
@@ -434,7 +347,7 @@ Der Basis-`compose.yml` ist auf Dev getrimmt (Default-Credentials, Mailhog, Keyc
 
 Alle API-Endpunkte (ausser Health-Check) sind durch OAuth2-Bearer-Tokens geschützt.\
 Das Frontend nutzt Authorization Code Flow mit PKCE.\
-Keycloak verwaltet Nutzer, Rollen und Sessions (V1 direkte Registrierung, ab zusätzlich V2 Google als federated IDP).
+Keycloak verwaltet Nutzer, Rollen und Sessions (V1 direkte Registrierung, ab V2 zusätzlich Google als federated IDP).
 
 - **Test-Profil-Guard (STRIDE E2).** Der `permitAll`-`SecurityFilterChain` für Integrationstests lebt ausschliesslich in `auth-module/src/testFixtures/` (nicht im Boot-Jar). Zusätzlich bricht `TestProfileGuard` (`EnvironmentPostProcessor`) den Boot ab, sobald das `test`-Profil mit `prod`/`docker` kombiniert wird oder die Datasource nicht auf In-Memory-H2 zeigt. Acht Unit-Tests decken die Kombinationen ab.
 - **JWT-Validierung (STRIDE S1).** Der `JwtDecoder` kombiniert drei Validatoren:
@@ -448,22 +361,22 @@ Keycloak verwaltet Nutzer, Rollen und Sessions (V1 direkte Registrierung, ab zus
 
 ### 8.2 Persistenz
 
-Der Zugriff auf die Datenbank erfolgt mit Spring Data JPA / Hibernate. Als Datenbank wird PostgreSQL verwendet. Jedes Modul hat seine eigene Repositories. Das Schema wird via Flyway erstellt und erweitert.
+Der Zugriff auf die Datenbank erfolgt mit Spring Data JPA / Hibernate. Als Datenbank wird PostgreSQL verwendet. Jedes Modul hat seine eigenen Repositories. Das Schema wird via Flyway erstellt und erweitert.
 
 - Flyway-Dependency im `app`-Modul; Skripte unter `db/migration/`, Schema `V{n}__{beschreibung}.sql`; `V1__baseline.sql` = initiales Schema.
 - Hibernate `ddl-auto` = `validate` (PostgreSQL — Default und `local`-Profil) bzw. `none` im `test`-Profil (H2) — Flyway ist einzige Schema-Quelle.
-- H2 wird nur noch im `test`-Profil (`application-test.yml`, in-memory) verwendet — für Unit-/Slice-Tests und einzelne Context-/Contract-Tests. Die IntegrationsTests laufen über Testcontainers gegen eine echte PostgreSQL Instanz (per `@DynamicPropertySource` verdrahtet; erfordert eine Container-Runtime). Das `local`-Profil nutzt ebenfalls PostgreSQL.
+- H2 wird nur noch im `test`-Profil (`application-test.yml`, in-memory) verwendet — für Unit-/Slice-Tests und einzelne Context-/Contract-Tests. Die Integrationstests laufen über Testcontainers gegen eine echte PostgreSQL-Instanz (per `@DynamicPropertySource` verdrahtet; erfordert eine Container-Runtime). Das `local`-Profil nutzt ebenfalls PostgreSQL.
 - Migrationen nutzen weitgehend ANSI-SQL (PostgreSQL- und H2-kompatibel), sodass dieselben Flyway-Skripte im `test`-Profil (H2) und auf PostgreSQL greifen.
 
 ### 8.3 Fehlerbehandlung
 
 Die Fehlerbehandlung ist deklarativ über `@RestControllerAdvice` gelöst. Das Antwortformat ist durchgängig RFC 7807 über Springs `ProblemDetail` (ersetzt das frühere Ad-hoc-Format); die Schemas der Fehlerantworten (400/404/409/422/502) sind via springdoc unter `/v3/api-docs` dokumentiert.\
-Der `GlobalExceptionHandler` behandelt die modulübergreifende “nicht gefunden”-Domain-Exceptions der fachlichen Module (Player/Match) und führen zu einem 404.\
+Der `GlobalExceptionHandler` behandelt die modulübergreifende “nicht gefunden”-Domain-Exceptions der fachlichen Module (Player/Match), die zu einem 404 führen.\
 Querschnittliche Fälle (Konflikte, Validierung, ungültige Argumente) übernimmt der `CommonExceptionHandler` im `common-module` und AI-spezifische Fälle der `AiExceptionHandler`.
 
 **Catch-all und Sanitization (STRIDE I5+I6).**
 
-Vier allgemeine Exception-Typen werden als Auffangnetz verwendet. So werden keine interne Details (Klassenpfade, SQL, Stack-Traces) nach aussen gegeben.
+Vier allgemeine Exception-Typen werden als Auffangnetz verwendet. So werden keine internen Details (Klassenpfade, SQL, Stack-Traces) nach aussen gegeben.
 
 | Exception | Status | Detail |
 |----|----|----|
@@ -485,7 +398,7 @@ Testpyramide: viele schnelle Unit-Tests (Domäne/Service), eine schmalere Integr
 
 - **Unit (Backend):** JUnit 5 + Mockito für Domänenlogik/Services (Scoring, Punkt-Attribution, Use-Case-Vorbedingungen) — ohne Spring-Context.
 - **Integration/API (Backend):** Spring Boot Test mit Testcontainers (PostgreSQL) + MockMvc (`AbstractIntegrationTest`). JWT via Spring Security Test gemockt (kein laufendes Keycloak nötig).
-- **Coverage-Gate:** JaCoCo, modulübergreifend aggregiert (die `I``ntegrationTests` im `app`-Modul decken alle Module ab; `jacocoRootReport`/`…CoverageVerification`). In `check` eingehängt, bricht unter **85 % Line / 70 % Branch** (Ist ~95 %/~80 %).
+- **Coverage-Gate:** JaCoCo, modulübergreifend aggregiert (die Integrationstests im `app`-Modul decken alle Module ab; `jacocoRootReport`/`…CoverageVerification`). In `check` eingehängt, bricht unter **85 % Line / 70 % Branch** (Ist ~95 %/~80 %).
 - **Frontend:** Vitest (`*.spec.ts`) + Cypress Component Testing (`*.cy.ts`, gemockte HTTP via `cy.intercept`).
 
 #### 8.5.1 Begründung der Werkzeuge
@@ -494,13 +407,11 @@ Testpyramide: viele schnelle Unit-Tests (Domäne/Service), eine schmalere Integr
 2)  *WireMock für den LLM-Adapter:* `OpenAiLlmAdapterTest` stubbt den OpenAI-HTTP-Endpoint und prüft den realen Serialisierungspfad deterministisch, offline, ohne Kosten.
 3)  *Coverage-Gate 85/70:* knapp unter Ist-Stand → fängt Regressionen ohne Brechen bei Schwankungen (ADR-11).
 
-#### 
-
 #### 8.5.2 Tests der KI-Anteile (Nichtdeterminismus, Guardrails, Fehlerpfade)
 
 Die KI-Anteile sind wegen Nichtdeterminismus, externer Abhängigkeit und Kosten gesondert abgesichert:
 
-- **Nichtdeterminismus eliminieren.** Auf Adapter-Ebene fixiert der WireMock-Stub die LLM-Antwort (`OpenAiLlmAdapterTest`). Auf Service-/IT-Ebene ersetzt der deterministische `FakeLlmClientAdapter` (aktiv via `@ConditionalOnMissingBean`, ohne API-Key) den Provider vollständig — die IT belegen das über `modelUsed = ``fake-llm`. So sind KI-Pfade reproduzierbar testbar, ohne dass eine generative Antwort das Ergebnis verwackelt.
+- **Nichtdeterminismus eliminieren.** Auf Adapter-Ebene fixiert der WireMock-Stub die LLM-Antwort (`OpenAiLlmAdapterTest`). Auf Service-/IT-Ebene ersetzt der deterministische `FakeLlmClientAdapter` (aktiv via `@ConditionalOnMissingBean`, ohne API-Key) den Provider vollständig — die IT belegen das über `modelUsed = fake-llm`. So sind KI-Pfade reproduzierbar testbar, ohne dass eine generative Antwort das Ergebnis verwackelt.
 - **Guardrails verifizieren.** `MatchAnalysisServiceTest` prüft die fachlichen Vorbedingungen explizit: `generate_throwsWhenMatchNotCompleted` (Match muss `COMPLETED` sein) und `generate_throwsWhenTooFewPoints` (Mindestpunktzahl). Die Kosten-Guardrail (Rate-Limit) ist separat in `MatchAnalysisRateLimitIT` abgedeckt (vgl. §7.1.3 / TEN-64).
 - **Fehlerpfade abdecken.** `generate_persistsFailedAnalysisAndRethrowsOnLlmError` belegt: ein LLM-Ausfall persistiert einen `FAILED`-Datensatz **und** propagiert den Fehler (→ HTTP 502). `MatchAnalysisControllerIT` prüft die HTTP-Abbildung end-to-end gegen echtes PostgreSQL (409 nicht beendet, 422 zu wenige Punkte, 404 unbekannt/cross-tenant).
 
@@ -535,7 +446,7 @@ Snapshot vom **2026-06-13** (`develop`, nach PR \#6). Reproduzierbar via `./grad
 
 **Interpretation.**\
 Abgedeckt ist die fachliche Kernlogik wie Tennis-Zählregeln, Punkt-Attribution/Statistik, Spieler-Regeln und KI-Analyse inkl. Fehlerpfade 502/422/409.\
-Die IntegrationTests fahren gegen eine echte PostgreSQL Instanz inkl. Flyway und JWT, der `ArchitectureTest` sichert die Einhaltung der Schichten-/Modulgrenzen.\
+Die Integrationstests fahren gegen eine echte PostgreSQL-Instanz inkl. Flyway und JWT, der `ArchitectureTest` sichert die Einhaltung der Schichten-/Modulgrenzen.\
 Die Branch-Coverage (80 %) liegt erwartungsgemäss unter der Line-Coverage — die offenen Zweige sind überwiegend defensive Pfade (Guards, Mapper-Null-Prüfungen, seltene Scoring-Verzweigungen). Das 70-%-Gate sichert eine Untergrenze, ohne für jeden trivialen Zweig einen Test zu erzwingen. Bewusste Lücken: OpenAI-Happy-Path gegen die echte API (über Fake/WireMock abgebildet; manuelle Verifikation), `main` und reine Config-Klassen.
 
 <span id="_Toc234006257" class="anchor"></span>
@@ -622,7 +533,7 @@ Ergänzend zu den Qualitätszielen (QZ-01–QZ-06, §1.2):
 
 ### 10.3 Abnahmekriterien je Kernfunktion
 
-Je Kernfunktion ein abnahmefähiges *Gegeben/Wenn/Dann*-Kriterium, verlinkt auf FA (§10.1) und QZ/NFA. **Erfüllt**, wenn der zugehörige automatisierte Test grün ist (Modul-Tests plus `IntegrationTests` gegen eine PostgreSQL Instanz, §8.5–8.7).
+Je Kernfunktion ein abnahmefähiges *Gegeben/Wenn/Dann*-Kriterium, verlinkt auf FA (§10.1) und QZ/NFA. **Erfüllt**, wenn der zugehörige automatisierte Test grün ist (Modul-Tests plus Integrationstests gegen eine PostgreSQL-Instanz, §8.5–8.7).
 
 | Kernfunktion | Abnahmekriterium (Kurz) | FA | QZ/NFA |
 |----|----|----|----|
@@ -639,11 +550,11 @@ Die funktionalen Kriterien sind durchgängig automatisiert abgedeckt (§8.7). Di
 
 ## 11. Datenmodell
 
-Durch die verwendete Datenbank (PostgrsSQL) ist das Datenmodell relational. Es wird keine Vector-DB verwendet auch nicht für den KI-Input. Dieser ist strukturierte Numerik (Statistiken und Metadaten), passt in einen Prompt-Context und braucht keine Embedding-Schicht (Begründung ADR-10; für V2 neu bewertet).
+Durch die verwendete Datenbank (PostgreSQL) ist das Datenmodell relational. Es wird keine Vector-DB verwendet, auch nicht für den KI-Input. Dieser ist strukturierte Numerik (Statistiken und Metadaten), passt in einen Prompt-Context und braucht keine Embedding-Schicht (Begründung ADR-10; für V2 neu bewertet).
 
 ![TSaS – Datenmodell](diagrams/TSaS_Datenmodell.svg)
 
-*Quelle: [`diagrams/TSaS_Datenmodell.drawio`](diagrams/TSaS_Datenmodell.drawio). Authoritatives Schema: Flyway **V1–V10**. Das Diagramm zeigt die Kernentitäten inkl. `match_player_notes`. Querschnittliche Spalten und `user_preferences` sind unten beschrieben.*<span id="_Toc234006263" class="anchor"></span>
+*Quelle: [`diagrams/TSaS_Datenmodell.drawio`](diagrams/TSaS_Datenmodell.drawio). Autoritatives Schema: Flyway **V1–V10**. Das Diagramm zeigt die Kernentitäten inkl. `match_player_notes`. Querschnittliche Spalten und `user_preferences` sind unten beschrieben.*<span id="_Toc234006263" class="anchor"></span>
 
 ### 11.1 Entitätenübersicht
 
@@ -709,7 +620,7 @@ Drei Bereiche wurden bewusst nicht an die KI delegiert. „Nicht delegiert” he
 
 ### 14.1 Veto 1 — Security-Konfiguration
 
-`SecurityConfig.java`, Keycloak-Realm-Export, JWT-Validator, CORS und Pfad-Permits wurden,wie der übrige Code, KI-gestützt erstellt, aber bewusst nicht als KI-Default übernommen. Jede sicherheitsrelevante Zeile wurde manuell gegen die OAuth2-/OIDC-Spec geprüft und KI-Vorschläge, wo nötig, verworfen.\
+`SecurityConfig.java`, Keycloak-Realm-Export, JWT-Validator, CORS und Pfad-Permits wurden, wie der übrige Code, KI-gestützt erstellt, aber bewusst nicht als KI-Default übernommen. Jede sicherheitsrelevante Zeile wurde manuell gegen die OAuth2-/OIDC-Spec geprüft und KI-Vorschläge, wo nötig, verworfen.\
 **Begründung:** Fehlerhafte Token-Validation (`aud`/`iss`, JWK-URL, Permit-Patterns) erzeugt direkt Auth-Bypass-Lücken. Generative Tools schlagen oft `permitAll()` als „lauffähigen” Default vor oder lassen die `aud`-Prüfung weg. Genau solche Vorschläge wurden hier zurückgewiesen.\
 **Beleg:** Die `aud`-Lücke (STRIDE-Befund S1, Hoch) wurde im manuellen Audit gefunden. Ein KI-Review hätte sie kaum als Lücke erkannt, da `createDefaultWithIssuer` formal „korrekt” ist.
 
@@ -729,7 +640,7 @@ Die ADRs in §9 wurden inhaltlich manuell entschieden, die KI half nur beim Ausf
 
 ### 14.3 Veto 3 — Tennis-Domänenregeln im Scoring
 
-`ScoringService.java` (Punkte, Spiele, Sätze, Tiebreak, Match-Tiebreak, Short Set, Einstand/Vorteil, Break-Point) wurde gegen das **ITF-Regelwerk manuell verifiziert**, statt der KI-generierten Version blind zu vertrauen. **Begründung:** LLMs haben unzuverlässige Domänenkenntnis bei Sport-Regelwerken (Edge Cases: Match-Tiebreak, Short Set, Tiebreak-Wechsel); falsche Regeln würde der Coach am Platz sofort bemerken. **Beleg:** 60 `match-module`-Tests, grösstenteils Edge-Case-Tests; die hohe Branch-Coverage (74,2 %) ist direktes Resultat dieser Manuell-Verifikation.
+`ScoringService.java` (Punkte, Spiele, Sätze, Tiebreak, Match-Tiebreak, Short Set, Einstand/Vorteil, Break-Point) wurde gegen das **ITF-Regelwerk manuell verifiziert**, statt der KI-generierten Version blind zu vertrauen. **Begründung:** LLMs haben unzuverlässige Domänenkenntnis bei Sport-Regelwerken (Edge Cases: Match-Tiebreak, Short Set, Tiebreak-Wechsel); falsche Regeln würde der Coach am Platz sofort bemerken. **Beleg:** 60 `match-module`-Tests, grösstenteils Edge-Case-Tests; die hohe Branch-Coverage (74,2 %) ist direktes Resultat dieser manuellen Verifikation.
 
 ### 14.4 Human-in-the-Loop
 
@@ -769,14 +680,14 @@ KI ist ein mächtiges Werkzeug für Implementierung und Architekturfindung, hat 
 
 ### 14.9 Gefahren und offene Fragen
 
-- **Kompetenzaufbau.** Unerfahrene Entwickler setzen Tickets mit KI schneller um, aber nicht zwangsläufig besser da sie noch nicht über das Wissen verfügen was gut oder weniger gut ist. Dir Frage für die Zukunft lautet “Wie bilden wir Juniors zu Seniors aus, wenn weniger Code selbst geschrieben wird?” Müssen sie künftig nur noch Code lesen können oder genügt das alleinige Verständnis für einen guten Aufbau, für gute Tickets und Architektur-Trade-offs zu entscheiden?
-- **Kontrollverlust.** Das Gefühl „das ist mein Code” schwindet. Bleibt die KI stecken, wird die manuelle Fehlersuche aufwendiger, weil man sich erst in den generierten Code einarbeiten muss. Evt. kommt hier dann in Zukunft auch KI (anderes LLM) zum Einsatz, was das Gefühl dann noch weiter verstärkt.
+- **Kompetenzaufbau.** Unerfahrene Entwickler setzen Tickets mit KI schneller um, aber nicht zwangsläufig besser, da sie noch nicht über das Wissen verfügen, was gut oder weniger gut ist. Die Frage für die Zukunft lautet: “Wie bilden wir Juniors zu Seniors aus, wenn weniger Code selbst geschrieben wird?” Müssen sie künftig nur noch Code lesen können, oder genügt das alleinige Verständnis, um über einen guten Aufbau, gute Tickets und Architektur-Trade-offs zu entscheiden?
+- **Kontrollverlust.** Das Gefühl „das ist mein Code” schwindet. Bleibt die KI stecken, wird die manuelle Fehlersuche aufwendiger, weil man sich erst in den generierten Code einarbeiten muss. Evtl. kommt hier dann in Zukunft auch KI (anderes LLM) zum Einsatz, was das Gefühl dann noch weiter verstärkt.
 - **Ethik und Regulatorik.** Wie weit darf KI in stark regulierten oder sicherheitskritischen Bereichen eingesetzt werden, und wie gehen wir mit den gesellschaftlichen Folgen um (Entscheidungshoheit, Überwachung, wegfallende Tätigkeiten)? Diese Fragen bleiben bewusst über den Projektrahmen hinaus offen.
-- **Arbeitsplatzverlust, Wertschätzung.** „Wozu brauche ich noch einen teuren SW-Ingenieur/Architekten? Ich lasse die KI schreiben, die ist schneller und billiger. Die Architektur interessiert mich nicht ich will Ergebnisse.“ Solchen Manager-Gedanken werden wir uns stellen müssen und unsere Antwort werden sie nicht verstehen, bis sie wieder eines Besseren belehrt werden. Siehe Ford.
+- **Arbeitsplatzverlust, Wertschätzung.** „Wozu brauche ich noch einen teuren SW-Ingenieur/Architekten? Ich lasse die KI schreiben, die ist schneller und billiger. Die Architektur interessiert mich nicht, ich will Ergebnisse.“ Solchen Manager-Gedanken werden wir uns stellen müssen und unsere Antwort werden sie nicht verstehen, bis sie wieder eines Besseren belehrt werden. Siehe Ford.
 
 ### 14.10 Fazit
 
-KI wird aus der Softwareentwicklung nicht mehr wegzudenken sein und bald so selbstverständlich genutzt werden, wie heute die Code-Completion in der IDE. Software-Ingenieure bleiben nötig, aber ihre Arbeit verschiebt sich. Ein Grossteil der Codierung wird die KI übernehmen, was bleibt sind die Codeabschnitte mit einer verzwickten Business-Logik, einem speziellen Algorithmus, bei dem die KI vielleicht noch etwas unterstützt. Wir werden uns daran gewöhnen präzisere Tickets zu formulieren, noch mehr mit dem Business zu sprechen die Requirements im Vorfeld noch genauer zu verstehen unsere Architekturentscheidungen mit Hilfe der KI zu untermauern oder zu revidieren.
+KI wird aus der Softwareentwicklung nicht mehr wegzudenken sein und bald so selbstverständlich genutzt werden, wie heute die Code-Completion in der IDE. Software-Ingenieure bleiben nötig, aber ihre Arbeit verschiebt sich. Ein Grossteil der Codierung wird die KI übernehmen; was bleibt, sind die Codeabschnitte mit einer verzwickten Business-Logik, einem speziellen Algorithmus, bei dem die KI vielleicht noch etwas unterstützt. Wir werden uns daran gewöhnen, präzisere Tickets zu formulieren, noch mehr mit dem Business zu sprechen, die Requirements im Vorfeld noch genauer zu verstehen und unsere Architekturentscheidungen mit Hilfe der KI zu untermauern oder zu revidieren.
 
 Für dieses Projekt hat sich die Kombination aus solider Vorarbeit (SAD, `CLAUDE.md`), klar delegierbaren Aufgaben und konsequent menschlicher Verifikation der kritischen Teile bewährt.
 
