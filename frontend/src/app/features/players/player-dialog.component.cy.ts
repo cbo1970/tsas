@@ -57,6 +57,19 @@ describe('PlayerDialogComponent responsive', () => {
     cy.get('[data-testid="dialog-cancel"]').should('be.visible');
   });
 
+  // M1: Am Handy kommt die Kopfzeile aus DialogHeaderComponent. Ohne
+  // mat-dialog-title bleibt role="dialog" ohne zugaenglichen Namen.
+  it('gibt dem Dialog am Handy einen zugänglichen Namen', () => {
+    openPlayerDialog(390, 736);
+    cy.get('.mat-mdc-dialog-container')
+      .invoke('attr', 'aria-labelledby')
+      .should('be.a', 'string')
+      .should('not.be.empty')
+      .then((id) => {
+        cy.get(`#${id}`).should('contain', 'Neuer Spieler');
+      });
+  });
+
   it('hat am Handy Tap-Targets von mindestens 44x44', () => {
     openPlayerDialog(390, 736);
     for (const id of ['dialog-save', 'dialog-cancel']) {

@@ -23,8 +23,7 @@ const FREE2: Player = {
   gender: 'FEMALE', handedness: 'RIGHT', backhandType: 'TWO_HANDED',
 };
 
-function mountSetup(players: Player[] = [FREE, BUSY, FREE2]) {
-  cy.intercept('GET', '**/api/players', players).as('getPlayers');
+function mountComponent() {
   cy.mount(MatchSetupComponent, {
     providers: [
       provideHttpClient(),
@@ -37,6 +36,11 @@ function mountSetup(players: Player[] = [FREE, BUSY, FREE2]) {
       })),
     ],
   });
+}
+
+function mountSetup(players: Player[] = [FREE, BUSY, FREE2]) {
+  cy.intercept('GET', '**/api/players', players).as('getPlayers');
+  mountComponent();
   cy.wait('@getPlayers');
 }
 
@@ -104,6 +108,35 @@ describe('MatchSetupComponent — Spieler aus der Namenssuche anlegen', () => {
     mountSetup([BUSY]);
     cy.get('[data-testid="player2-input"]').click();
     cy.get('[data-testid="create-player-option"]').should('not.exist');
+  });
+
+  // I2: Ein Spieler mit laufendem Match faellt aus der Auswahlliste, existiert
+  // aber. Boete die Maske hier das Anlegen an, entstuende ein zweiter Datensatz
+  // und Head-to-Head sowie saemtliche Statistiken spalteten sich still auf
+  // zwei Spieler-Ids auf.
+  it('bietet das Anlegen nicht an, wenn der Spieler ein laufendes Match hat (Spieler 1)', () => {
+    cy.get('[data-testid="player1-input"]').type('Nadal');
+    cy.get('[data-testid="create-player-option"]').should('not.exist');
+  });
+
+  it('bietet das Anlegen nicht an, wenn der Spieler ein laufendes Match hat (Spieler 2)', () => {
+    cy.get('[data-testid="player2-input"]').type('Nadal');
+    cy.get('[data-testid="create-player-option"]').should('not.exist');
+  });
+
+  // Dieselbe Luecke, solange die Spielerliste noch unterwegs ist: dann ist die
+  // gefilterte Liste leer, ohne dass irgendetwas ueber vorhandene Spieler
+  // bekannt waere.
+  it('bietet das Anlegen nicht an, solange die Spielerliste noch laedt', () => {
+    cy.intercept('GET', '**/api/players', { body: [FREE, BUSY, FREE2], delay: 6000 }).as('getPlayersSlow');
+    mountComponent();
+
+    cy.get('[data-testid="player1-input"]').type('Federer');
+    cy.get('[data-testid="create-player-option"]').should('not.exist');
+
+    cy.wait('@getPlayersSlow');
+    cy.get('[data-testid="create-player-option"]').should('not.exist');
+    cy.get('mat-option').contains('Federer Roger').should('exist');
   });
 
   it('öffnet den Dialog mit dem getippten Namen vorbefüllt', () => {

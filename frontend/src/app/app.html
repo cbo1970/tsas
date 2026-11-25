@@ -62,7 +62,8 @@
         ADMIN
       </mat-chip>
     }
-    <button mat-menu-item [matMenuTriggerFor]="langMenu" data-cy="lang-menu-trigger" [attr.aria-label]="'app.language.label' | translate">
+    <!-- Kein aria-label: der sichtbare Text nennt Sprache und aktuelle Sprache bereits. -->
+    <button mat-menu-item [matMenuTriggerFor]="langMenu" data-cy="lang-menu-trigger">
       <span class="flag" aria-hidden="true">{{ currentFlag() }}</span>
       <span>{{ 'app.language.label' | translate }} ({{ language.current().toUpperCase() }})</span>
     </button>

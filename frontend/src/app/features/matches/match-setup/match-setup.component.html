@@ -17,7 +17,7 @@
             @for (p of filtered1(); track p.id) {
               <mat-option [value]="p">{{ p.lastName }} {{ p.firstName }}</mat-option>
             } @empty {
-              @if (player1Query().trim()) {
+              @if (showCreatePlayer1()) {
                 <mat-option class="create-player-option" data-testid="create-player-option" [value]="player1Query()">
                   {{ 'matchSetup.createPlayer' | translate: { name: player1Query().trim() } }}
                 </mat-option>
@@ -37,7 +37,7 @@
             @for (p of filtered2(); track p.id) {
               <mat-option [value]="p">{{ p.lastName }} {{ p.firstName }}</mat-option>
             } @empty {
-              @if (player2Query().trim()) {
+              @if (showCreatePlayer2()) {
                 <mat-option class="create-player-option" data-testid="create-player-option" [value]="player2Query()">
                   {{ 'matchSetup.createPlayer' | translate: { name: player2Query().trim() } }}
                 </mat-option>

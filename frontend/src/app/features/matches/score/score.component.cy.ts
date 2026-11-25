@@ -749,6 +749,28 @@ describe('ScoreComponent — Panel folgt dem Aufschlag', () => {
 
 // ─── Untere Leiste, Notizen-Vollbild, beendetes Match ─────────────────────
 
+// I3: Die Breite steckt am Aufrufort (dialog.open), nicht in der Dialog-
+// Komponente — end-match-dialog.component.cy.ts mountet sie direkt und kann
+// das deshalb nicht pruefen.
+describe('ScoreComponent — Beenden-Dialog responsiv', () => {
+  function openEndMatchDialog(width: number, height: number) {
+    cy.viewport(width, height);
+    mountScore();
+    cy.get('[data-testid="end-match-btn"]').click();
+    cy.get('.mat-mdc-dialog-surface').should('be.visible');
+  }
+
+  it('fuellt bei 390x736 die volle Breite', () => {
+    openEndMatchDialog(390, 736);
+    cy.get('.mat-mdc-dialog-surface').invoke('outerWidth').should('be.gte', 380);
+  });
+
+  it('bleibt bei 1280x900 bei rund 500px', () => {
+    openEndMatchDialog(1280, 900);
+    cy.get('.mat-mdc-dialog-surface').invoke('outerWidth').should('be.within', 480, 520);
+  });
+});
+
 describe('ScoreComponent — untere Leiste und Notizen', () => {
   beforeEach(() => cy.viewport(360, 692));
 

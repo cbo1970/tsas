@@ -1,6 +1,6 @@
 import { Component, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialogConfig } from '@angular/material/dialog';
+import { MatDialogConfig, MatDialogModule } from '@angular/material/dialog';
 import { TranslatePipe } from '@ngx-translate/core';
 
 /** Panel class that makes the dialog surface a borderless full-screen sheet (styles in styles.scss). */
@@ -20,13 +20,15 @@ export function responsiveDialogConfig(isHandset: boolean): MatDialogConfig {
 @Component({
   selector: 'app-dialog-header',
   standalone: true,
-  imports: [MatButtonModule, TranslatePipe],
+  imports: [MatButtonModule, MatDialogModule, TranslatePipe],
   template: `
     <header class="dialog-header">
       <button mat-button type="button" data-testid="dialog-cancel" (click)="cancelled.emit()">
         {{ 'common.cancel' | translate }}
       </button>
-      <h2 class="dialog-header-title">{{ title() }}</h2>
+      <!-- mat-dialog-title loest den umschliessenden Dialog per DI auf und setzt
+           dort aria-labelledby: ohne das bleibt role="dialog" am Handy namenlos. -->
+      <h2 mat-dialog-title class="dialog-header-title">{{ title() }}</h2>
       <button mat-flat-button type="button" data-testid="dialog-save" [disabled]="saveDisabled()" (click)="saved.emit()">
         {{ 'common.save' | translate }}
       </button>

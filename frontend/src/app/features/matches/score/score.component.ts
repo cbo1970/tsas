@@ -524,7 +524,7 @@ export class ScoreComponent implements OnInit {
 
   endMatch() {
     const ref = this.dialog.open(EndMatchDialogComponent, {
-      width: '360px',
+      ...responsiveDialogConfig(this.layout.isHandset()),
       data: { player1Name: this.player1Name(), player2Name: this.player2Name() }
     });
     ref.afterClosed().subscribe((result: EndMatchDialogResult | undefined) => {

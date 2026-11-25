@@ -19,6 +19,12 @@ import { LayoutService } from '../../../core/layout/layout.service';
 import { responsiveDialogConfig } from '../../../core/layout/responsive-dialog';
 import { PlayerDialogComponent } from '../../players/player-dialog.component';
 
+/** Matches a player against a lower-cased, trimmed search term. */
+function matchesName(player: Player, term: string): boolean {
+  return player.lastName.toLowerCase().includes(term)
+      || player.firstName.toLowerCase().includes(term);
+}
+
 /** Splits a typed name at the first space: first word is the first name, the rest the last name. */
 export function splitName(input: string): { firstName: string; lastName: string } {
   const trimmed = input.trim();
@@ -84,11 +90,27 @@ export class MatchSetupComponent implements OnInit {
   players = signal<Player[]>([]);
   availablePlayers = computed(() => this.players().filter(p => !p.activeMatchId));
 
+  /**
+   * Die Antwort auf getPlayers ist da (auch wenn sie leer war). Solange sie
+   * aussteht oder fehlgeschlagen ist, weiss die Maske nichts ueber vorhandene
+   * Spieler und darf das Anlegen nicht anbieten.
+   */
+  private readonly playersLoaded = signal(false);
+
   player1Input = new FormControl<Player | string>('');
   player2Input = new FormControl<Player | string>('');
 
   filtered1 = computed(() => this.filterPlayers(this.player1Query()));
   filtered2 = computed(() => this.filterPlayers(this.player2Query()));
+
+  /**
+   * Das Anlegen haengt an der *vollen* Spielerliste, nicht an der auswaehlbaren:
+   * ein Spieler mit laufendem Match faellt zwar aus der Auswahl, existiert aber.
+   * Wuerde die Maske ihn zum Anlegen anbieten, entstuende ein zweiter Datensatz
+   * und Head-to-Head wie Statistiken spalteten sich still auf zwei Ids auf.
+   */
+  showCreatePlayer1 = computed(() => this.canCreatePlayer(this.player1Query()));
+  showCreatePlayer2 = computed(() => this.canCreatePlayer(this.player2Query()));
 
   protected readonly player1Query = signal('');
   protected readonly player2Query = signal('');
@@ -105,7 +127,7 @@ export class MatchSetupComponent implements OnInit {
 
   ngOnInit() {
     this.api.getPlayers().subscribe({
-      next: (players) => this.players.set(players),
+      next: (players) => { this.players.set(players); this.playersLoaded.set(true); },
       error: () => this.snackBar.open('Fehler beim Laden der Spieler', 'OK', { duration: 3000 })
     });
 
@@ -128,11 +150,13 @@ export class MatchSetupComponent implements OnInit {
 
   private filterPlayers(query: string): Player[] {
     const term = query.toLowerCase().trim();
-    return this.availablePlayers().filter(p =>
-      !term ||
-      p.lastName.toLowerCase().includes(term) ||
-      p.firstName.toLowerCase().includes(term)
-    );
+    return this.availablePlayers().filter(p => !term || matchesName(p, term));
+  }
+
+  private canCreatePlayer(query: string): boolean {
+    const term = query.toLowerCase().trim();
+    if (!term || !this.playersLoaded()) return false;
+    return !this.players().some(p => matchesName(p, term));
   }
 
   displayPlayer(player: Player | string | null): string {
