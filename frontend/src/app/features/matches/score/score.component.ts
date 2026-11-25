@@ -6,7 +6,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 
-import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../../core/services/api.service';
 import { Player } from '../../../core/models/player.model';
 import { MatchWithScore, MatchScore } from '../../../core/models/match.model';
@@ -16,6 +15,15 @@ import { PointType, StrokeType, RecordPointRequest } from '../../../core/models/
 import { PlayerNotesComponent } from '../notes/player-notes.component';
 import { ServePickerComponent } from './serve-picker.component';
 import { ObservationPanelComponent } from './observation-panel.component';
+
+const OBSERVATION_LABELS: Record<PointType, string> = {
+  ACE: 'Ass',
+  WINNER: 'Winner',
+  DOUBLE_FAULT: 'Doppelfehler',
+  FORCED_ERROR: 'Forced Error',
+  UNFORCED_ERROR: 'Unforced Error',
+  NET: 'Netz',
+};
 
 @Component({
   selector: 'app-score',
@@ -29,7 +37,6 @@ import { ObservationPanelComponent } from './observation-panel.component';
     PlayerNotesComponent,
     ServePickerComponent,
     ObservationPanelComponent,
-    TranslatePipe,
   ],
   templateUrl: './score.component.html',
   styles: [`
@@ -155,23 +162,60 @@ import { ObservationPanelComponent } from './observation-panel.component';
       color: var(--brand-strong);
     }
 
-    /* Coach-Notizen: volle Breite unter dem Umschalter */
-    .coach-notes {
+    /* ── Untere Leiste ── */
+    .bottom-bar {
       flex-shrink: 0;
-      max-height: 40vh;
-      overflow-y: auto;
-      background: var(--border);
-      border-top: 1px solid var(--text);
-      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 0 8px 8px;
     }
-    .coach-notes summary {
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: .04em;
+    .last-observation {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
       color: var(--text-muted);
-      padding: 8px 0;
     }
+    .notes-btn {
+      position: relative;
+      flex-shrink: 0;
+      min-height: 40px;
+      min-width: 44px;
+      padding: 0 16px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface-card);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .notes-dot {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--brand);
+    }
+
+    /* ── Notizen-Vollbild ── */
+    .notes-view { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+    .notes-head {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 8px;
+      background: var(--surface-card);
+      border-bottom: 1px solid var(--border);
+    }
+    .notes-title { font-size: 16px; font-weight: 700; }
+    .notes-body { flex: 1; min-height: 0; overflow-y: auto; padding: 12px; }
 
     /* ── Winner overlay ── */
     .winner-overlay {
@@ -215,6 +259,17 @@ export class ScoreComponent implements OnInit {
   serveAttempt     = signal<1 | 2 | null>(null);
   strokeTypeP1     = signal<StrokeType | null>(null);
   strokeTypeP2     = signal<StrokeType | null>(null);
+
+  /** Notizen-Vollbild innerhalb der Scoring-Route. */
+  showNotes = signal(false);
+  hasNotes  = signal(false);
+  /** Zuletzt erfolgreich erfasste Beobachtung (Anzeige in der unteren Leiste). */
+  lastObservation = signal<PointType | null>(null);
+
+  lastObservationText = computed(() => {
+    const o = this.lastObservation();
+    return o ? `Zuletzt: ${OBSERVATION_LABELS[o]}` : 'Noch nichts erfasst';
+  });
 
   /** Spieler, dessen Panel gerade sichtbar ist. */
   activePlayer = signal<1 | 2>(1);
@@ -279,9 +334,22 @@ export class ScoreComponent implements OnInit {
       next: (match) => {
         this.matchData.set(match);
         this.loadPlayers(match.player1Id, match.player2Id);
+        this.loadNotesIndicator();
       },
       error: () => this.snackBar.open('Match nicht gefunden', 'OK', { duration: 3000 })
     });
+  }
+
+  private loadNotesIndicator() {
+    this.api.getPlayerNotes(this.matchId).subscribe({
+      next: (notes) => this.hasNotes.set(notes.some(n => n.note.trim().length > 0)),
+      error: () => this.hasNotes.set(false),
+    });
+  }
+
+  closeNotes() {
+    this.showNotes.set(false);
+    this.loadNotesIndicator();
   }
 
   loadPlayers(p1Id: string, p2Id: string) {
@@ -319,6 +387,7 @@ export class ScoreComponent implements OnInit {
     this.api.recordPoint(this.matchId, request).subscribe({
       next: (updated) => {
         this.handlePointResponse(updated);
+        this.lastObservation.set(pointType);
         this.resetPointContext();
       },
       error: () => this.snackBar.open('Fehler beim Speichern', 'OK', { duration: 3000 })

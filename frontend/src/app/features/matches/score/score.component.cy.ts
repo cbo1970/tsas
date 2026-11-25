@@ -55,11 +55,11 @@ const activatedRouteStub = {
   snapshot: { paramMap: { get: () => 'match-1' } },
 };
 
-function mountScore(match: MatchWithScore = makeMatch(), player1: Player = PLAYER1, player2: Player = PLAYER2) {
+function mountScore(match: MatchWithScore = makeMatch(), player1: Player = PLAYER1, player2: Player = PLAYER2, notes: unknown[] = []) {
   cy.intercept('GET', '**/api/matches/match-1', match).as('getMatch');
   cy.intercept('GET', '**/api/players/p1', player1).as('getPlayer1');
   cy.intercept('GET', '**/api/players/p2', player2).as('getPlayer2');
-  cy.intercept('GET', '**/api/matches/*/notes', []).as('notes');
+  cy.intercept('GET', '**/api/matches/*/notes', notes).as('notes');
 
   cy.mount(ScoreComponent, {
     providers: [
@@ -677,5 +677,50 @@ describe('ScoreComponent — Panel folgt dem Aufschlag', () => {
 
     cy.get('[data-testid="panel"]').should('contain', 'Roger Federer');
     cy.get('[data-testid="switch-player-1"]').should('have.attr', 'aria-pressed', 'true');
+  });
+});
+
+// ─── Untere Leiste, Notizen-Vollbild, beendetes Match ─────────────────────
+
+describe('ScoreComponent — untere Leiste und Notizen', () => {
+  beforeEach(() => cy.viewport(360, 692));
+
+  it('zeigt unten die zuletzt erfasste Beobachtung und den Notiz-Button', () => {
+    mountScore();
+    cy.intercept('POST', '**/api/matches/match-1/points', makeUpdatedScore(1, 0)).as('recordPoint');
+    cy.get('[data-testid="last-observation"]').should('not.contain', 'Winner');
+    cy.get('[data-testid="obs-WINNER"]').click();
+    cy.wait('@recordPoint');
+    cy.get('[data-testid="last-observation"]').should('contain', 'Winner');
+    cy.get('[data-testid="notes-btn"]').should('be.visible')
+      .invoke('outerHeight').should('be.gte', 40);
+  });
+
+  it('öffnet die Notizen als Vollbild und kehrt zurück', () => {
+    mountScore();
+    cy.get('[data-testid="notes-btn"]').click();
+    cy.get('[data-testid="player-notes"]').should('be.visible');
+    cy.get('[data-testid="panel"]').should('not.exist');
+    cy.get('[data-testid="notes-back"]').click();
+    cy.get('[data-testid="panel"]').should('be.visible');
+    cy.get('[data-testid="player-notes"]').should('not.exist');
+  });
+
+  it('gibt dem Notiz-Button einen Punkt, wenn Notizen existieren', () => {
+    mountScore(makeMatch(), PLAYER1, PLAYER2, [{ playerId: 'p1', note: 'Rückhand schwach' }]);
+    cy.get('[data-testid="notes-dot"]').should('exist');
+  });
+
+  it('zeigt ohne Notizen keinen Punkt', () => {
+    mountScore();
+    cy.get('[data-testid="notes-btn"]').should('be.visible');
+    cy.get('[data-testid="notes-dot"]').should('not.exist');
+  });
+
+  it('zeigt bei beendetem Match weder Panel noch Umschalter', () => {
+    mountScore(makeMatch({ status: 'COMPLETED', score: { ...makeMatch().score, isDone: true, winner: 'PLAYER1' } }));
+    cy.get('[data-testid="panel"]').should('not.exist');
+    cy.get('[data-testid="switch-player-1"]').should('not.exist');
+    cy.contains('Sieger').should('be.visible');
   });
 });

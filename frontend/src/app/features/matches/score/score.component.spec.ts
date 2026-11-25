@@ -41,7 +41,7 @@ describe('ScoreComponent — inline scoring', () => {
     mockApi = {
       getMatch: vi.fn().mockReturnValue(of(MOCK_MATCH)),
       getPlayer: vi.fn().mockReturnValue(of({ id: 'p1', firstName: 'Anna', lastName: 'Müller' })),
-      // embedded PlayerNotesComponent fires this on init (rendered even inside a collapsed <details>)
+      // the bottom-bar notes indicator loads this (and PlayerNotesComponent in the notes view)
       getPlayerNotes: vi.fn().mockReturnValue(of([])),
       recordPoint: vi.fn(),
       setServingPlayer1: vi.fn(),

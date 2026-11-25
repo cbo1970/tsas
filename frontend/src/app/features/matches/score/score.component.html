@@ -4,7 +4,20 @@
     <div class="loading">Lade Match...</div>
   }
 
-  @if (matchData()) {
+  @if (matchData() && showNotes()) {
+    <!-- ── Notizen im Vollbild (innerhalb der Scoring-Route) ── -->
+    <div class="notes-view" data-testid="notes-view">
+      <div class="notes-head">
+        <button mat-icon-button class="hdr-icon" data-testid="notes-back" aria-label="Zurück zum Spielstand" (click)="closeNotes()">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <span class="notes-title">Notizen</span>
+      </div>
+      <div class="notes-body">
+        <app-player-notes [matchId]="matchData()!.id" />
+      </div>
+    </div>
+  } @else if (matchData()) {
 
     @if (!needsServer()) {
       <!-- ── Score Header (verdichtet: eine Zeile + Satzverlauf) ── -->
@@ -102,13 +115,16 @@
         </div>
       }
 
-      <!-- ── Coach Notes ── -->
-      <details class="coach-notes">
-        <summary>{{ 'playerNotes.title' | translate }}</summary>
-        @if (matchData(); as m) {
-          <app-player-notes [matchId]="m.id" />
-        }
-      </details>
+      @if (!needsServer()) {
+        <!-- ── Untere Leiste: zuletzt erfasst + Notiz-Einstieg ── -->
+        <div class="bottom-bar">
+          <span class="last-observation" data-testid="last-observation">{{ lastObservationText() }}</span>
+          <button type="button" class="notes-btn" data-testid="notes-btn" (click)="showNotes.set(true)">
+            Notizen
+            @if (hasNotes()) { <span class="notes-dot" data-testid="notes-dot" aria-label="Notizen vorhanden"></span> }
+          </button>
+        </div>
+      }
     }
 
     <!-- ── Winner overlay (completed match) ── -->
