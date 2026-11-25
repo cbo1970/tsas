@@ -83,6 +83,25 @@ function makeUpdatedScore(pointsP1: number, pointsP2: number): MatchWithScore {
   });
 }
 
+/**
+ * Faellt durch, wenn das Element von einem overflow:hidden-Vorfahren
+ * abgeschnitten wird. Ein solcher Container laesst sich vom Benutzer nicht
+ * scrollen — was unterhalb liegt, ist schlicht nicht erreichbar.
+ */
+function assertNotClipped(testid: string) {
+  cy.get(`[data-testid="${testid}"]`).then($el => {
+    const el = $el[0];
+    const rect = el.getBoundingClientRect();
+    for (let a: HTMLElement | null = el.parentElement; a; a = a.parentElement) {
+      const overflowY = getComputedStyle(a).overflowY;
+      if (overflowY !== 'hidden' && overflowY !== 'clip') continue;
+      const box = a.getBoundingClientRect();
+      const name = a.getAttribute('data-testid') ?? a.className ?? a.tagName;
+      expect(rect.bottom, `${testid} wird von "${name}" abgeschnitten`).to.be.at.most(box.bottom + 1);
+    }
+  });
+}
+
 // ─── Layout tests ─────────────────────────────────────────────────────────
 
 describe('ScoreComponent — layout', () => {
@@ -647,6 +666,31 @@ describe('ScoreComponent — ein Panel', () => {
     cy.get('[data-testid="panels-area"]').then($el => {
       expect($el[0].scrollHeight).to.be.at.most($el[0].clientHeight + 1);
     });
+  });
+
+  // I1: Im Querformat (~360px hoch) passt das Aufschlaeger-Panel nicht in die
+  // Erfassungsflaeche. Ohne Ausweg schneidet overflow:hidden die unteren
+  // Zeilen ab — Forced/Unforced/Netz und die Schlagart sind dann unerreichbar.
+  // Geprueft wird das Clipping selbst, nicht der Klick: Cypress' .click()
+  // scrollt vorher per scrollIntoView, und das funktioniert auch in einem
+  // overflow:hidden-Container, den der Benutzer gar nicht scrollen kann.
+  it('schneidet im Querformat (800x360) keine Kachel unerreichbar ab', () => {
+    cy.viewport(800, 360);
+    mountScore();
+
+    for (const id of ['obs-NET', 'stroke-BACKHAND']) {
+      assertNotClipped(id);
+    }
+  });
+
+  it('laesst im Querformat (800x360) die untere Kachel erfassen', () => {
+    cy.viewport(800, 360);
+    cy.intercept('POST', '**/api/matches/match-1/points', makeUpdatedScore(0, 1)).as('recordPoint');
+    mountScore();
+
+    cy.get('[data-testid="stroke-BACKHAND"]').click();
+    cy.get('[data-testid="obs-NET"]').click();
+    cy.wait('@recordPoint').its('request.body.pointType').should('eq', 'NET');
   });
 
   it('gibt den Umschaltflächen mindestens 56px Höhe', () => {

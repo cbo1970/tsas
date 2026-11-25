@@ -246,6 +246,18 @@ const OBSERVATION_LABELS: Record<PointType, string> = {
     .final-score { font-size: 15px; color: var(--text-muted); margin-bottom: 16px; }
 
     .loading { text-align: center; padding: 48px; color: var(--text-subtle); }
+
+    /* ── Flache Viewports (Querformat, ~360px hoch) ──
+       Das Aufschlaeger-Panel braucht rund 580px Hoehe; es passt dort nicht.
+       Ohne Ausweg schneidet overflow:hidden die unteren Zeilen (Forced /
+       Unforced / Netz und die Schlagart) ab und nichts kann dorthin scrollen.
+       Im Querformat ist senkrechtes Scrollen ausdruecklich erlaubt, also
+       geben wir der Seite ihre natuerliche Hoehe zurueck. */
+    @media (max-height: 560px) {
+      :host { height: auto; min-height: 100dvh; }
+      .scoring-page { height: auto; min-height: 100dvh; overflow: visible; }
+      .panels-area { overflow: visible; }
+    }
   `]
 })
 export class ScoreComponent implements OnInit {
