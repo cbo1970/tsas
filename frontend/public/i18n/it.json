@@ -81,6 +81,9 @@
       "TWO_HANDED": "A due mani"
     },
     "actions": {
+      "menu": "Azioni",
+      "history": "Storico partite",
+      "openMatch": "Mostra partita in corso",
       "headToHead": "Head-to-head",
       "deactivate": "Disattiva",
       "deleteHard": "Elimina definitivamente"

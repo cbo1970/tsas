@@ -1,0 +1,46 @@
+@for (player of players(); track player.id) {
+  <div class="player-card" data-testid="player-card" role="button" tabindex="0"
+       [class.inactive-card]="player.active === false"
+       (click)="edit.emit(player)" (keydown.enter)="edit.emit(player)">
+    <div class="player-info">
+      <div class="player-name">{{ player.firstName }} {{ player.lastName }}</div>
+      <div class="player-meta">
+        {{ player.ranking ?? '–' }} · {{ 'players.handedness.' + player.handedness | translate }}
+      </div>
+    </div>
+    @if (player.activeMatchId) {
+      <button mat-icon-button data-testid="open-match"
+              [attr.aria-label]="'players.actions.openMatch' | translate"
+              (click)="$event.stopPropagation(); openMatch.emit(player)">
+        <span class="tennis-ball">🎾</span>
+      </button>
+    }
+    <button mat-icon-button data-testid="player-menu" [matMenuTriggerFor]="menu"
+            [attr.aria-label]="'players.actions.menu' | translate"
+            (click)="$event.stopPropagation()">
+      <mat-icon>more_vert</mat-icon>
+    </button>
+    <mat-menu #menu="matMenu">
+      <button mat-menu-item data-testid="player-history-btn" (click)="history.emit(player)">
+        <mat-icon>history</mat-icon>
+        <span>{{ 'players.actions.history' | translate }}</span>
+      </button>
+      <button mat-menu-item data-testid="compare-btn" (click)="compare.emit(player)">
+        <mat-icon>compare_arrows</mat-icon>
+        <span>{{ 'players.actions.headToHead' | translate }}</span>
+      </button>
+      @if (player.deletable !== false) {
+        <button mat-menu-item data-testid="delete-btn" (click)="remove.emit(player)">
+          <mat-icon color="warn">delete</mat-icon>
+          <span>{{ 'common.delete' | translate }}</span>
+        </button>
+      } @else {
+        <button mat-menu-item data-testid="deactivate-btn"
+                [disabled]="player.active === false" (click)="deactivate.emit(player)">
+          <mat-icon>person_off</mat-icon>
+          <span>{{ 'players.actions.deactivate' | translate }}</span>
+        </button>
+      }
+    </mat-menu>
+  </div>
+}
