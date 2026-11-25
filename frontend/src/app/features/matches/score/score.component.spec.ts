@@ -199,6 +199,15 @@ describe('ScoreComponent — inline scoring', () => {
     expect(component.serviceContextP1()).toBeNull();
   });
 
+  it('should reset the context of BOTH panels after a recorded point', () => {
+    mockApi['recordPoint'].mockReturnValue(of(MOCK_MATCH));
+    component.setStroke(1, 'FOREHAND');
+    component.toggleService(1, 2);
+    component.recordObservation(2, 'UNFORCED_ERROR');   // Punkt vom anderen Panel
+    expect(component.strokeTypeP1()).toBeNull();
+    expect(component.serviceContextP1()).toBeNull();
+  });
+
   it('should reject ACE if the panel is not serving', () => {
     // MOCK_SCORE has servingPlayer: 2, so panel 1 is NOT serving
     component.recordObservation(1, 'ACE');
@@ -231,7 +240,9 @@ describe('ScoreComponent — inline scoring', () => {
   });
 
   it('should follow the serve when it changes with a score response', () => {
-    component.activePlayer.set(1);
+    // Arrange auf 2 (= der Ausgangswert aus MOCK_SCORE), Antwort nennt 1:
+    // der erwartete Wert unterscheidet sich vom arrangierten.
+    component.activePlayer.set(2);
     component.matchData.set({ ...MOCK_MATCH, score: { ...MOCK_SCORE, servingPlayer: 1 } as any });
     fixture.detectChanges();
     expect(component.activePlayer()).toBe(1);

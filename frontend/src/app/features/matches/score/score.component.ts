@@ -319,7 +319,7 @@ export class ScoreComponent implements OnInit {
     this.api.recordPoint(this.matchId, request).subscribe({
       next: (updated) => {
         this.handlePointResponse(updated);
-        this.resetContextForPanel(panel);
+        this.resetPointContext();
       },
       error: () => this.snackBar.open('Fehler beim Speichern', 'OK', { duration: 3000 })
     });
@@ -341,14 +341,17 @@ export class ScoreComponent implements OnInit {
     }
   }
 
-  private resetContextForPanel(panel: 1 | 2): void {
-    if (panel === 1) {
-      this.serviceContextP1.set(null);
-      this.strokeTypeP1.set(null);
-    } else {
-      this.serviceContextP2.set(null);
-      this.strokeTypeP2.set(null);
-    }
+  /**
+   * Der Kontext gehört zum erfassten Punkt, nicht zum Panel: nach einem Punkt
+   * wird er auf beiden Panels geräumt. Sonst bliebe eine Auswahl auf dem
+   * Aufschläger-Panel stehen, wenn der Punkt vom Returnierenden-Panel erfasst
+   * wurde, und reiste stumm mit dem nächsten Punkt mit.
+   */
+  private resetPointContext(): void {
+    this.serviceContextP1.set(null);
+    this.serviceContextP2.set(null);
+    this.strokeTypeP1.set(null);
+    this.strokeTypeP2.set(null);
   }
 
   private handlePointResponse(updated: MatchWithScore): void {

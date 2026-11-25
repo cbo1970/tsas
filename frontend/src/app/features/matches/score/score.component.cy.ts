@@ -262,6 +262,42 @@ describe('ScoreComponent — service context', () => {
     // After point, service context should be cleared
     cy.get('[data-testid="serve-attempt-1"]').should('have.attr', 'aria-pressed', 'false');
   });
+
+  // Der Kontext gehört zum Punkt, nicht zum Panel: wird der Punkt vom anderen
+  // Panel erfasst, darf die Auswahl auf dem Aufschläger-Panel nicht stehen
+  // bleiben — sonst reist sie stumm mit dem nächsten Punkt mit.
+  it('räumt den Kontext auch auf, wenn der Punkt vom anderen Panel erfasst wurde', () => {
+    cy.intercept('POST', '**/api/matches/match-1/points', makeUpdatedScore(0, 1)).as('recordPoint');
+    mountScore();
+
+    cy.get('[data-testid="serve-attempt-2"]').click();
+    cy.get('[data-testid="stroke-BACKHAND"]').click();
+    cy.get('[data-testid="switch-player-2"]').click();
+    cy.get('[data-testid="obs-UNFORCED_ERROR"]').click();
+    cy.wait('@recordPoint');
+
+    // Der effect hat auf das Aufschläger-Panel zurückgeschaltet
+    cy.get('[data-testid="serve-attempt-2"]').should('have.attr', 'aria-pressed', 'false');
+    cy.get('[data-testid="stroke-BACKHAND"]').should('have.attr', 'aria-pressed', 'false');
+  });
+
+  it('schickt nach einem Punkt vom anderen Panel keinen alten Kontext mit', () => {
+    cy.intercept('POST', '**/api/matches/match-1/points', makeUpdatedScore(0, 1)).as('recordPoint');
+    mountScore();
+
+    cy.get('[data-testid="serve-attempt-2"]').click();
+    cy.get('[data-testid="stroke-BACKHAND"]').click();
+    cy.get('[data-testid="switch-player-2"]').click();
+    cy.get('[data-testid="obs-UNFORCED_ERROR"]').click();
+    cy.wait('@recordPoint');
+
+    // Nächster Punkt, jetzt wieder auf dem Aufschläger-Panel, ohne neue Auswahl
+    cy.get('[data-testid="obs-WINNER"]').click();
+    cy.wait('@recordPoint').its('request.body').should(body => {
+      expect(body.serveAttempt, 'serveAttempt').to.be.oneOf([null, undefined]);
+      expect(body.strokeType, 'strokeType').to.be.oneOf([null, undefined]);
+    });
+  });
 });
 
 // ─── Stroke context ────────────────────────────────────────────────────────
