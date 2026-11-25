@@ -248,6 +248,15 @@ describe('ScoreComponent — service context', () => {
     });
   });
 
+  it('schickt den auf dem Aufschläger-Panel gewählten Aufschlagversuch mit, auch wenn vom Returnierenden-Panel erfasst wird', () => {
+    cy.intercept('POST', '**/api/matches/match-1/points', makeUpdatedScore(0, 1)).as('point');
+    mountScore();
+    cy.get('[data-testid="serve-attempt-2"]').click();
+    cy.get('[data-testid="switch-player-2"]').click();
+    cy.get('[data-testid="obs-UNFORCED_ERROR"]').click();
+    cy.wait('@point').its('request.body.serveAttempt').should('eq', 2);
+  });
+
   it('context is reset after recording a point', () => {
     const updated = makeUpdatedScore(1, 0);
     cy.intercept('POST', '**/api/matches/match-1/points', updated).as('recordPoint');
@@ -503,6 +512,38 @@ describe('ScoreComponent — Kopfzeile', () => {
       expect(r1.left, 'p1 links').to.be.gte(0);
       expect(r2.right, 'p2 rechts').to.be.lte(360);
     });
+  });
+
+  it('schneidet sehr lange Spielernamen ab, statt die Zeile zu sprengen', () => {
+    cy.viewport(360, 692);
+    const long1: Player = { ...PLAYER1, firstName: 'Roger', lastName: 'Abcdefghijklmnopqrstuvwxyzabcdefghijklmn' };
+    const long2: Player = { ...PLAYER2, firstName: 'Rafael', lastName: 'Zyxwvutsrqponmlkjihgfedcbazyxwvutsrqpon' };
+    mountScore(makeMatch(), long1, long2);
+    cy.get('[data-testid="score-header"]').invoke('outerHeight').should('be.lte', 100);
+    cy.get('[data-testid="score-header"]').then($header => {
+      const row = $header.find('.header-row')[0].getBoundingClientRect();
+      Array.from($header.find('.header-row')[0].children).forEach(c => {
+        const r = c.getBoundingClientRect();
+        expect(r.left, `${c.className} links`).to.be.gte(row.left - 0.5);
+        expect(r.right, `${c.className} rechts`).to.be.lte(row.right + 0.5);
+      });
+      expect($header.find('[data-testid="quick-score-p2"]')[0].getBoundingClientRect().right, 'p2 rechts').to.be.lte(360);
+      // Der Name selbst bleibt in seiner Spaltenhälfte (abgeschnitten, nicht überlaufend)
+      $header.find('.player-half').each((i, half) => {
+        const h = half.getBoundingClientRect();
+        const n = half.querySelector('.player-name')!.getBoundingClientRect();
+        expect(n.left, `Name ${i + 1} links`).to.be.gte(h.left - 0.5);
+        expect(n.right, `Name ${i + 1} rechts`).to.be.lte(h.right + 0.5);
+        // Der Text ragt über den Namenskasten hinaus (Fixture ist wirklich zu lang) und
+        // wird dort beschnitten, nicht in die Nachbarspalte gezeichnet
+        const name = half.querySelector('.player-name') as HTMLElement;
+        const cs = getComputedStyle(name);
+        expect(name.scrollWidth, `Name ${i + 1} ist länger als sein Kasten`).to.be.gt(name.clientWidth);
+        expect(cs.overflow, `Name ${i + 1} overflow`).to.equal('hidden');
+        expect(cs.textOverflow, `Name ${i + 1} text-overflow`).to.equal('ellipsis');
+      });
+    });
+    cy.document().its('body').then(b => expect(b.scrollWidth, 'Body-Überlauf').to.be.at.most(b.clientWidth));
   });
 
   it('alle Tipp-Ziele in der Kopfzeile sind mindestens 44x44px', () => {

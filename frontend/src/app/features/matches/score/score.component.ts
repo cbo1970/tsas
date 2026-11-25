@@ -211,8 +211,8 @@ export class ScoreComponent implements OnInit {
   player2    = signal<Player | null>(null);
   setHistory = signal<Array<{p1: number; p2: number}>>([]);
 
-  serviceContextP1 = signal<1 | 2 | null>(null);
-  serviceContextP2 = signal<1 | 2 | null>(null);
+  /** Aufschlagversuch des laufenden Punkts, unabhängig vom aktiven Panel. */
+  serveAttempt     = signal<1 | 2 | null>(null);
   strokeTypeP1     = signal<StrokeType | null>(null);
   strokeTypeP2     = signal<StrokeType | null>(null);
 
@@ -252,7 +252,7 @@ export class ScoreComponent implements OnInit {
 
   activeOpponentName = computed(() => this.activePlayer() === 1 ? this.player2Name() : this.player1Name());
 
-  activeServeAttempt = computed(() => this.activePlayer() === 1 ? this.serviceContextP1() : this.serviceContextP2());
+  activeServeAttempt = computed(() => this.serveAttempt());
 
   activeStrokeType = computed(() => this.activePlayer() === 1 ? this.strokeTypeP1() : this.strokeTypeP2());
 
@@ -311,7 +311,7 @@ export class ScoreComponent implements OnInit {
     }
 
     const winner: 1 | 2 = (pointType === 'ACE' || pointType === 'WINNER') ? panel : (panel === 1 ? 2 : 1);
-    const serveAttempt = panel === 1 ? this.serviceContextP1() : this.serviceContextP2();
+    const serveAttempt = this.serveAttempt();
     const strokeType   = panel === 1 ? this.strokeTypeP1()     : this.strokeTypeP2();
 
     const request: RecordPointRequest = { winner, pointType, serveAttempt, strokeType };
@@ -325,12 +325,8 @@ export class ScoreComponent implements OnInit {
     });
   }
 
-  toggleService(panel: 1 | 2, attempt: 1 | 2): void {
-    if (panel === 1) {
-      this.serviceContextP1.update(v => v === attempt ? null : attempt);
-    } else {
-      this.serviceContextP2.update(v => v === attempt ? null : attempt);
-    }
+  toggleService(attempt: 1 | 2): void {
+    this.serveAttempt.update(v => v === attempt ? null : attempt);
   }
 
   setStroke(panel: 1 | 2, type: StrokeType | null): void {
@@ -348,8 +344,7 @@ export class ScoreComponent implements OnInit {
    * wurde, und reiste stumm mit dem nächsten Punkt mit.
    */
   private resetPointContext(): void {
-    this.serviceContextP1.set(null);
-    this.serviceContextP2.set(null);
+    this.serveAttempt.set(null);
     this.strokeTypeP1.set(null);
     this.strokeTypeP2.set(null);
   }

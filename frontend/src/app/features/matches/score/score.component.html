@@ -77,7 +77,7 @@
             [serveAttempt]="activeServeAttempt()"
             [strokeType]="activeStrokeType()"
             (observation)="recordObservation(activePlayer(), $event)"
-            (serveAttemptChange)="toggleService(activePlayer(), $event)"
+            (serveAttemptChange)="toggleService($event)"
             (strokeTypeChange)="setStroke(activePlayer(), $event)" />
         }
       </div>
