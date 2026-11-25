@@ -9,6 +9,8 @@ import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { ApiService } from '../../../core/services/api.service';
 import { Player } from '../../../core/models/player.model';
 import { MatchWithScore, MatchScore } from '../../../core/models/match.model';
+import { LayoutService } from '../../../core/layout/layout.service';
+import { responsiveDialogConfig } from '../../../core/layout/responsive-dialog';
 import { ScoreEditDialogComponent } from './score-edit-dialog.component';
 import { EndMatchDialogComponent, EndMatchDialogResult } from './end-match-dialog.component';
 import { PointType, StrokeType, RecordPointRequest } from '../../../core/models/point.model';
@@ -251,6 +253,7 @@ export class ScoreComponent implements OnInit {
   private readonly route    = inject(ActivatedRoute);
   private readonly router   = inject(Router);
   private readonly dialog   = inject(MatDialog);
+  private readonly layout   = inject(LayoutService);
   private readonly snackBar = inject(MatSnackBar);
 
   matchData  = signal<MatchWithScore | null>(null);
@@ -482,7 +485,7 @@ export class ScoreComponent implements OnInit {
   openEditDialog() {
     const m = this.matchData();
     if (!m) return;
-    const ref = this.dialog.open(ScoreEditDialogComponent, { width: '500px', data: { score: m.score } });
+    const ref = this.dialog.open(ScoreEditDialogComponent, { ...responsiveDialogConfig(this.layout.isHandset()), data: { score: m.score } });
     ref.afterClosed().subscribe((result) => {
       if (!result) return;
       this.api.setScore(this.matchId, result).subscribe({

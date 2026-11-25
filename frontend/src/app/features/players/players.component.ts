@@ -18,6 +18,8 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { Player, CreatePlayerRequest } from '../../core/models/player.model';
+import { LayoutService } from '../../core/layout/layout.service';
+import { responsiveDialogConfig } from '../../core/layout/responsive-dialog';
 import { PlayerDialogComponent } from './player-dialog.component';
 
 export type Scope = 'mine' | 'all';
@@ -79,6 +81,7 @@ export type Scope = 'mine' | 'all';
 export class PlayersComponent implements OnInit {
   private readonly api = inject(ApiService);
   private readonly dialog = inject(MatDialog);
+  private readonly layout = inject(LayoutService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly router = inject(Router);
   protected readonly authService = inject(AuthService);
@@ -147,7 +150,7 @@ export class PlayersComponent implements OnInit {
   }
 
   openCreateDialog() {
-    const ref = this.dialog.open(PlayerDialogComponent, { width: '500px' });
+    const ref = this.dialog.open(PlayerDialogComponent, responsiveDialogConfig(this.layout.isHandset()));
     ref.afterClosed().subscribe((result: CreatePlayerRequest | undefined) => {
       if (result) {
         this.api.createPlayer(result).subscribe({
@@ -162,7 +165,7 @@ export class PlayersComponent implements OnInit {
   }
 
   openEditDialog(player: Player) {
-    const ref = this.dialog.open(PlayerDialogComponent, { width: '500px', data: player });
+    const ref = this.dialog.open(PlayerDialogComponent, { ...responsiveDialogConfig(this.layout.isHandset()), data: player });
     ref.afterClosed().subscribe((result: CreatePlayerRequest | undefined) => {
       if (result) {
         this.api.updatePlayer(player.id, result).subscribe({

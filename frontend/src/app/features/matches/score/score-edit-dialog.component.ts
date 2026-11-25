@@ -7,6 +7,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSelectModule } from '@angular/material/select';
+import { LayoutService } from '../../../core/layout/layout.service';
+import { DialogHeaderComponent } from '../../../core/layout/responsive-dialog';
 import { MatchScore, SetScoreRequest } from '../../../core/models/match.model';
 
 @Component({
@@ -20,17 +22,20 @@ import { MatchScore, SetScoreRequest } from '../../../core/models/match.model';
     MatInputModule,
     MatButtonModule,
     MatCheckboxModule,
-    MatSelectModule
+    MatSelectModule,
+    DialogHeaderComponent
   ],
   templateUrl: './score-edit-dialog.component.html',
   styles: [`
-    .edit-form { display: flex; flex-direction: column; gap: 8px; min-width: 400px; padding-top: 8px; }
+    .edit-form { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; }
     .row-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .full-width { width: 100%; }
-    .checkbox-row { display: flex; gap: 24px; padding: 8px 0; }
+    .checkbox-row { display: flex; flex-wrap: wrap; gap: 8px 24px; padding: 8px 0; }
+    .checkbox-row mat-checkbox { min-height: 44px; }
   `]
 })
 export class ScoreEditDialogComponent {
+  protected readonly layout = inject(LayoutService);
   private readonly fb = inject(FormBuilder);
   private readonly dialogRef = inject(MatDialogRef<ScoreEditDialogComponent>);
   readonly data: { score: MatchScore } = inject(MAT_DIALOG_DATA);

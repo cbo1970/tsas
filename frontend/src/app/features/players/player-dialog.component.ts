@@ -7,6 +7,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { CreatePlayerRequest, Player } from '../../core/models/player.model';
+import { LayoutService } from '../../core/layout/layout.service';
+import { DialogHeaderComponent } from '../../core/layout/responsive-dialog';
 
 @Component({
   selector: 'app-player-dialog',
@@ -18,15 +20,17 @@ import { CreatePlayerRequest, Player } from '../../core/models/player.model';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatButtonModule
+    MatButtonModule,
+    DialogHeaderComponent
   ],
   templateUrl: './player-dialog.component.html',
   styles: [`
-    .dialog-form { display: flex; flex-direction: column; gap: 8px; min-width: 400px; padding-top: 8px; }
+    .dialog-form { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; }
     .full-width { width: 100%; }
   `]
 })
 export class PlayerDialogComponent {
+  protected readonly layout = inject(LayoutService);
   private readonly fb = inject(FormBuilder);
   private readonly dialogRef = inject(MatDialogRef<PlayerDialogComponent>);
   readonly player: Player | null = inject(MAT_DIALOG_DATA, { optional: true });
