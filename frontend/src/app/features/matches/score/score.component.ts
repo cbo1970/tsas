@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -15,6 +15,7 @@ import { EndMatchDialogComponent, EndMatchDialogResult } from './end-match-dialo
 import { PointType, StrokeType, RecordPointRequest } from '../../../core/models/point.model';
 import { PlayerNotesComponent } from '../notes/player-notes.component';
 import { ServePickerComponent } from './serve-picker.component';
+import { ObservationPanelComponent } from './observation-panel.component';
 
 @Component({
   selector: 'app-score',
@@ -27,6 +28,7 @@ import { ServePickerComponent } from './serve-picker.component';
     MatSnackBarModule,
     PlayerNotesComponent,
     ServePickerComponent,
+    ObservationPanelComponent,
     TranslatePipe,
   ],
   templateUrl: './score.component.html',
@@ -114,37 +116,53 @@ import { ServePickerComponent } from './serve-picker.component';
       letter-spacing: .5px;
     }
 
-    /* ── Observation panels ── */
+    /* ── Erfassungsfläche: genau ein Panel ── */
     .panels-area {
       flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      align-content: start;
-      gap: 12px;
-      padding: 12px;
-      overflow-y: auto;
-    }
-    .obs-panel {
-      background: var(--surface-card);
-      border: 1px solid var(--text);
-      border-radius: 10px;
-      padding: 10px;
+      min-height: 0;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-    }
-    .obs-panel.serving {
-      background: var(--brand-soft);
-      border-color: var(--brand-border);
+      padding: 8px;
+      overflow: hidden;
     }
 
-    /* Coach-Notizen: volle Breite direkt unter den beiden Panels */
-    .coach-notes {
-      grid-column: 1 / -1;
-      background: var(--border);
-      border: 1px solid var(--text);
+    /* ── Spielerumschalter (zwei Flächen à 56px, in Daumenreichweite) ── */
+    .player-switch {
+      flex-shrink: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 0 8px 8px;
+    }
+    .switch-btn {
+      min-height: 56px;
+      border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 8px 12px;
+      background: var(--surface-card);
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.2;
+      padding: 8px 6px;
+      cursor: pointer;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      transition: background .15s;
+    }
+    .switch-btn.active {
+      background: var(--brand-soft);
+      border-color: var(--brand);
+      color: var(--brand-strong);
+    }
+
+    /* Coach-Notizen: volle Breite unter dem Umschalter */
+    .coach-notes {
+      flex-shrink: 0;
+      max-height: 40vh;
+      overflow-y: auto;
+      background: var(--border);
+      border-top: 1px solid var(--text);
+      padding: 0 12px;
     }
     .coach-notes summary {
       cursor: pointer;
@@ -152,79 +170,8 @@ import { ServePickerComponent } from './serve-picker.component';
       font-weight: 700;
       letter-spacing: .04em;
       color: var(--text-muted);
-      padding: 4px 0;
+      padding: 8px 0;
     }
-    .panel-title {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .5px;
-      text-align: center;
-      color: var(--text-muted);
-    }
-    .obs-panel.serving .panel-title { color: var(--brand-strong); }
-    .serve-badge { font-size: 9px; opacity: .6; font-weight: 400; }
-
-    .section-label {
-      font-size: 9px;
-      color: var(--text);
-      font-weight: 700;
-      letter-spacing: .5px;
-      margin-top: 4px;
-    }
-    .section-label.green { color: var(--success); opacity: .8; }
-    .section-label.red   { color: var(--danger); opacity: .8; }
-
-    /* Context toggle buttons */
-    .ctx-row { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-    .ctx-btn {
-      background: var(--border);
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      padding: 6px 4px;
-      text-align: center;
-      font-size: 12px;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: background .15s;
-    }
-    .ctx-btn.active {
-      background: var(--brand-soft);
-      border-color: var(--brand);
-      color: var(--brand-strong);
-      font-weight: 600;
-    }
-
-    /* Observation buttons */
-    .obs-row-2 { display: grid; grid-template-columns: 1fr 1fr;     gap: 4px; }
-    .obs-row-1 { display: grid; grid-template-columns: 1fr;         gap: 4px; }
-    .obs-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
-
-    .obs-btn {
-      border: none;
-      border-radius: 5px;
-      padding: 7px 4px;
-      text-align: center;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: opacity .15s;
-    }
-    .obs-btn:hover  { opacity: .85; }
-    .obs-btn:active { opacity: .7; }
-    .obs-btn.err-sm { font-size: 11px; padding: 6px 2px; }
-
-    .win-btn {
-      background: var(--success);
-      border: none;
-      color: #fff;
-    }
-    .err-btn {
-      background: var(--danger);
-      border: none;
-      color: #fff;
-    }
-    /* Gelbes Icon-Glyph auf den roten Buttons (auf Rot deutlich sichtbar) */
-    .ico-y { color: #FACC15; font-weight: 900; }
 
     /* ── Winner overlay ── */
     .winner-overlay {
@@ -269,6 +216,9 @@ export class ScoreComponent implements OnInit {
   strokeTypeP1     = signal<StrokeType | null>(null);
   strokeTypeP2     = signal<StrokeType | null>(null);
 
+  /** Spieler, dessen Panel gerade sichtbar ist. */
+  activePlayer = signal<1 | 2>(1);
+
   player1Name = computed(() => {
     const p = this.player1();
     return p ? `${p.firstName} ${p.lastName}` : 'Spieler 1';
@@ -296,7 +246,28 @@ export class ScoreComponent implements OnInit {
     return past ? `${past} · ${current}` : current;
   });
 
+  activePlayerInfo = computed(() => this.activePlayer() === 1
+    ? { id: this.matchData()?.player1Id ?? '', name: this.player1Name() }
+    : { id: this.matchData()?.player2Id ?? '', name: this.player2Name() });
+
+  activeOpponentName = computed(() => this.activePlayer() === 1 ? this.player2Name() : this.player1Name());
+
+  activeServeAttempt = computed(() => this.activePlayer() === 1 ? this.serviceContextP1() : this.serviceContextP2());
+
+  activeStrokeType = computed(() => this.activePlayer() === 1 ? this.strokeTypeP1() : this.strokeTypeP2());
+
   private matchId = '';
+
+  constructor() {
+    // Das Panel folgt dem Aufschlag: jede Score-Antwort (Punkt, Aufschlagwahl,
+    // manuelle Korrektur) setzt den aktiven Spieler auf den dann gültigen
+    // Aufschläger zurück. Bewusst auf matchData() statt auf servingPlayer(),
+    // damit auch eine Antwort mit unverändertem Aufschläger zurückschaltet.
+    effect(() => {
+      const serving = this.matchData()?.score?.servingPlayer ?? null;
+      if (serving === 1 || serving === 2) this.activePlayer.set(serving);
+    });
+  }
 
   ngOnInit() {
     this.matchId = this.route.snapshot.paramMap.get('id') ?? '';
@@ -362,11 +333,11 @@ export class ScoreComponent implements OnInit {
     }
   }
 
-  toggleStroke(panel: 1 | 2, type: StrokeType): void {
+  setStroke(panel: 1 | 2, type: StrokeType | null): void {
     if (panel === 1) {
-      this.strokeTypeP1.update(v => v === type ? null : type);
+      this.strokeTypeP1.set(type);
     } else {
-      this.strokeTypeP2.update(v => v === type ? null : type);
+      this.strokeTypeP2.set(type);
     }
   }
 

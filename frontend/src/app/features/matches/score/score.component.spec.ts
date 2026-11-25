@@ -82,22 +82,22 @@ describe('ScoreComponent — inline scoring', () => {
     expect(component.serviceContextP2()).toBeNull();
   });
 
-  // ── toggleStroke ─────────────────────────────────────────────────────────────
+  // ── setStroke ────────────────────────────────────────────────────────────────
 
-  it('should set strokeType when toggled on', () => {
-    component.toggleStroke(1, 'FOREHAND');
+  it('should set strokeType for the given panel', () => {
+    component.setStroke(1, 'FOREHAND');
     expect(component.strokeTypeP1()).toBe('FOREHAND');
   });
 
-  it('should clear strokeType when toggled off (same value)', () => {
-    component.toggleStroke(1, 'BACKHAND');
-    component.toggleStroke(1, 'BACKHAND');
+  it('should clear strokeType when the panel emits null', () => {
+    component.setStroke(1, 'BACKHAND');
+    component.setStroke(1, null);
     expect(component.strokeTypeP1()).toBeNull();
   });
 
-  it('should toggle strokeType independently for each panel', () => {
-    component.toggleStroke(1, 'FOREHAND');
-    component.toggleStroke(2, 'BACKHAND');
+  it('should hold strokeType independently for each panel', () => {
+    component.setStroke(1, 'FOREHAND');
+    component.setStroke(2, 'BACKHAND');
     expect(component.strokeTypeP1()).toBe('FOREHAND');
     expect(component.strokeTypeP2()).toBe('BACKHAND');
   });
@@ -164,7 +164,7 @@ describe('ScoreComponent — inline scoring', () => {
 
   it('should call api.recordPoint with pointType and context for recordObservation', () => {
     mockApi['recordPoint'].mockReturnValue(of(MOCK_MATCH));
-    component.toggleStroke(1, 'BACKHAND');
+    component.setStroke(1, 'BACKHAND');
     component.toggleService(1, 1);
     component.recordObservation(1, 'WINNER');
     expect(mockApi['recordPoint']).toHaveBeenCalledWith('match-1', {
@@ -192,7 +192,7 @@ describe('ScoreComponent — inline scoring', () => {
 
   it('should reset context signals after successful recordObservation', () => {
     mockApi['recordPoint'].mockReturnValue(of(MOCK_MATCH));
-    component.toggleStroke(1, 'FOREHAND');
+    component.setStroke(1, 'FOREHAND');
     component.toggleService(1, 2);
     component.recordObservation(1, 'WINNER');
     expect(component.strokeTypeP1()).toBeNull();
@@ -217,10 +217,42 @@ describe('ScoreComponent — inline scoring', () => {
     expect(page).toBeTruthy();
   });
 
-  it('should render both player panels regardless of serving state', () => {
+  it('should render exactly one observation panel', () => {
     component.matchData.set({ ...MOCK_MATCH, score: { ...MOCK_SCORE, servingPlayer: 1 } as any });
     fixture.detectChanges();
-    const panels = fixture.debugElement.queryAll(By.css('[data-testid^="panel-"]'));
-    expect(panels).toHaveLength(2);
+    const panels = fixture.debugElement.queryAll(By.css('[data-testid="panel"]'));
+    expect(panels).toHaveLength(1);
+  });
+
+  // ── activePlayer folgt dem Aufschlag ─────────────────────────────────────────
+
+  it('should start on the serving player', () => {
+    expect(component.activePlayer()).toBe(2);   // MOCK_SCORE: servingPlayer 2
+  });
+
+  it('should follow the serve when it changes with a score response', () => {
+    component.activePlayer.set(1);
+    component.matchData.set({ ...MOCK_MATCH, score: { ...MOCK_SCORE, servingPlayer: 1 } as any });
+    fixture.detectChanges();
+    expect(component.activePlayer()).toBe(1);
+  });
+
+  it('should return to the serving player after a recorded point', () => {
+    // frische Antwort (wie vom HTTP-Client), servingPlayer unverändert 2
+    mockApi['recordPoint'].mockReturnValue(of({ ...MOCK_MATCH, score: { ...MOCK_SCORE } as any }));
+    component.activePlayer.set(1);
+    component.recordObservation(1, 'UNFORCED_ERROR');
+    fixture.detectChanges();
+    expect(component.activePlayer()).toBe(2);
+  });
+
+  it('should expose the active player panel inputs', () => {
+    component.activePlayer.set(1);
+    component.setStroke(1, 'FOREHAND');
+    component.toggleService(1, 2);
+    expect(component.activePlayerInfo().id).toBe('p1');
+    expect(component.activeOpponentName()).toBe(component.player2Name());
+    expect(component.activeStrokeType()).toBe('FOREHAND');
+    expect(component.activeServeAttempt()).toBe(2);
   });
 });

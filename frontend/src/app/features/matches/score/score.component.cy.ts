@@ -93,9 +93,8 @@ describe('ScoreComponent — layout', () => {
     cy.contains('Rafael Nadal').should('be.visible');
   });
 
-  it('shows two observation panels', () => {
-    cy.get('[data-testid="panel-p1"]').should('be.visible');
-    cy.get('[data-testid="panel-p2"]').should('be.visible');
+  it('shows a single observation panel', () => {
+    cy.get('[data-testid="panel"]').should('be.visible');
   });
 
   it('shows edit-score and end-match buttons', () => {
@@ -136,13 +135,14 @@ describe('ScoreComponent — quick-click', () => {
 // ─── Observation buttons — point attribution ───────────────────────────────
 
 describe('ScoreComponent — observation buttons', () => {
+  beforeEach(() => cy.viewport(360, 692));
 
-  it('Winner on P1 panel → winner=1 in request', () => {
+  it('Winner on the serving panel → winner=1 in request', () => {
     const updated = makeUpdatedScore(1, 0);
     cy.intercept('POST', '**/api/matches/match-1/points', updated).as('recordPoint');
     mountScore();
 
-    cy.get('[data-testid="p1-winner"]').click();
+    cy.get('[data-testid="obs-WINNER"]').click();
 
     cy.wait('@recordPoint').its('request.body').should(body => {
       expect(body.winner).to.equal(1);
@@ -150,12 +150,12 @@ describe('ScoreComponent — observation buttons', () => {
     });
   });
 
-  it('Forced Error on P1 panel → winner=2 (point for opponent)', () => {
+  it('Forced Error on the serving panel → winner=2 (point for opponent)', () => {
     const updated = makeUpdatedScore(0, 1);
     cy.intercept('POST', '**/api/matches/match-1/points', updated).as('recordPoint');
     mountScore();
 
-    cy.get('[data-testid="p1-forced"]').click();
+    cy.get('[data-testid="obs-FORCED_ERROR"]').click();
 
     cy.wait('@recordPoint').its('request.body').should(body => {
       expect(body.winner).to.equal(2);
@@ -163,12 +163,12 @@ describe('ScoreComponent — observation buttons', () => {
     });
   });
 
-  it('Unforced Error on P1 panel → winner=2', () => {
+  it('Unforced Error on the serving panel → winner=2', () => {
     const updated = makeUpdatedScore(0, 1);
     cy.intercept('POST', '**/api/matches/match-1/points', updated).as('recordPoint');
     mountScore();
 
-    cy.get('[data-testid="p1-unforced"]').click();
+    cy.get('[data-testid="obs-UNFORCED_ERROR"]').click();
 
     cy.wait('@recordPoint').its('request.body').should(body => {
       expect(body.winner).to.equal(2);
@@ -176,12 +176,12 @@ describe('ScoreComponent — observation buttons', () => {
     });
   });
 
-  it('Netz on P1 panel → winner=2', () => {
+  it('Netz on the serving panel → winner=2', () => {
     const updated = makeUpdatedScore(0, 1);
     cy.intercept('POST', '**/api/matches/match-1/points', updated).as('recordPoint');
     mountScore();
 
-    cy.get('[data-testid="p1-net"]').click();
+    cy.get('[data-testid="obs-NET"]').click();
 
     cy.wait('@recordPoint').its('request.body').should(body => {
       expect(body.winner).to.equal(2);
@@ -189,12 +189,12 @@ describe('ScoreComponent — observation buttons', () => {
     });
   });
 
-  it('DF on P1 panel (serving) → winner=2, pointType=DOUBLE_FAULT', () => {
+  it('DF on the serving panel → winner=2, pointType=DOUBLE_FAULT', () => {
     const updated = makeUpdatedScore(0, 1);
     cy.intercept('POST', '**/api/matches/match-1/points', updated).as('recordPoint');
     mountScore(makeMatch()); // P1 is serving by default
 
-    cy.get('[data-testid="p1-df"]').click();
+    cy.get('[data-testid="obs-DOUBLE_FAULT"]').click();
 
     cy.wait('@recordPoint').its('request.body').should(body => {
       expect(body.winner).to.equal(2);
@@ -202,57 +202,46 @@ describe('ScoreComponent — observation buttons', () => {
     });
   });
 
-  it('Ass on P1 panel (serving) → winner=1, pointType=ACE', () => {
+  it('Ass on the serving panel → winner=1, pointType=ACE', () => {
     const updated = makeUpdatedScore(1, 0);
     cy.intercept('POST', '**/api/matches/match-1/points', updated).as('recordPoint');
     mountScore(makeMatch()); // P1 is serving
 
-    cy.get('[data-testid="p1-ace"]').click();
+    cy.get('[data-testid="obs-ACE"]').click();
 
     cy.wait('@recordPoint').its('request.body').should(body => {
       expect(body.winner).to.equal(1);
       expect(body.pointType).to.equal('ACE');
     });
   });
-});
 
-// ─── Ass / DF validation ───────────────────────────────────────────────────
+  it('Winner on the returning panel → winner=2', () => {
+    const updated = makeUpdatedScore(0, 1);
+    cy.intercept('POST', '**/api/matches/match-1/points', updated).as('recordPoint');
+    mountScore();
 
-describe('ScoreComponent — Ass/DF validation', () => {
+    cy.get('[data-testid="switch-player-2"]').click();
+    cy.get('[data-testid="obs-WINNER"]').click();
 
-  it('Ass on non-serving P2 panel → shows snackbar, no API call', () => {
-    cy.intercept('POST', '**/api/matches/match-1/points').as('recordPoint');
-    // P1 is serving (servingPlayer: 1)
-    mountScore(makeMatch());
-
-    cy.get('[data-testid="p2-ace"]').click();
-
-    cy.contains('Ass nur für den Aufschläger').should('be.visible');
-    cy.get('@recordPoint.all').should('have.length', 0);
-  });
-
-  it('DF on non-serving P2 panel → shows snackbar, no API call', () => {
-    cy.intercept('POST', '**/api/matches/match-1/points').as('recordPoint');
-    mountScore(makeMatch());
-
-    cy.get('[data-testid="p2-df"]').click();
-
-    cy.contains('Doppelfehler nur für den Aufschläger').should('be.visible');
-    cy.get('@recordPoint.all').should('have.length', 0);
+    cy.wait('@recordPoint').its('request.body').should(body => {
+      expect(body.winner).to.equal(2);
+      expect(body.pointType).to.equal('WINNER');
+    });
   });
 });
 
 // ─── Service context ───────────────────────────────────────────────────────
 
 describe('ScoreComponent — service context', () => {
+  beforeEach(() => cy.viewport(360, 692));
 
-  it('selecting 1. Service on P1 panel sends serveAttempt=1 in request', () => {
+  it('selecting 1. Service sends serveAttempt=1 in request', () => {
     const updated = makeUpdatedScore(1, 0);
     cy.intercept('POST', '**/api/matches/match-1/points', updated).as('recordPoint');
     mountScore();
 
-    cy.get('[data-testid="p1-service-1"]').click();
-    cy.get('[data-testid="p1-winner"]').click();
+    cy.get('[data-testid="serve-attempt-1"]').click();
+    cy.get('[data-testid="obs-WINNER"]').click();
 
     cy.wait('@recordPoint').its('request.body').should(body => {
       expect(body.serveAttempt).to.equal(1);
@@ -264,14 +253,43 @@ describe('ScoreComponent — service context', () => {
     cy.intercept('POST', '**/api/matches/match-1/points', updated).as('recordPoint');
     mountScore();
 
-    cy.get('[data-testid="p1-service-1"]').click();
-    cy.get('[data-testid="p1-service-1"]').should('have.class', 'active');
+    cy.get('[data-testid="serve-attempt-1"]').click();
+    cy.get('[data-testid="serve-attempt-1"]').should('have.attr', 'aria-pressed', 'true');
 
-    cy.get('[data-testid="p1-winner"]').click();
+    cy.get('[data-testid="obs-WINNER"]').click();
     cy.wait('@recordPoint');
 
     // After point, service context should be cleared
-    cy.get('[data-testid="p1-service-1"]').should('not.have.class', 'active');
+    cy.get('[data-testid="serve-attempt-1"]').should('have.attr', 'aria-pressed', 'false');
+  });
+});
+
+// ─── Stroke context ────────────────────────────────────────────────────────
+
+describe('ScoreComponent — Schlagart', () => {
+  beforeEach(() => cy.viewport(360, 692));
+
+  it('schickt die gewählte Schlagart mit', () => {
+    cy.intercept('POST', '**/api/matches/match-1/points', makeUpdatedScore(1, 0)).as('recordPoint');
+    mountScore();
+
+    cy.get('[data-testid="stroke-BACKHAND"]').click();
+    cy.get('[data-testid="obs-WINNER"]').click();
+
+    cy.wait('@recordPoint').its('request.body.strokeType').should('eq', 'BACKHAND');
+  });
+
+  it('hebt die Schlagart beim zweiten Tipp wieder auf', () => {
+    cy.intercept('POST', '**/api/matches/match-1/points', makeUpdatedScore(1, 0)).as('recordPoint');
+    mountScore();
+
+    cy.get('[data-testid="stroke-FOREHAND"]').click();
+    cy.get('[data-testid="stroke-FOREHAND"]').should('have.attr', 'aria-pressed', 'true');
+    cy.get('[data-testid="stroke-FOREHAND"]').click();
+    cy.get('[data-testid="stroke-FOREHAND"]').should('have.attr', 'aria-pressed', 'false');
+
+    cy.get('[data-testid="obs-WINNER"]').click();
+    cy.wait('@recordPoint').its('request.body.strokeType').should('eq', null);
   });
 });
 
@@ -347,8 +365,8 @@ describe('ScoreComponent — Aufschlagwahl', () => {
   it('zeigt die Aufschlagwahl, wenn servingPlayer null ist', () => {
     mountScore(makeMatch({ score: { ...makeMatch().score, servingPlayer: null } }));
     cy.get('[data-testid="serve-picker"]').should('be.visible');
-    cy.get('[data-testid="panel-p1"]').should('not.exist');
-    cy.get('[data-testid="panel-p2"]').should('not.exist');
+    cy.get('[data-testid="panel"]').should('not.exist');
+    cy.get('[data-testid="switch-player-1"]').should('not.exist');
   });
 
   it('setzt den Aufschläger und zeigt danach die Panels', () => {
@@ -359,7 +377,7 @@ describe('ScoreComponent — Aufschlagwahl', () => {
     cy.get('[data-testid="serve-pick-1"]').click();
     cy.wait('@setServe');
     cy.get('[data-testid="serve-picker"]').should('not.exist');
-    cy.get('[data-testid="panel-p1"]').should('be.visible');
+    cy.get('[data-testid="panel"]').should('be.visible');
   });
 
   it('blendet den Punktestand-Header aus, bis ein Aufschläger gewählt ist', () => {
@@ -459,5 +477,109 @@ describe('ScoreComponent — Kopfzeile', () => {
       expect(r.width, 'Breite').to.be.gte(44);
       expect(r.height, 'Höhe').to.be.gte(44);
     });
+  });
+});
+
+// ─── Ein Panel, rollenabhängig, mit Spielerumschalter ──────────────────────
+
+describe('ScoreComponent — ein Panel', () => {
+  beforeEach(() => {
+    cy.viewport(360, 692);
+    mountScore();   // servingPlayer: 1 → Roger Federer schlägt auf
+  });
+
+  it('zeigt genau ein Panel', () => {
+    cy.get('[data-testid="panel"]').should('have.length', 1);
+  });
+
+  it('zeigt beim Aufschläger Ass, Doppelfehler und die Service-Wahl', () => {
+    cy.get('[data-testid="obs-ACE"]').should('be.visible');
+    cy.get('[data-testid="obs-DOUBLE_FAULT"]').should('be.visible');
+    cy.get('[data-testid="serve-attempt-1"]').should('be.visible');
+  });
+
+  it('zeigt beim Returnierenden weder Ass noch Doppelfehler noch Service-Wahl', () => {
+    cy.get('[data-testid="switch-player-2"]').click();
+    cy.get('[data-testid="panel"]').should('contain', 'Rafael Nadal');
+    cy.get('[data-testid="obs-ACE"]').should('not.exist');
+    cy.get('[data-testid="obs-DOUBLE_FAULT"]').should('not.exist');
+    cy.get('[data-testid="serve-attempt-1"]').should('not.exist');
+    cy.get('[data-testid="obs-WINNER"]').should('be.visible');
+    cy.get('[data-testid="obs-NET"]').should('be.visible');
+  });
+
+  it('gibt jeder Beobachtungs-Kachel mindestens 56px Höhe', () => {
+    cy.viewport(360, 692);
+    cy.get('[data-testid^="obs-"]').each($el => {
+      expect($el[0].getBoundingClientRect().height).to.be.at.least(56);
+    });
+  });
+
+  it('gibt auch dem Returnierenden-Panel Kacheln von mindestens 56px', () => {
+    cy.viewport(360, 692);
+    cy.get('[data-testid="switch-player-2"]').click();
+    cy.get('[data-testid^="obs-"]').each($el => {
+      expect($el[0].getBoundingClientRect().height).to.be.at.least(56);
+    });
+  });
+
+  it('scrollt auf 360x692 nicht', () => {
+    cy.viewport(360, 692);
+    cy.get('[data-testid="panels-area"]').then($el => {
+      expect($el[0].scrollHeight).to.be.at.most($el[0].clientHeight + 1);
+    });
+  });
+
+  it('gibt den Umschaltflächen mindestens 56px Höhe', () => {
+    cy.viewport(360, 692);
+    cy.get('[data-testid="switch-player-1"]').invoke('outerHeight').should('be.gte', 56);
+    cy.get('[data-testid="switch-player-2"]').invoke('outerHeight').should('be.gte', 56);
+  });
+
+  it('markiert den aktiven Spieler per aria-pressed', () => {
+    cy.get('[data-testid="switch-player-1"]').should('have.attr', 'aria-pressed', 'true');
+    cy.get('[data-testid="switch-player-2"]').should('have.attr', 'aria-pressed', 'false');
+    cy.get('[data-testid="switch-player-2"]').click();
+    cy.get('[data-testid="switch-player-1"]').should('have.attr', 'aria-pressed', 'false');
+    cy.get('[data-testid="switch-player-2"]').should('have.attr', 'aria-pressed', 'true');
+  });
+
+  it('zeigt auch bei 1280x900 genau ein Panel', () => {
+    cy.viewport(1280, 900);
+    cy.get('[data-testid="panel"]').should('have.length', 1);
+    cy.get('[data-testid="switch-player-1"]').should('be.visible');
+  });
+});
+
+describe('ScoreComponent — Panel folgt dem Aufschlag', () => {
+  it('folgt dem Aufschlagwechsel nach einem Game', () => {   // Review Focus 2
+    cy.viewport(360, 692);
+    // Punkt, der das Game beendet: die Antwort nennt Spieler 2 als Aufschläger
+    const afterGame = makeMatch({
+      score: { ...makeMatch().score, gamesPlayer1: 1, servingPlayer: 2 },
+    });
+    cy.intercept('POST', '**/api/matches/match-1/points', afterGame).as('point');
+    mountScore();
+
+    cy.get('[data-testid="panel"]').should('contain', 'Roger Federer');
+    cy.get('[data-testid="obs-WINNER"]').click();
+    cy.wait('@point');
+
+    cy.get('[data-testid="panel"]').should('contain', 'Rafael Nadal');
+    cy.get('[data-testid="switch-player-2"]').should('have.attr', 'aria-pressed', 'true');
+  });
+
+  it('kehrt nach einem erfassten Punkt zum Aufschläger zurück', () => {
+    cy.viewport(360, 692);
+    cy.intercept('POST', '**/api/matches/match-1/points', makeUpdatedScore(0, 1)).as('point');
+    mountScore();
+
+    cy.get('[data-testid="switch-player-2"]').click();
+    cy.get('[data-testid="panel"]').should('contain', 'Rafael Nadal');
+    cy.get('[data-testid="obs-UNFORCED_ERROR"]').click();
+    cy.wait('@point');
+
+    cy.get('[data-testid="panel"]').should('contain', 'Roger Federer');
+    cy.get('[data-testid="switch-player-1"]').should('have.attr', 'aria-pressed', 'true');
   });
 });
