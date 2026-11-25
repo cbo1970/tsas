@@ -1,4 +1,10 @@
 <div class="serve-picker" data-testid="serve-picker">
+  <div class="bar">
+    <button mat-icon-button type="button" data-testid="serve-picker-back" aria-label="Zurück" (click)="back.emit()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <span class="bar-title">{{ players().player1 }} – {{ players().player2 }}</span>
+  </div>
   <h2>Wer schlägt auf?</h2>
   <p>Wähle den Spieler, der das Match mit dem ersten Aufschlag beginnt.</p>
   <button type="button" class="pick-btn" data-testid="serve-pick-1" (click)="picked.emit(1)">

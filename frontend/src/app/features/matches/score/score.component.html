@@ -6,6 +6,7 @@
 
   @if (matchData()) {
 
+    @if (!needsServer()) {
     <!-- ── Score Header ── -->
     <div class="score-header">
 
@@ -69,15 +70,17 @@
         }
       </div>
     </div>
+    }
 
     <!-- ── Observation Panels ── -->
     @if (matchData()!.status !== 'COMPLETED') {
       <div class="panels-area">
 
-        @if (servingPlayer() === null) {
+        @if (needsServer()) {
           <app-serve-picker
             [players]="{ player1: player1Name(), player2: player2Name() }"
-            (picked)="pickServer($event)" />
+            (picked)="pickServer($event)"
+            (back)="goToMatches()" />
         } @else {
         <!-- ── Player 1 Panel ── -->
         <div class="obs-panel" [class.serving]="servingPlayer() === 1" data-testid="panel-p1">

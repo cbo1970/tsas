@@ -272,6 +272,11 @@ export class ScoreComponent implements OnInit {
 
   servingPlayer = computed(() => this.matchData()?.score?.servingPlayer ?? null);
 
+  needsServer = computed(() => {
+    const m = this.matchData();
+    return !!m && m.status !== 'COMPLETED' && this.servingPlayer() === null;
+  });
+
   setHistoryText = computed(() => {
     const history = this.setHistory();
     const m = this.matchData();

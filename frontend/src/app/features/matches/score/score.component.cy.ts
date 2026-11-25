@@ -362,6 +362,20 @@ describe('ScoreComponent — Aufschlagwahl', () => {
     cy.get('[data-testid="panel-p1"]').should('be.visible');
   });
 
+  it('blendet den Punktestand-Header aus, bis ein Aufschläger gewählt ist', () => {
+    cy.intercept('POST', '**/api/matches/match-1/serve/player2', {
+      body: { ...makeMatch().score, servingPlayer: 2 },
+    }).as('setServe2');
+    mountScore(makeMatch({ score: { ...makeMatch().score, servingPlayer: null } }));
+    cy.get('[data-testid="quick-score-p1"]').should('not.exist');
+    cy.get('[data-testid="quick-score-p2"]').should('not.exist');
+    cy.get('[data-testid="serve-picker-back"]').should('be.visible');
+    cy.get('[data-testid="serve-pick-2"]').click();
+    cy.wait('@setServe2');
+    cy.get('[data-testid="quick-score-p1"]').should('be.visible');
+    cy.get('[data-testid="quick-score-p2"]').should('be.visible');
+  });
+
   it('die Auswahlflächen sind mindestens 88px hoch', () => {
     mountScore(makeMatch({ score: { ...makeMatch().score, servingPlayer: null } }));
     cy.get('[data-testid="serve-pick-1"]').invoke('outerHeight').should('be.gte', 88);
