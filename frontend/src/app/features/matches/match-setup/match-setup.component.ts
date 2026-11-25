@@ -136,7 +136,9 @@ export class MatchSetupComponent implements OnInit {
   }
 
   displayPlayer(player: Player | string | null): string {
-    if (!player || typeof player === 'string') return '';
+    if (!player) return '';
+    // A string is the typed text (the "create player" option writes it back): keep it visible.
+    if (typeof player === 'string') return player;
     return `${player.lastName} ${player.firstName}`;
   }
 

@@ -133,6 +133,15 @@ describe('MatchSetupComponent — Spieler aus der Namenssuche anlegen', () => {
     cy.get('[data-testid="player2-input"]').should('have.value', '');
   });
 
+  it('behält den getippten Text, wenn der Dialog abgebrochen wird', () => {
+    cy.get('[data-testid="player2-input"]').type('Zzz Test');
+    cy.get('[data-testid="create-player-option"]').click();
+    cy.get('[data-testid="dialog-cancel"]').click();
+    cy.get('[data-testid="player2-input"]').should('have.value', 'Zzz Test');
+    cy.get('[data-testid="player2-input"]').focus();
+    cy.get('[data-testid="create-player-option"]').should('contain', 'Zzz Test');
+  });
+
   it('hält die Option bei 360x692 mindestens 44px hoch', () => {
     cy.viewport(360, 692);
     mountSetup();
