@@ -523,6 +523,25 @@ describe('ScoreComponent — ein Panel', () => {
     });
   });
 
+  // 56px ist eine Untergrenze, keine Aufforderung, den Restplatz aufzufüllen:
+  // die Kacheln behalten ihre natürliche Höhe, übriger Platz bleibt leer.
+  it('streckt die Kacheln des Aufschläger-Panels nicht über ihre natürliche Höhe', () => {
+    cy.viewport(360, 692);
+    cy.get('[data-testid^="obs-"]').each($el => {
+      const h = $el[0].getBoundingClientRect().height;
+      expect(h, `${$el.attr('data-testid')} Höhe`).to.be.within(56, 96);
+    });
+  });
+
+  it('streckt die Kacheln des Returnierenden-Panels nicht über ihre natürliche Höhe', () => {
+    cy.viewport(360, 692);
+    cy.get('[data-testid="switch-player-2"]').click();
+    cy.get('[data-testid^="obs-"]').each($el => {
+      const h = $el[0].getBoundingClientRect().height;
+      expect(h, `${$el.attr('data-testid')} Höhe`).to.be.within(56, 96);
+    });
+  });
+
   it('scrollt auf 360x692 nicht', () => {
     cy.viewport(360, 692);
     cy.get('[data-testid="panels-area"]').then($el => {

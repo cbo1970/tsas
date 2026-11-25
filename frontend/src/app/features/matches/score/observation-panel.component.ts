@@ -13,7 +13,9 @@ import { PointType, StrokeType } from '../../../core/models/point.model';
   standalone: true,
   templateUrl: './observation-panel.component.html',
   styles: [`
-    :host { display: flex; flex: 1; min-height: 0; }
+    /* Das Panel ist so hoch wie sein Inhalt — das Returnierenden-Panel ist
+       dadurch schlicht kürzer als das des Aufschlägers. Restplatz bleibt leer. */
+    :host { display: flex; flex: 0 1 auto; min-height: 0; }
 
     .panel {
       flex: 1;
@@ -86,17 +88,18 @@ import { PointType, StrokeType } from '../../../core/models/point.model';
       font-weight: 600;
     }
 
-    /* Beobachtungskacheln füllen die verbleibende Höhe.
-       Kein min-height: 0 — bei zu wenig Platz soll der Block lieber unten
+    /* Kein min-height: 0 — bei zu wenig Platz soll der Block lieber unten
        abgeschnitten werden als sich über die Kontextzeilen legen. */
     .obs-block {
-      flex: 1 1 auto;
+      flex: 0 1 auto;
       display: flex;
       flex-direction: column;
       gap: 4px;
     }
+    /* 56px ist die Untergrenze, kein Auftrag, den Restplatz aufzufüllen:
+       die Zeilen wachsen nicht (kein flex-grow). */
     .obs-row {
-      flex: 1 1 0;
+      flex: 0 0 auto;
       min-height: 56px;
       display: grid;
       grid-template-columns: 1fr;
