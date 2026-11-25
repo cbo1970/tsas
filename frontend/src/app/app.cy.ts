@@ -85,6 +85,19 @@ describe('App — Navigation', () => {
     cy.get('[data-cy="logout"]').should('exist');
   });
 
+  it('verankert die Navigationsleiste am unteren Bildschirmrand, unterhalb von main', () => {
+    cy.viewport(390, 736);
+    mountApp();
+    cy.get('[data-testid="bottom-nav"]').should('be.visible').then($nav => {
+      cy.window().then(win => {
+        const nav = $nav[0].getBoundingClientRect();
+        expect(nav.bottom).to.be.closeTo(win.innerHeight, 1);
+        const main = win.document.querySelector('main')!.getBoundingClientRect();
+        expect(main.bottom).to.be.at.most(nav.top + 1);
+      });
+    });
+  });
+
   it('hält alle Tap-Ziele der Navigationsleiste bei mindestens 44x44 px', () => {
     cy.viewport(390, 736);
     mountApp();

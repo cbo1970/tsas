@@ -47,6 +47,10 @@ import { LayoutService } from './core/layout/layout.service';
       letter-spacing: 0.5px;
     }
     .bottom-nav {
+      order: 1;
+      position: sticky;
+      bottom: 0;
+      z-index: 1;
       display: flex;
       background: var(--surface-card);
       border-top: 1px solid var(--border);
