@@ -1,3 +1,4 @@
+@if (showAppNav() && !isHandset()) {
 <mat-toolbar>
   <mat-icon>sports_tennis</mat-icon>
   <span class="app-title">{{ 'app.title' | translate }}</span>
@@ -12,14 +13,6 @@
     <span class="flag" aria-hidden="true">{{ currentFlag() }}</span>
     {{ language.current().toUpperCase() }}
   </button>
-  <mat-menu #langMenu="matMenu">
-    @for (l of languages; track l.code) {
-      <button mat-menu-item [attr.data-cy]="'lang-' + l.code" (click)="switchLanguage(l.code)">
-        <span class="flag" aria-hidden="true">{{ l.flag }}</span>
-        <span>{{ l.label }}</span>
-      </button>
-    }
-  </mat-menu>
   @if (authService.isAdmin()) {
     <mat-chip class="admin-badge" data-cy="admin-badge" highlighted>
       <mat-icon matChipAvatar>shield</mat-icon>
@@ -48,6 +41,58 @@
     </mat-menu>
   }
 </mat-toolbar>
+} @else if (showAppNav()) {
+<nav class="bottom-nav" data-testid="bottom-nav">
+  <a class="nav-item" mat-button routerLink="/players" routerLinkActive="active-link" data-testid="nav-players">
+    <mat-icon>people</mat-icon>
+    <span>{{ 'app.nav.players' | translate }}</span>
+  </a>
+  <a class="nav-item" mat-button routerLink="/matches/new" routerLinkActive="active-link" data-testid="nav-new-match">
+    <mat-icon>add_circle</mat-icon>
+    <span>{{ 'app.nav.newMatch' | translate }}</span>
+  </a>
+  <button class="nav-item" mat-button [matMenuTriggerFor]="moreMenu" data-testid="nav-more">
+    <mat-icon>more_horiz</mat-icon>
+    <span>{{ 'app.nav.more' | translate }}</span>
+  </button>
+  <mat-menu #moreMenu="matMenu">
+    @if (authService.isAdmin()) {
+      <mat-chip class="admin-badge" data-cy="admin-badge" highlighted>
+        <mat-icon matChipAvatar>shield</mat-icon>
+        ADMIN
+      </mat-chip>
+    }
+    <button mat-menu-item [matMenuTriggerFor]="langMenu" data-cy="lang-menu-trigger" [attr.aria-label]="'app.language.label' | translate">
+      <span class="flag" aria-hidden="true">{{ currentFlag() }}</span>
+      <span>{{ 'app.language.label' | translate }} ({{ language.current().toUpperCase() }})</span>
+    </button>
+    @if (userName()) {
+      <mat-divider />
+      <button mat-menu-item data-cy="export-my-data" (click)="exportMyData()">
+        <mat-icon>file_download</mat-icon>
+        <span>{{ 'app.menu.exportData' | translate }}</span>
+      </button>
+      <button mat-menu-item class="danger-item" data-cy="delete-my-data" (click)="deleteMyData()">
+        <mat-icon>delete_forever</mat-icon>
+        <span>{{ 'app.menu.deleteData' | translate }}</span>
+      </button>
+      <mat-divider />
+      <button mat-menu-item data-cy="logout" (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>{{ 'app.menu.logout' | translate }}</span>
+      </button>
+    }
+  </mat-menu>
+</nav>
+}
+<mat-menu #langMenu="matMenu">
+  @for (l of languages; track l.code) {
+    <button mat-menu-item [attr.data-cy]="'lang-' + l.code" (click)="switchLanguage(l.code)">
+      <span class="flag" aria-hidden="true">{{ l.flag }}</span>
+      <span>{{ l.label }}</span>
+    </button>
+  }
+</mat-menu>
 <main>
   <router-outlet />
 </main>

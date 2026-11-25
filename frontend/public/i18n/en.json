@@ -3,7 +3,8 @@
     "title": "TSaS – Tennis Score & Statistic",
     "nav": {
       "players": "Players",
-      "newMatch": "New match"
+      "newMatch": "New match",
+      "more": "More"
     },
     "menu": {
       "exportData": "Export my data",
