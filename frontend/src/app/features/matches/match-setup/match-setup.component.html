@@ -35,8 +35,8 @@
         </mat-form-field>
 
         <div class="form-row">
-          <label class="form-label">{{ 'matchSetup.setsToWin' | translate }}</label>
-          <mat-radio-group formControlName="setsToWin" class="radio-group">
+          <label class="form-label" data-testid="sets-to-win-label">{{ 'matchSetup.setsToWin' | translate }}</label>
+          <mat-radio-group formControlName="setsToWin" class="radio-group" data-testid="sets-to-win-group">
             <mat-radio-button [value]="2">2</mat-radio-button>
             <mat-radio-button [value]="3">3</mat-radio-button>
           </mat-radio-group>
@@ -53,7 +53,7 @@
         </div>
 
         <div class="actions">
-          <button mat-raised-button color="primary" (click)="startMatch()"
+          <button mat-raised-button color="primary" class="start-button" data-testid="start-match" (click)="startMatch()"
                   [disabled]="form.invalid || loading()">
             {{ 'matchSetup.start' | translate }}
           </button>

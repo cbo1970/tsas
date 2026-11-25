@@ -45,6 +45,19 @@ import { Player } from '../../../core/models/player.model';
     .toggle-row span { font-weight: 700; }
     .actions { display: flex; justify-content: flex-end; padding-top: 16px; }
     mat-card { border: 1px solid var(--text); }
+    @media (max-width: 700px) {
+      .page-container { padding: 16px; }
+      .page-header { margin-bottom: 16px; }
+      mat-card { border: none; box-shadow: none; background: transparent; }
+      :host ::ng-deep mat-card-content { padding: 0; }
+      .page-header h1 { font-size: 22px; }
+      .form-row:not(.toggle-row) { flex-direction: column; align-items: stretch; gap: 4px; }
+      .radio-group { gap: 8px; }
+      :host ::ng-deep .radio-group .mdc-radio { width: 44px; height: 44px; padding: 12px; box-sizing: border-box; }
+      .toggle-row { min-height: 44px; }
+      .actions { display: block; }
+      .start-button { width: 100%; min-height: 52px; }
+    }
   `]
 })
 export class MatchSetupComponent implements OnInit {

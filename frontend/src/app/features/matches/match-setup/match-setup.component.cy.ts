@@ -78,3 +78,49 @@ describe('MatchSetupComponent — player autocomplete filter', () => {
     cy.get('mat-option').should('not.exist');
   });
 });
+
+describe('MatchSetupComponent — Layout', () => {
+
+  beforeEach(() => mountSetup());
+
+  it('stellt bei 360x692 das Label über das Bedienelement', () => {
+    cy.viewport(360, 692);
+    cy.get('[data-testid="sets-to-win-label"]').then($l => {
+      cy.get('[data-testid="sets-to-win-group"]').then($g => {
+        expect($l[0].getBoundingClientRect().bottom).to.be.at.most($g[0].getBoundingClientRect().top + 1);
+      });
+    });
+  });
+
+  it('läuft bei 360x692 nicht waagerecht über', () => {
+    cy.viewport(360, 692);
+    cy.document().its('body').then(b => expect(b.scrollWidth).to.be.at.most(b.clientWidth));
+  });
+
+  it('gibt dem Startknopf die volle Breite und mindestens 52px Höhe', () => {
+    cy.viewport(360, 692);
+    cy.get('[data-testid="start-match"]').invoke('outerWidth').should('be.gte', 320);
+    cy.get('[data-testid="start-match"]').invoke('outerHeight').should('be.gte', 52);
+  });
+
+  it('hält bei 360x692 alle Bedienelemente mindestens 44px hoch', () => {
+    cy.viewport(360, 692);
+    cy.get('[data-testid="sets-to-win-group"] mat-radio-button .mdc-radio').each($r => {
+      expect($r.outerHeight()).to.be.at.least(44);
+      expect($r.outerWidth()).to.be.at.least(44);
+    });
+    cy.get('.toggle-row').each($r => expect($r.outerHeight()).to.be.at.least(44));
+  });
+
+  it('behält bei 1024x768 die Desktop-Darstellung: Label neben der Gruppe, Rand 24px', () => {
+    cy.viewport(1024, 768);
+    cy.get('[data-testid="sets-to-win-label"]').then($l => {
+      cy.get('[data-testid="sets-to-win-group"]').then($g => {
+        expect($l[0].getBoundingClientRect().right).to.be.at.most($g[0].getBoundingClientRect().left + 1);
+      });
+    });
+    cy.get('.page-container').should('have.css', 'padding-left', '24px');
+    cy.get('h1').should('have.css', 'font-size', '28px');
+    cy.get('[data-testid="start-match"]').invoke('outerWidth').should('be.lt', 200);
+  });
+});
