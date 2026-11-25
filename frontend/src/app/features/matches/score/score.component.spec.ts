@@ -130,20 +130,28 @@ describe('ScoreComponent — inline scoring', () => {
     expect(mockApi['recordPoint']).toHaveBeenCalledWith('match-1', { winner: 2 });
   });
 
-  it('should set serving player on recordQuickPoint when no server set (player 1)', () => {
+  it('pickServer(1) sets player 1 as server and patches the score', () => {
     component.matchData.set({ ...MOCK_MATCH, score: { ...MOCK_SCORE, servingPlayer: null } as any });
     mockApi['setServingPlayer1'].mockReturnValue(of({ ...MOCK_SCORE, servingPlayer: 1 }));
-    component.recordQuickPoint(1);
-    expect(mockApi['setServingPlayer1']).toHaveBeenCalled();
-    expect(mockApi['recordPoint']).not.toHaveBeenCalled();
+    component.pickServer(1);
+    expect(mockApi['setServingPlayer1']).toHaveBeenCalledWith('match-1');
+    expect(component.servingPlayer()).toBe(1);
   });
 
-  it('should set serving player 2 on recordQuickPoint when no server set', () => {
+  it('pickServer(2) sets player 2 as server', () => {
     component.matchData.set({ ...MOCK_MATCH, score: { ...MOCK_SCORE, servingPlayer: null } as any });
     mockApi['setServingPlayer2'].mockReturnValue(of({ ...MOCK_SCORE, servingPlayer: 2 }));
-    component.recordQuickPoint(2);
-    expect(mockApi['setServingPlayer2']).toHaveBeenCalled();
-    expect(mockApi['recordPoint']).not.toHaveBeenCalled();
+    component.pickServer(2);
+    expect(mockApi['setServingPlayer2']).toHaveBeenCalledWith('match-1');
+    expect(component.servingPlayer()).toBe(2);
+  });
+
+  it('recordQuickPoint without a server no longer sets the server implicitly', () => {
+    component.matchData.set({ ...MOCK_MATCH, score: { ...MOCK_SCORE, servingPlayer: null } as any });
+    mockApi['recordPoint'].mockReturnValue(of(MOCK_MATCH));
+    component.recordQuickPoint(1);
+    expect(mockApi['setServingPlayer1']).not.toHaveBeenCalled();
+    expect(mockApi['setServingPlayer2']).not.toHaveBeenCalled();
   });
 
   it('should not record point when match is completed (recordQuickPoint)', () => {

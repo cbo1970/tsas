@@ -74,6 +74,11 @@
     @if (matchData()!.status !== 'COMPLETED') {
       <div class="panels-area">
 
+        @if (servingPlayer() === null) {
+          <app-serve-picker
+            [players]="{ player1: player1Name(), player2: player2Name() }"
+            (picked)="pickServer($event)" />
+        } @else {
         <!-- ── Player 1 Panel ── -->
         <div class="obs-panel" [class.serving]="servingPlayer() === 1" data-testid="panel-p1">
           <div class="section-label">SERVICE (Kontext)</div>
@@ -179,6 +184,7 @@
                     (click)="toggleStroke(2, 'BACKHAND')">Rückhand</button>
           </div>
         </div>
+        }
 
         <!-- ── Coach Notes (volle Breite, direkt unter den Panels) ── -->
         <details class="coach-notes">

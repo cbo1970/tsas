@@ -14,6 +14,7 @@ import { ScoreEditDialogComponent } from './score-edit-dialog.component';
 import { EndMatchDialogComponent, EndMatchDialogResult } from './end-match-dialog.component';
 import { PointType, StrokeType, RecordPointRequest } from '../../../core/models/point.model';
 import { PlayerNotesComponent } from '../notes/player-notes.component';
+import { ServePickerComponent } from './serve-picker.component';
 
 @Component({
   selector: 'app-score',
@@ -25,6 +26,7 @@ import { PlayerNotesComponent } from '../notes/player-notes.component';
     MatDialogModule,
     MatSnackBarModule,
     PlayerNotesComponent,
+    ServePickerComponent,
     TranslatePipe,
   ],
   templateUrl: './score.component.html',
@@ -305,7 +307,6 @@ export class ScoreComponent implements OnInit {
   recordQuickPoint(winner: 1 | 2): void {
     const m = this.matchData();
     if (!m || m.status === 'COMPLETED') return;
-    if (this.servingPlayer() === null) { this.setServe(winner === 1); return; }
     this.api.recordPoint(this.matchId, { winner }).subscribe({
       next: (updated) => this.handlePointResponse(updated),
       error: () => this.snackBar.open('Fehler beim Speichern', 'OK', { duration: 3000 })
@@ -315,8 +316,6 @@ export class ScoreComponent implements OnInit {
   recordObservation(panel: 1 | 2, pointType: PointType): void {
     const m = this.matchData();
     if (!m || m.status === 'COMPLETED') return;
-    if (this.servingPlayer() === null) { this.setServe(panel === 1); return; }
-
     if (pointType === 'ACE' && this.servingPlayer() !== panel) {
       this.snackBar.open('Ass nur für den Aufschläger', 'OK', { duration: 3000 });
       return;
@@ -400,8 +399,8 @@ export class ScoreComponent implements OnInit {
     );
   }
 
-  private setServe(forPlayer1: boolean) {
-    const obs = forPlayer1
+  pickServer(player: 1 | 2): void {
+    const obs = player === 1
       ? this.api.setServingPlayer1(this.matchId)
       : this.api.setServingPlayer2(this.matchId);
     obs.subscribe({

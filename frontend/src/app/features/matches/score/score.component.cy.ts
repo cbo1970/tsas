@@ -342,3 +342,34 @@ describe('formatPoints logic', () => {
     expect(formatPoints(score, true)).to.equal('40');
   });
 });
+
+describe('ScoreComponent — Aufschlagwahl', () => {
+  it('zeigt die Aufschlagwahl, wenn servingPlayer null ist', () => {
+    mountScore(makeMatch({ score: { ...makeMatch().score, servingPlayer: null } }));
+    cy.get('[data-testid="serve-picker"]').should('be.visible');
+    cy.get('[data-testid="panel-p1"]').should('not.exist');
+    cy.get('[data-testid="panel-p2"]').should('not.exist');
+  });
+
+  it('setzt den Aufschläger und zeigt danach die Panels', () => {
+    cy.intercept('POST', '**/api/matches/match-1/serve/player1', {
+      body: { ...makeMatch().score, servingPlayer: 1 },
+    }).as('setServe');
+    mountScore(makeMatch({ score: { ...makeMatch().score, servingPlayer: null } }));
+    cy.get('[data-testid="serve-pick-1"]').click();
+    cy.wait('@setServe');
+    cy.get('[data-testid="serve-picker"]').should('not.exist');
+    cy.get('[data-testid="panel-p1"]').should('be.visible');
+  });
+
+  it('die Auswahlflächen sind mindestens 88px hoch', () => {
+    mountScore(makeMatch({ score: { ...makeMatch().score, servingPlayer: null } }));
+    cy.get('[data-testid="serve-pick-1"]').invoke('outerHeight').should('be.gte', 88);
+    cy.get('[data-testid="serve-pick-2"]').invoke('outerHeight').should('be.gte', 88);
+  });
+
+  it('zeigt die Aufschlagwahl nicht, wenn servingPlayer gesetzt ist', () => {
+    mountScore();
+    cy.get('[data-testid="serve-picker"]').should('not.exist');
+  });
+});
