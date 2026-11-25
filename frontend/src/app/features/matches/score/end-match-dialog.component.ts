@@ -27,7 +27,13 @@ export interface EndMatchDialogResult {
   templateUrl: './end-match-dialog.component.html',
   styles: [`
     .hint { margin: 0 0 16px; color: var(--text-muted); }
-    .radio-group { display: flex; flex-direction: column; gap: 12px; }
+    .radio-group { display: flex; flex-direction: column; gap: 4px; }
+    mat-radio-button { min-height: 44px; display: flex; align-items: center; }
+    mat-dialog-actions button {
+      --mat-button-text-container-height: 44px;
+      --mat-button-filled-container-height: 44px;
+      --mat-button-protected-container-height: 44px;
+    }
   `]
 })
 export class EndMatchDialogComponent {
