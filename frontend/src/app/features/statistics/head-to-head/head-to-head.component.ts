@@ -29,7 +29,7 @@ import { OpponentPreparation } from '../../../core/models/analysis.model';
     .val-right { text-align: left; padding-left: 4px; color: var(--text-subtle); }
     .val-right.leading { color: var(--text); font-weight: 700; }
     .player-row .val { color: var(--text); }
-    .stat-label { font-size: 10px; color: var(--text); font-weight: 700; text-align: center; }
+    .stat-label { font-size: 11px; color: var(--text); font-weight: 700; text-align: center; }
     .bar { display: flex; height: 4px; border-radius: 2px; overflow: hidden; margin-top: 1px; background: var(--surface-muted); }
     .bar-p1 { background: var(--brand); }
     .bar-p2 { background: var(--text-subtle); }
