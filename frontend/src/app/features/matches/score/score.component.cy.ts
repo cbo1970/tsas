@@ -724,15 +724,27 @@ describe('ScoreComponent — untere Leiste und Notizen', () => {
     cy.contains('Sieger').should('be.visible');
   });
 
-  it('hält die Notizen bei beendetem Match erreichbar, ohne Panel und Umschalter', () => {
+  it('bietet bei beendetem Match mit Siegerüberlag die Notizen in der Sieger-Karte an', () => {
     mountScore(makeMatch({ status: 'COMPLETED', score: { ...makeMatch().score, isDone: true, winner: 'PLAYER1' } }));
     cy.get('[data-testid="panel"]').should('not.exist');
     cy.get('[data-testid="switch-player-1"]').should('not.exist');
+    cy.get('[data-testid="notes-btn"]').should('not.exist');
+    cy.get('.winner-card [data-testid="winner-notes-btn"]').should('be.visible').click();
+    cy.get('[data-testid="player-notes"]').should('be.visible');
+    cy.get('[data-testid="notes-back"]').click();
+    cy.get('[data-testid="player-notes"]').should('not.exist');
+    cy.get('.winner-card').should('be.visible');
+  });
+
+  it('hält die Notizen bei beendetem Match ohne Überlay über die untere Leiste erreichbar', () => {
+    mountScore(makeMatch({ status: 'COMPLETED', score: { ...makeMatch().score, isDone: false } }));
+    cy.get('[data-testid="panel"]').should('not.exist');
+    cy.get('[data-testid="switch-player-1"]').should('not.exist');
     cy.get('[data-testid="last-observation"]').should('not.exist');
+    cy.get('.winner-overlay').should('not.exist');
     cy.get('[data-testid="notes-btn"]').should('be.visible').click();
     cy.get('[data-testid="player-notes"]').should('be.visible');
     cy.get('[data-testid="notes-back"]').click();
     cy.get('[data-testid="player-notes"]').should('not.exist');
-    cy.get('[data-testid="notes-btn"]').should('exist');
   });
 });

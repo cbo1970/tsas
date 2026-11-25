@@ -117,8 +117,8 @@
 
     }
 
-    @if (!needsServer()) {
-      <!-- ── Untere Leiste: zuletzt erfasst + Notiz-Einstieg (auch nach Matchende) ── -->
+    @if (!needsServer() && !matchData()!.score.isDone) {
+      <!-- ── Untere Leiste: zuletzt erfasst + Notiz-Einstieg (ohne Siegerüberlag) ── -->
       <div class="bottom-bar">
         @if (matchData()!.status !== 'COMPLETED') {
           <span class="last-observation" data-testid="last-observation">{{ lastObservationText() }}</span>
@@ -138,9 +138,14 @@
           <div class="final-score">
             {{ matchData()!.score.setsPlayer1 }} : {{ matchData()!.score.setsPlayer2 }} Sätze
           </div>
-          <button mat-raised-button color="primary" (click)="goToMatches()">
-            Zurück zur Übersicht
-          </button>
+          <div class="winner-actions">
+            <button mat-stroked-button data-testid="winner-notes-btn" (click)="showNotes.set(true)">
+              Notizen
+            </button>
+            <button mat-raised-button color="primary" (click)="goToMatches()">
+              Zurück zur Übersicht
+            </button>
+          </div>
         </div>
       </div>
     }

@@ -170,9 +170,6 @@ const OBSERVATION_LABELS: Record<PointType, string> = {
       justify-content: space-between;
       gap: 8px;
       padding: 0 8px 8px;
-      /* über dem Siegerüberlag: Notizen bleiben nach dem Match erreichbar */
-      position: relative;
-      z-index: 21;
     }
     .last-observation {
       min-width: 0;
@@ -242,6 +239,8 @@ const OBSERVATION_LABELS: Record<PointType, string> = {
       box-shadow: var(--shadow-pop);
     }
     .winner-text { font-size: 22px; font-weight: bold; margin-bottom: 8px; color: var(--brand-strong); }
+    .winner-actions { display: flex; flex-direction: column; gap: 8px; }
+    .winner-actions button { min-height: 44px; }
     .final-score { font-size: 15px; color: var(--text-muted); margin-bottom: 16px; }
 
     .loading { text-align: center; padding: 48px; color: var(--text-subtle); }
