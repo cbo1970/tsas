@@ -15,18 +15,21 @@ import { Player } from '../../core/models/player.model';
     :host { display: block; }
     .player-card {
       display: flex; align-items: center; gap: 4px;
-      min-height: 64px; padding: 8px 4px 8px 16px;
+      min-height: 64px; padding: 0 4px 0 0;
       border-bottom: 1px solid var(--brand-border);
-      cursor: pointer;
     }
     .player-card:last-child { border-bottom: 0; }
     .player-card.inactive-card { opacity: 0.45; }
-    .player-info { flex: 1; min-width: 0; }
+    .player-main {
+      flex: 1; min-width: 0; min-height: 64px; padding: 8px 4px 8px 16px;
+      display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+      background: none; border: 0; font: inherit; text-align: left; cursor: pointer;
+    }
     .player-name { font-weight: 600; color: var(--text); overflow-wrap: anywhere; }
     .player-meta { font-size: 14px; color: var(--text-muted); }
     @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.25); opacity: 0.7; } }
     .tennis-ball { font-size: 20px; line-height: 1; display: inline-block; animation: pulse 2s ease-in-out infinite; }
-    .player-card button { flex-shrink: 0; width: 48px; height: 48px; }
+    .player-card .mat-mdc-icon-button { flex-shrink: 0; width: 48px; height: 48px; }
   `],
 })
 export class PlayerCardListComponent {

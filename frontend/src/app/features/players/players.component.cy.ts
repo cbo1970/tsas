@@ -246,6 +246,21 @@ describe('PlayersComponent', () => {
       cy.get('[formcontrolname="firstName"]').should('not.exist');
     });
 
+    it('does not open the edit dialog when pressing Enter on the menu or ball button', () => {
+      mountPlayers(WITH_MATCH, [{ provide: Router, useValue: { navigate: cy.stub() } }], makeAuthMock(), PHONE);
+      cy.get('[data-testid="open-match"]').type('{enter}');
+      cy.get('[formcontrolname="firstName"]').should('not.exist');
+      cy.get('[data-testid="player-menu"]').first().type('{enter}');
+      cy.get('[data-testid="player-history-btn"]').should('be.visible');
+      cy.get('[formcontrolname="firstName"]').should('not.exist');
+    });
+
+    it('opens the edit dialog with the keyboard on the card', () => {
+      mountPlayers(PLAYERS, [], makeAuthMock(), PHONE);
+      cy.get('[data-testid="player-card-main"]').first().focus().type('{enter}');
+      cy.get('[formcontrolname="firstName"]').should('be.visible');
+    });
+
     it('offers history and head-to-head behind the overflow menu', () => {
       const navigateSpy = cy.stub().as('navigate');
       mountPlayers(PLAYERS, [{ provide: Router, useValue: { navigate: navigateSpy } }], makeAuthMock(), PHONE);
