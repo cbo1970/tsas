@@ -290,6 +290,29 @@ describe('ScoreComponent — service context', () => {
     cy.get('[data-testid="stroke-BACKHAND"]').should('have.attr', 'aria-pressed', 'false');
   });
 
+  // C1: Ein Schnellpunkt (Tipp auf die Punktzahl) ist ein erfasster Punkt. Der
+  // Kontext gehoert zum Punkt, nicht zum Panel — er darf danach nicht stehen
+  // bleiben und stumm mit dem naechsten Punkt mitreisen.
+  it('schickt nach einem Schnellpunkt keinen alten Kontext mit', () => {
+    cy.intercept('POST', '**/api/matches/match-1/points', makeUpdatedScore(0, 1)).as('recordPoint');
+    mountScore();
+
+    cy.get('[data-testid="serve-attempt-2"]').click();
+    cy.get('[data-testid="stroke-BACKHAND"]').click();
+    cy.get('[data-testid="quick-score-p1"]').click();
+    cy.wait('@recordPoint');
+
+    cy.get('[data-testid="serve-attempt-2"]').should('have.attr', 'aria-pressed', 'false');
+    cy.get('[data-testid="stroke-BACKHAND"]').should('have.attr', 'aria-pressed', 'false');
+
+    // Naechster Punkt ueber das Panel, ohne neue Auswahl
+    cy.get('[data-testid="obs-WINNER"]').click();
+    cy.wait('@recordPoint').its('request.body').should(body => {
+      expect(body.serveAttempt, 'serveAttempt').to.be.oneOf([null, undefined]);
+      expect(body.strokeType, 'strokeType').to.be.oneOf([null, undefined]);
+    });
+  });
+
   it('schickt nach einem Punkt vom anderen Panel keinen alten Kontext mit', () => {
     cy.intercept('POST', '**/api/matches/match-1/points', makeUpdatedScore(0, 1)).as('recordPoint');
     mountScore();
@@ -694,6 +717,20 @@ describe('ScoreComponent — untere Leiste und Notizen', () => {
     cy.get('[data-testid="last-observation"]').should('contain', 'Winner');
     cy.get('[data-testid="notes-btn"]').should('be.visible')
       .invoke('outerHeight').should('be.gte', 40);
+  });
+
+  // M5: Ein Schnellpunkt traegt keine Beobachtung — die Leiste darf danach
+  // nicht weiter die Beobachtung des vorherigen Punktes behaupten.
+  it('behauptet nach einem Schnellpunkt nicht mehr die alte Beobachtung', () => {
+    mountScore();
+    cy.intercept('POST', '**/api/matches/match-1/points', makeUpdatedScore(1, 0)).as('recordPoint');
+    cy.get('[data-testid="obs-WINNER"]').click();
+    cy.wait('@recordPoint');
+    cy.get('[data-testid="last-observation"]').should('contain', 'Winner');
+
+    cy.get('[data-testid="quick-score-p1"]').click();
+    cy.wait('@recordPoint');
+    cy.get('[data-testid="last-observation"]').should('not.contain', 'Winner');
   });
 
   it('öffnet die Notizen als Vollbild und kehrt zurück', () => {

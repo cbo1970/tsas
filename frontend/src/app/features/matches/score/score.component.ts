@@ -269,12 +269,17 @@ export class ScoreComponent implements OnInit {
   /** Notizen-Vollbild innerhalb der Scoring-Route. */
   showNotes = signal(false);
   hasNotes  = signal(false);
-  /** Zuletzt erfolgreich erfasste Beobachtung (Anzeige in der unteren Leiste). */
-  lastObservation = signal<PointType | null>(null);
+  /**
+   * Zuletzt erfolgreich erfasster Punkt (Anzeige in der unteren Leiste).
+   * 'QUICK' = Schnellpunkt ohne Beobachtung — die Leiste darf dann nicht
+   * weiter die Beobachtung des vorherigen Punktes behaupten.
+   */
+  lastObservation = signal<PointType | 'QUICK' | null>(null);
 
   lastObservationText = computed(() => {
     const o = this.lastObservation();
-    return o ? `Zuletzt: ${OBSERVATION_LABELS[o]}` : 'Noch nichts erfasst';
+    if (!o) return 'Noch nichts erfasst';
+    return o === 'QUICK' ? 'Zuletzt: Punkt ohne Zuordnung' : `Zuletzt: ${OBSERVATION_LABELS[o]}`;
   });
 
   /** Spieler, dessen Panel gerade sichtbar ist. */
@@ -367,7 +372,13 @@ export class ScoreComponent implements OnInit {
     const m = this.matchData();
     if (!m || m.status === 'COMPLETED') return;
     this.api.recordPoint(this.matchId, { winner }).subscribe({
-      next: (updated) => this.handlePointResponse(updated),
+      next: (updated) => {
+        this.handlePointResponse(updated);
+        // Auch der Schnellpunkt ist ein erfasster Punkt: Aufschlagversuch und
+        // Schlagart gehoeren zu ihm und duerfen nicht am naechsten mitreisen.
+        this.lastObservation.set('QUICK');
+        this.resetPointContext();
+      },
       error: () => this.snackBar.open('Fehler beim Speichern', 'OK', { duration: 3000 })
     });
   }
