@@ -104,6 +104,7 @@
     "matchTiebreak": "Match-Tiebreak im Entscheidungssatz",
     "shortSet": "Short Set (auf 4)",
     "start": "Match starten",
+    "createPlayer": "« {{name}} » neu anlegen",
     "errors": {
       "samePlayer": "Beide Spieler müssen unterschiedlich sein.",
       "missingPlayer": "Bitte beide Spieler auswählen."

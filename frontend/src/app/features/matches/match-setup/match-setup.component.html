@@ -8,7 +8,7 @@
       <form [formGroup]="form" class="setup-form">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>{{ 'matchSetup.player1' | translate }}</mat-label>
-          <input matInput [formControl]="player1Input"
+          <input matInput [formControl]="player1Input" data-testid="player1-input"
                  [matAutocomplete]="auto1"
                  placeholder="Name eintippen…">
           <mat-autocomplete #auto1="matAutocomplete"
@@ -16,13 +16,19 @@
                             (optionSelected)="onPlayer1Selected($event.option.value)">
             @for (p of filtered1(); track p.id) {
               <mat-option [value]="p">{{ p.lastName }} {{ p.firstName }}</mat-option>
+            } @empty {
+              @if (player1Query().trim()) {
+                <mat-option class="create-player-option" data-testid="create-player-option" [value]="player1Query()">
+                  {{ 'matchSetup.createPlayer' | translate: { name: player1Query().trim() } }}
+                </mat-option>
+              }
             }
           </mat-autocomplete>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>{{ 'matchSetup.player2' | translate }}</mat-label>
-          <input matInput [formControl]="player2Input"
+          <input matInput [formControl]="player2Input" data-testid="player2-input"
                  [matAutocomplete]="auto2"
                  placeholder="Name eintippen…">
           <mat-autocomplete #auto2="matAutocomplete"
@@ -30,6 +36,12 @@
                             (optionSelected)="onPlayer2Selected($event.option.value)">
             @for (p of filtered2(); track p.id) {
               <mat-option [value]="p">{{ p.lastName }} {{ p.firstName }}</mat-option>
+            } @empty {
+              @if (player2Query().trim()) {
+                <mat-option class="create-player-option" data-testid="create-player-option" [value]="player2Query()">
+                  {{ 'matchSetup.createPlayer' | translate: { name: player2Query().trim() } }}
+                </mat-option>
+              }
             }
           </mat-autocomplete>
         </mat-form-field>

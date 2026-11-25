@@ -3,6 +3,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideRouter } from '@angular/router';
 import { Player } from '../../../core/models/player.model';
+import { inject, provideAppInitializer } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { testTranslateProviders } from '../../../core/i18n/test-providers';
 
 const FREE: Player = {
@@ -29,6 +31,10 @@ function mountSetup(players: Player[] = [FREE, BUSY, FREE2]) {
       provideAnimationsAsync(),
       provideRouter([]),
       ...testTranslateProviders,
+      // The test providers return bare keys; the create option must show the typed name, so give it its text.
+      provideAppInitializer(() => inject(TranslateService).setTranslation('de', {
+        matchSetup: { createPlayer: '« {{name}} » neu anlegen' },
+      })),
     ],
   });
   cy.wait('@getPlayers');
@@ -76,6 +82,63 @@ describe('MatchSetupComponent — player autocomplete filter', () => {
     mountSetup([BUSY]);
     cy.get('input').first().click();
     cy.get('mat-option').should('not.exist');
+  });
+});
+
+describe('MatchSetupComponent — Spieler aus der Namenssuche anlegen', () => {
+
+  beforeEach(() => mountSetup());
+
+  it('bietet bei fehlendem Treffer das Anlegen an', () => {
+    cy.get('[data-testid="player2-input"]').type('Zzz');
+    cy.get('[data-testid="create-player-option"]').should('contain', 'Zzz');
+  });
+
+  it('bietet das Anlegen nicht an, wenn ein Treffer existiert', () => {
+    cy.get('[data-testid="player2-input"]').type('Muster');
+    cy.get('mat-option').contains('Muster Anna').should('exist');
+    cy.get('[data-testid="create-player-option"]').should('not.exist');
+  });
+
+  it('bietet das Anlegen bei leerer Eingabe nicht an', () => {
+    mountSetup([BUSY]);
+    cy.get('[data-testid="player2-input"]').click();
+    cy.get('[data-testid="create-player-option"]').should('not.exist');
+  });
+
+  it('öffnet den Dialog mit dem getippten Namen vorbefüllt', () => {
+    cy.get('[data-testid="player2-input"]').type('Zzz Test Muster');
+    cy.get('[data-testid="create-player-option"]').click();
+    cy.get('[formcontrolname="firstName"]').should('have.value', 'Zzz');
+    cy.get('[formcontrolname="lastName"]').should('have.value', 'Test Muster');
+  });
+
+  it('übernimmt den angelegten Spieler in das Feld, aus dem heraus angelegt wurde', () => {
+    cy.intercept('POST', '**/api/players', { id: 'p9', firstName: 'Zzz', lastName: 'Test' }).as('create');
+    cy.get('[data-testid="player2-input"]').type('Zzz Test');
+    cy.get('[data-testid="create-player-option"]').click();
+    cy.get('[data-testid="dialog-save"]').click();
+    cy.wait('@create');
+    cy.get('[data-testid="player2-input"]').should('have.value', 'Test Zzz');
+    cy.get('[data-testid="player1-input"]').should('have.value', '');
+  });
+
+  it('übernimmt den angelegten Spieler auch in Spieler 1', () => {
+    cy.intercept('POST', '**/api/players', { id: 'p9', firstName: 'Zzz', lastName: 'Test' }).as('create');
+    cy.get('[data-testid="player1-input"]').type('Zzz Test');
+    cy.get('[data-testid="create-player-option"]').click();
+    cy.get('[data-testid="dialog-save"]').click();
+    cy.wait('@create');
+    cy.get('[data-testid="player1-input"]').should('have.value', 'Test Zzz');
+    cy.get('[data-testid="player2-input"]').should('have.value', '');
+  });
+
+  it('hält die Option bei 360x692 mindestens 44px hoch', () => {
+    cy.viewport(360, 692);
+    mountSetup();
+    cy.get('[data-testid="player2-input"]').focus().type('Zzz');
+    cy.get('[data-testid="create-player-option"]').invoke('outerHeight').should('be.gte', 44);
+    cy.document().its('body').then(b => expect(b.scrollWidth).to.be.at.most(b.clientWidth));
   });
 });
 
