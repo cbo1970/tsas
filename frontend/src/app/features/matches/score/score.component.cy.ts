@@ -55,10 +55,10 @@ const activatedRouteStub = {
   snapshot: { paramMap: { get: () => 'match-1' } },
 };
 
-function mountScore(match: MatchWithScore = makeMatch()) {
+function mountScore(match: MatchWithScore = makeMatch(), player1: Player = PLAYER1, player2: Player = PLAYER2) {
   cy.intercept('GET', '**/api/matches/match-1', match).as('getMatch');
-  cy.intercept('GET', '**/api/players/p1', PLAYER1).as('getPlayer1');
-  cy.intercept('GET', '**/api/players/p2', PLAYER2).as('getPlayer2');
+  cy.intercept('GET', '**/api/players/p1', player1).as('getPlayer1');
+  cy.intercept('GET', '**/api/players/p2', player2).as('getPlayer2');
   cy.intercept('GET', '**/api/matches/*/notes', []).as('notes');
 
   cy.mount(ScoreComponent, {
@@ -413,12 +413,42 @@ describe('ScoreComponent — Kopfzeile', () => {
     });
   });
 
-  it('bricht bei zweistelligen Tie-Break-Punkten nicht um', () => {
+  it('bricht bei zweistelligen Tie-Break-Punkten und langen Namen nicht um oder über', () => {
     cy.viewport(360, 692);
-    mountScore(makeMatch({ score: { ...makeMatch().score, gamesPlayer1: 6, gamesPlayer2: 6, pointsPlayer1: 10, pointsPlayer2: 12 } }));
+    const long1: Player = { ...PLAYER1, firstName: 'Alexander', lastName: 'Zverev' };
+    const long2: Player = { ...PLAYER2, firstName: 'Stefanos', lastName: 'Tsitsipas' };
+    mountScore(
+      makeMatch({ score: { ...makeMatch().score, gamesPlayer1: 6, gamesPlayer2: 6, pointsPlayer1: 10, pointsPlayer2: 12 } }),
+      long1, long2);
     cy.get('[data-testid="score-header"]').invoke('outerHeight').should('be.lte', 100);
-    cy.get('[data-testid="quick-score-p1"]').should('be.visible');
-    cy.get('[data-testid="quick-score-p1"]').invoke('outerHeight').should('be.lte', 50);
+    cy.get('[data-testid="quick-score-p1"]').should('contain.text', '10');
+    cy.get('[data-testid="quick-score-p2"]').should('contain.text', '12');
+
+    cy.get('[data-testid="score-header"]').then($header => {
+      const row = $header.find('.header-row')[0];
+      const p1 = $header.find('[data-testid="quick-score-p1"]')[0];
+      const p2 = $header.find('[data-testid="quick-score-p2"]')[0];
+      const games = $header.find('.games')[0].getBoundingClientRect();
+      const r1 = p1.getBoundingClientRect();
+      const r2 = p2.getBoundingClientRect();
+      // Zahl passt in ihre Schaltfläche, Zeile läuft nicht horizontal über
+      expect(p1.scrollWidth, 'p1 scrollWidth').to.be.lte(p1.clientWidth);
+      expect(p2.scrollWidth, 'p2 scrollWidth').to.be.lte(p2.clientWidth);
+      // Kein Kind ragt über die Zeile hinaus (row.scrollWidth taugt nicht: Materials
+      // 48px-Touch-Target der Icon-Buttons ragt 2px über, ohne sichtbar zu sein)
+      const rowRect = row.getBoundingClientRect();
+      Array.from(row.children).forEach(c => {
+        const r = c.getBoundingClientRect();
+        expect(r.left, `${c.className} links`).to.be.gte(rowRect.left - 0.5);
+        expect(r.right, `${c.className} rechts`).to.be.lte(rowRect.right + 0.5);
+      });
+      // Punktzahlen überlappen die Games-Spalte nicht
+      expect(r1.right, 'p1 rechts <= Games links').to.be.lte(games.left);
+      expect(r2.left, 'p2 links >= Games rechts').to.be.gte(games.right);
+      // und liegen im sichtbaren Bereich
+      expect(r1.left, 'p1 links').to.be.gte(0);
+      expect(r2.right, 'p2 rechts').to.be.lte(360);
+    });
   });
 
   it('alle Tipp-Ziele in der Kopfzeile sind mindestens 44x44px', () => {
