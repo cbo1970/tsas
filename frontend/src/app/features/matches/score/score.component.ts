@@ -170,6 +170,9 @@ const OBSERVATION_LABELS: Record<PointType, string> = {
       justify-content: space-between;
       gap: 8px;
       padding: 0 8px 8px;
+      /* über dem Siegerüberlag: Notizen bleiben nach dem Match erreichbar */
+      position: relative;
+      z-index: 21;
     }
     .last-observation {
       min-width: 0;
@@ -181,6 +184,7 @@ const OBSERVATION_LABELS: Record<PointType, string> = {
     }
     .notes-btn {
       position: relative;
+      margin-left: auto;
       flex-shrink: 0;
       min-height: 40px;
       min-width: 44px;

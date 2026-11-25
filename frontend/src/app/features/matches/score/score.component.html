@@ -115,16 +115,19 @@
         </div>
       }
 
-      @if (!needsServer()) {
-        <!-- ── Untere Leiste: zuletzt erfasst + Notiz-Einstieg ── -->
-        <div class="bottom-bar">
+    }
+
+    @if (!needsServer()) {
+      <!-- ── Untere Leiste: zuletzt erfasst + Notiz-Einstieg (auch nach Matchende) ── -->
+      <div class="bottom-bar">
+        @if (matchData()!.status !== 'COMPLETED') {
           <span class="last-observation" data-testid="last-observation">{{ lastObservationText() }}</span>
-          <button type="button" class="notes-btn" data-testid="notes-btn" (click)="showNotes.set(true)">
-            Notizen
-            @if (hasNotes()) { <span class="notes-dot" data-testid="notes-dot" aria-label="Notizen vorhanden"></span> }
-          </button>
-        </div>
-      }
+        }
+        <button type="button" class="notes-btn" data-testid="notes-btn" (click)="showNotes.set(true)">
+          Notizen
+          @if (hasNotes()) { <span class="notes-dot" data-testid="notes-dot" aria-label="Notizen vorhanden"></span> }
+        </button>
+      </div>
     }
 
     <!-- ── Winner overlay (completed match) ── -->

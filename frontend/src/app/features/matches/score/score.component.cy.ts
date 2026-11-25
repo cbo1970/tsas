@@ -723,4 +723,16 @@ describe('ScoreComponent — untere Leiste und Notizen', () => {
     cy.get('[data-testid="switch-player-1"]').should('not.exist');
     cy.contains('Sieger').should('be.visible');
   });
+
+  it('hält die Notizen bei beendetem Match erreichbar, ohne Panel und Umschalter', () => {
+    mountScore(makeMatch({ status: 'COMPLETED', score: { ...makeMatch().score, isDone: true, winner: 'PLAYER1' } }));
+    cy.get('[data-testid="panel"]').should('not.exist');
+    cy.get('[data-testid="switch-player-1"]').should('not.exist');
+    cy.get('[data-testid="last-observation"]').should('not.exist');
+    cy.get('[data-testid="notes-btn"]').should('be.visible').click();
+    cy.get('[data-testid="player-notes"]').should('be.visible');
+    cy.get('[data-testid="notes-back"]').click();
+    cy.get('[data-testid="player-notes"]').should('not.exist');
+    cy.get('[data-testid="notes-btn"]').should('exist');
+  });
 });
