@@ -42,67 +42,76 @@ import { ServePickerComponent } from './serve-picker.component';
       overflow: hidden;
     }
 
-    /* ── Score header ── */
+    /* ── Score header (verdichtet, <= 100px) ── */
     .score-header {
       background: var(--surface-card);
-      padding: 10px 16px;
+      padding: 4px 8px;
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
     }
-    .header-grid {
+    .header-row {
       display: grid;
-      grid-template-columns: 1fr auto 1fr;
+      grid-template-columns: 44px minmax(0, 1fr) auto minmax(0, 1fr) 44px 44px;
       align-items: center;
-      gap: 8px;
+      gap: 4px;
     }
-    .player-half-left  { text-align: center; }
-    .player-half-right { text-align: center; }
+    .hdr-icon { width: 44px; height: 44px; padding: 10px; }
+    .player-half {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 0;
+    }
     .player-name {
-      font-size: 14px;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 15px;
       font-weight: 700;
       color: var(--text-muted);
     }
     .player-name.serving { color: var(--brand-strong); }
-    .score-center { display: flex; align-items: center; gap: 8px; }
-    .sep { opacity: .3; }
-    .games-num {
-      font-size: 26px;
-      font-weight: 800;
-      line-height: 1;
+    .games {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-    .games-num.winning { color: var(--brand-strong); }
+    .games-label { font-size: 10px; color: var(--text); letter-spacing: .5px; }
+    .games-value {
+      display: flex;
+      gap: 4px;
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.2;
+      font-variant-numeric: tabular-nums;
+    }
+    .games-value .winning { color: var(--brand-strong); }
+    .sep { opacity: .3; }
     .pts-btn {
       background: none;
       border: none;
       color: var(--text);
-      font-size: 34px;
+      font-size: 30px;
       font-weight: 900;
       line-height: 1;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
       cursor: pointer;
       border-radius: 6px;
-      padding: 2px 10px;
+      min-width: 44px;
+      min-height: 44px;
+      padding: 0 6px;
       transition: background .15s;
     }
     .pts-btn:hover { background: var(--surface-muted); }
     .pts-btn.p1 { color: var(--brand-strong); }
-    .pts-label {
-      font-size: 10px;
-      color: var(--text);
-      letter-spacing: .5px;
-      text-align: center;
-    }
     .set-history {
       text-align: center;
-      margin-top: 4px;
       font-size: 10px;
+      line-height: 14px;
       color: var(--text);
       letter-spacing: .5px;
-    }
-    .header-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 4px;
-      margin-top: 6px;
     }
 
     /* ── Observation panels ── */

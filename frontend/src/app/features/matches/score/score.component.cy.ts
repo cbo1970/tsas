@@ -387,3 +387,47 @@ describe('ScoreComponent — Aufschlagwahl', () => {
     cy.get('[data-testid="serve-picker"]').should('not.exist');
   });
 });
+
+// ─── Kopfzeile ─────────────────────────────────────────────────────────────
+
+describe('ScoreComponent — Kopfzeile', () => {
+  it('ist höchstens 100px hoch', () => {
+    cy.viewport(390, 736);
+    mountScore();
+    cy.get('[data-testid="score-header"]').invoke('outerHeight').should('be.lte', 100);
+  });
+
+  it('ist auch bei 360px Breite höchstens 100px hoch', () => {
+    cy.viewport(360, 692);
+    mountScore();
+    cy.get('[data-testid="score-header"]').invoke('outerHeight').should('be.lte', 100);
+  });
+
+  it('erfasst beim Tipp auf die Punktzahl einen Punkt ohne Attribut', () => {
+    cy.intercept('POST', '**/api/matches/match-1/points', makeUpdatedScore(1, 0)).as('point');
+    mountScore();
+    cy.get('[data-testid="quick-score-p1"]').should('match', 'button').click();
+    cy.wait('@point').its('request.body').should(body => {
+      expect(body.winner).to.equal(1);
+      expect(body.pointType).to.be.oneOf([null, undefined]);
+    });
+  });
+
+  it('bricht bei zweistelligen Tie-Break-Punkten nicht um', () => {
+    cy.viewport(360, 692);
+    mountScore(makeMatch({ score: { ...makeMatch().score, gamesPlayer1: 6, gamesPlayer2: 6, pointsPlayer1: 10, pointsPlayer2: 12 } }));
+    cy.get('[data-testid="score-header"]').invoke('outerHeight').should('be.lte', 100);
+    cy.get('[data-testid="quick-score-p1"]').should('be.visible');
+    cy.get('[data-testid="quick-score-p1"]').invoke('outerHeight').should('be.lte', 50);
+  });
+
+  it('alle Tipp-Ziele in der Kopfzeile sind mindestens 44x44px', () => {
+    cy.viewport(360, 692);
+    mountScore();
+    cy.get('[data-testid="score-header"] button').each($b => {
+      const r = $b[0].getBoundingClientRect();
+      expect(r.width, 'Breite').to.be.gte(44);
+      expect(r.height, 'Höhe').to.be.gte(44);
+    });
+  });
+});

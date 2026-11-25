@@ -7,69 +7,58 @@
   @if (matchData()) {
 
     @if (!needsServer()) {
-    <!-- ── Score Header ── -->
-    <div class="score-header">
-
-      <!-- Row 1: Names + Games -->
-      <div class="header-grid">
-        <div class="player-half-left">
-          <span class="player-name" [class.serving]="servingPlayer() === 1">
-            @if (servingPlayer() === 1) { 🎾 } {{ player1Name() }}
-          </span>
-        </div>
-        <div class="score-center">
-          <span class="games-num" [class.winning]="matchData()!.score.setsPlayer1 > matchData()!.score.setsPlayer2">
-            {{ matchData()!.score.gamesPlayer1 }}
-          </span>
-          <span class="sep">:</span>
-          <span class="games-num" [class.winning]="matchData()!.score.setsPlayer2 > matchData()!.score.setsPlayer1">
-            {{ matchData()!.score.gamesPlayer2 }}
-          </span>
-        </div>
-        <div class="player-half-right">
-          <span class="player-name" [class.serving]="servingPlayer() === 2">
-            {{ player2Name() }} @if (servingPlayer() === 2) { 🎾 }
-          </span>
-        </div>
-      </div>
-
-      <!-- Row 2: Points (clickable) -->
-      <div class="header-grid" style="margin-top:4px;">
-        <div class="pts-label">PUNKTE</div>
-        <div class="score-center">
-          <button class="pts-btn p1"
-                  data-testid="quick-score-p1"
-                  (click)="recordQuickPoint(1)">
-            {{ formatPoints(matchData()!.score, true) }}
+      <!-- ── Score Header (verdichtet: eine Zeile + Satzverlauf) ── -->
+      <div class="score-header" data-testid="score-header">
+        <div class="header-row">
+          <button mat-icon-button class="hdr-icon" aria-label="Zurück" (click)="goToMatches()">
+            <mat-icon>arrow_back</mat-icon>
           </button>
-          <span class="sep" style="font-size:22px;">:</span>
-          <button class="pts-btn"
-                  data-testid="quick-score-p2"
-                  (click)="recordQuickPoint(2)">
-            {{ formatPoints(matchData()!.score, false) }}
+
+          <div class="player-half">
+            <span class="player-name" [class.serving]="servingPlayer() === 1">
+              @if (servingPlayer() === 1) { 🎾 }{{ player1Name() }}
+            </span>
+            <button class="pts-btn p1"
+                    data-testid="quick-score-p1"
+                    [attr.aria-label]="'Punkt für ' + player1Name()"
+                    (click)="recordQuickPoint(1)">
+              {{ formatPoints(matchData()!.score, true) }}
+            </button>
+          </div>
+
+          <div class="games">
+            <span class="games-label">Games</span>
+            <span class="games-value">
+              <span [class.winning]="matchData()!.score.setsPlayer1 > matchData()!.score.setsPlayer2">{{ matchData()!.score.gamesPlayer1 }}</span>
+              <span class="sep">:</span>
+              <span [class.winning]="matchData()!.score.setsPlayer2 > matchData()!.score.setsPlayer1">{{ matchData()!.score.gamesPlayer2 }}</span>
+            </span>
+          </div>
+
+          <div class="player-half">
+            <span class="player-name" [class.serving]="servingPlayer() === 2">
+              {{ player2Name() }}@if (servingPlayer() === 2) { 🎾 }
+            </span>
+            <button class="pts-btn"
+                    data-testid="quick-score-p2"
+                    [attr.aria-label]="'Punkt für ' + player2Name()"
+                    (click)="recordQuickPoint(2)">
+              {{ formatPoints(matchData()!.score, false) }}
+            </button>
+          </div>
+
+          <button mat-icon-button class="hdr-icon" data-testid="edit-score-btn" aria-label="Spielstand bearbeiten" (click)="openEditDialog()">
+            <mat-icon>edit</mat-icon>
           </button>
+          @if (matchData()!.status !== 'COMPLETED') {
+            <button mat-icon-button class="hdr-icon" color="warn" data-testid="end-match-btn" aria-label="Match beenden" (click)="endMatch()">
+              <mat-icon>stop</mat-icon>
+            </button>
+          }
         </div>
-        <div class="pts-label">PUNKTE</div>
-      </div>
 
-      <!-- Row 3: Set history -->
-      <div class="set-history">{{ setHistoryText() }}</div>
-
-      <!-- Actions -->
-      <div class="header-actions">
-        <button mat-icon-button (click)="goToMatches()">
-          <mat-icon>arrow_back</mat-icon>
-        </button>
-        <button mat-icon-button data-testid="edit-score-btn" (click)="openEditDialog()">
-          <mat-icon>edit</mat-icon>
-        </button>
-        @if (matchData()!.status !== 'COMPLETED') {
-          <button mat-mini-fab color="warn" data-testid="end-match-btn" (click)="endMatch()">
-            <mat-icon>stop</mat-icon>
-          </button>
-        }
+        <div class="set-history">{{ setHistoryText() }}</div>
       </div>
-    </div>
     }
 
     <!-- ── Observation Panels ── -->
