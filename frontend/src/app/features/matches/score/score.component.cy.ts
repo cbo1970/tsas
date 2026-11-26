@@ -661,10 +661,15 @@ describe('ScoreComponent — ein Panel', () => {
     });
   });
 
+  // Die Zusicherung haengt am Dokument, nicht an .panels-area: seit die Seite
+  // ihre natuerliche Hoehe behaelt (overflow sichtbar), waere eine Aussage
+  // ueber .panels-area trivial erfuellt. Im Hochformat darf nichts scrollen.
   it('scrollt auf 360x692 nicht', () => {
     cy.viewport(360, 692);
-    cy.get('[data-testid="panels-area"]').then($el => {
-      expect($el[0].scrollHeight).to.be.at.most($el[0].clientHeight + 1);
+    cy.get('[data-testid="panel"]').should('be.visible');
+    cy.document().then(doc => {
+      const de = doc.documentElement;
+      expect(de.scrollHeight, 'Dokumenthoehe').to.be.at.most(de.clientHeight + 1);
     });
   });
 
@@ -687,6 +692,24 @@ describe('ScoreComponent — ein Panel', () => {
     cy.viewport(800, 360);
     cy.intercept('POST', '**/api/matches/match-1/points', makeUpdatedScore(0, 1)).as('recordPoint');
     mountScore();
+
+    cy.get('[data-testid="stroke-BACKHAND"]').click();
+    cy.get('[data-testid="obs-NET"]').click();
+    cy.wait('@recordPoint').its('request.body.pointType').should('eq', 'NET');
+  });
+
+  // I1b: Der fruehere Ausweg griff erst unter 561px Viewporthoehe. Das
+  // Aufschlaeger-Panel braucht aber bis ~577px, darunter schnitt
+  // overflow:hidden die Schlagart-Zeile ohne Scrollmoeglichkeit ab.
+  // 375x568 (iPhone SE/5s im Hochformat) liegt in dieser Luecke.
+  it('laesst bei 375x568 die unteren Kacheln erreichen', () => {
+    cy.viewport(375, 568);
+    cy.intercept('POST', '**/api/matches/match-1/points', makeUpdatedScore(0, 1)).as('recordPoint');
+    mountScore();
+
+    for (const id of ['obs-NET', 'stroke-BACKHAND']) {
+      assertNotClipped(id);
+    }
 
     cy.get('[data-testid="stroke-BACKHAND"]').click();
     cy.get('[data-testid="obs-NET"]').click();
@@ -807,6 +830,20 @@ describe('ScoreComponent — untere Leiste und Notizen', () => {
     cy.get('[data-testid="notes-back"]').click();
     cy.get('[data-testid="panel"]').should('be.visible');
     cy.get('[data-testid="player-notes"]').should('not.exist');
+  });
+
+  // Die Notizen fuellen die Seite: sonst klebt die Kopfzeile mitten im Bild
+  // und darunter steht leerer Hintergrund. Haengt daran, dass .notes-view
+  // seine Hoehe nicht per Prozent von einer auto-hohen Seite ableitet.
+  it('fuellt im Vollbild die ganze Seitenhoehe', () => {
+    mountScore();
+    cy.get('[data-testid="notes-btn"]').click();
+    cy.get('[data-testid="notes-view"]').then($el => {
+      const el = $el[0];
+      const viewportH = el.ownerDocument.documentElement.clientHeight;
+      expect(el.getBoundingClientRect().height, 'Hoehe der Notizen-Ansicht')
+        .to.be.at.least(viewportH - 1);
+    });
   });
 
   it('gibt dem Notiz-Button einen Punkt, wenn Notizen existieren', () => {

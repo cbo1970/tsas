@@ -42,15 +42,23 @@ const OBSERVATION_LABELS: Record<PointType, string> = {
   ],
   templateUrl: './score.component.html',
   styles: [`
-    :host { display: block; height: 100dvh; }
+    /* Die Seite fuellt mindestens den Viewport, darf aber hoeher werden.
+       Kein Ausweg per Media Query mehr: deren max-height misst die
+       CSS-Viewporthoehe, waehrend das Layout in dvh bemisst — am Handy
+       trennt beide die Browserleiste (375x667 rendert ~553dvh), und jede
+       Schwelle traf darum die falschen Geraete. Stattdessen scrollt
+       grundsaetzlich die Erfassungsflaeche (overflow:auto, s.u.) und,
+       falls Kopfzeile/Umschalter/Leiste die Seite sprengen, das Dokument.
+       Nichts wird mehr unerreichbar abgeschnitten. */
+    :host { display: block; min-height: 100dvh; }
 
     .scoring-page {
       display: flex;
       flex-direction: column;
-      height: 100dvh;
+      min-height: 100dvh;
       background: var(--surface-bg);
       color: var(--text);
-      overflow: hidden;
+      overflow: visible;
     }
 
     /* ── Score header (verdichtet, <= 100px) ── */
@@ -125,14 +133,17 @@ const OBSERVATION_LABELS: Record<PointType, string> = {
       letter-spacing: .5px;
     }
 
-    /* ── Erfassungsfläche: genau ein Panel ── */
+    /* ── Erfassungsfläche: genau ein Panel ──
+       flex:1 fuellt die min-height-Box, damit Umschalter und untere Leiste
+       im Hochformat unten kleben. overflow:auto statt hidden: passt das
+       Panel nicht, ist es scrollbar statt unerreichbar. */
     .panels-area {
       flex: 1;
       min-height: 0;
       display: flex;
       flex-direction: column;
       padding: 8px;
-      overflow: hidden;
+      overflow: auto;
     }
 
     /* ── Spielerumschalter (zwei Flächen à 56px, in Daumenreichweite) ── */
@@ -207,7 +218,10 @@ const OBSERVATION_LABELS: Record<PointType, string> = {
     }
 
     /* ── Notizen-Vollbild ── */
-    .notes-view { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+    /* flex statt height:100% — die Seite ist auto-hoch, eine Prozentangabe
+       loeste sich dort zu auto auf und die Notizen schrumpften auf ihren
+       Inhalt, mit leerem Hintergrund darunter. */
+    .notes-view { display: flex; flex-direction: column; flex: 1; min-height: 0; }
     .notes-head {
       flex-shrink: 0;
       display: flex;
@@ -246,18 +260,6 @@ const OBSERVATION_LABELS: Record<PointType, string> = {
     .final-score { font-size: 15px; color: var(--text-muted); margin-bottom: 16px; }
 
     .loading { text-align: center; padding: 48px; color: var(--text-subtle); }
-
-    /* ── Flache Viewports (Querformat, ~360px hoch) ──
-       Das Aufschlaeger-Panel braucht rund 580px Hoehe; es passt dort nicht.
-       Ohne Ausweg schneidet overflow:hidden die unteren Zeilen (Forced /
-       Unforced / Netz und die Schlagart) ab und nichts kann dorthin scrollen.
-       Im Querformat ist senkrechtes Scrollen ausdruecklich erlaubt, also
-       geben wir der Seite ihre natuerliche Hoehe zurueck. */
-    @media (max-height: 560px) {
-      :host { height: auto; min-height: 100dvh; }
-      .scoring-page { height: auto; min-height: 100dvh; overflow: visible; }
-      .panels-area { overflow: visible; }
-    }
   `]
 })
 export class ScoreComponent implements OnInit {
