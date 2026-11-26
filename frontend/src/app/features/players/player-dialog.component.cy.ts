@@ -70,6 +70,23 @@ describe('PlayerDialogComponent responsive', () => {
       });
   });
 
+  // M2: mat-dialog-title schleppt die Headline-Typografie des Dialog-Containers
+  // mit (padding 6px 24px 13px, ::before mit 40px Hoehe, 32px Zeilenhoehe).
+  // Ungebremst wird die Titelbox statt ~22px rund 91px hoch, die Kopfzeile
+  // waechst auf ueber 100px und dem Titel fehlen 48px Breite — und das auf
+  // genau dem Bildschirm, fuer den die Kopfzeile verdichtet wurde.
+  it('haelt die Kopfzeile bei 360px flach', () => {
+    openPlayerDialog(360, 640);
+    cy.get('.dialog-header').then(($h) => {
+      const header = $h[0] as HTMLElement;
+      const title = header.querySelector('.dialog-header-title') as HTMLElement;
+      const lineHeight = parseFloat(getComputedStyle(title).lineHeight);
+      expect(title.getBoundingClientRect().height, 'Hoehe des Titels')
+        .to.be.at.most(2 * lineHeight + 1);
+      expect(header.getBoundingClientRect().height, 'Hoehe der Kopfzeile').to.be.at.most(64);
+    });
+  });
+
   it('hat am Handy Tap-Targets von mindestens 44x44', () => {
     openPlayerDialog(390, 736);
     for (const id of ['dialog-save', 'dialog-cancel']) {

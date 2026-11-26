@@ -39,7 +39,16 @@ export function responsiveDialogConfig(isHandset: boolean): MatDialogConfig {
       display: flex; align-items: center; justify-content: space-between; gap: 8px;
       flex: none; padding: 8px 12px; border-bottom: 1px solid var(--text-muted, #ccc);
     }
-    .dialog-header-title { margin: 0; font-size: 18px; font-weight: 600; text-align: center; flex: 1; }
+    /* mat-dialog-title schleppt die Headline-Typografie des Dialog-Containers
+       mit: padding 6px 24px 13px, ein ::before von 40px Hoehe und 32px
+       Zeilenhoehe. Hier sitzt der Titel aber in einer eigenen flachen
+       Kopfzeile — ungebremst waere sie bei 360px ueber 100px hoch und dem
+       Titel fehlten 48px Breite. */
+    .dialog-header-title {
+      margin: 0; padding: 0; line-height: 1.2;
+      font-size: 18px; font-weight: 600; text-align: center; flex: 1;
+    }
+    .dialog-header-title::before { display: none; }
     .dialog-header button {
       min-width: 44px;
       --mat-button-text-container-height: 44px;
