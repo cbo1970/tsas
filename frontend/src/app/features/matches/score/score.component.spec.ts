@@ -41,7 +41,7 @@ describe('ScoreComponent — inline scoring', () => {
     mockApi = {
       getMatch: vi.fn().mockReturnValue(of(MOCK_MATCH)),
       getPlayer: vi.fn().mockReturnValue(of({ id: 'p1', firstName: 'Anna', lastName: 'Müller' })),
-      // embedded PlayerNotesComponent fires this on init (rendered even inside a collapsed <details>)
+      // the bottom-bar notes indicator loads this (and PlayerNotesComponent in the notes view)
       getPlayerNotes: vi.fn().mockReturnValue(of([])),
       recordPoint: vi.fn(),
       setServingPlayer1: vi.fn(),
@@ -77,42 +77,41 @@ describe('ScoreComponent — inline scoring', () => {
     expect(component.strokeTypeP2()).toBeNull();
   });
 
-  it('should default serviceContext to null for both players', () => {
-    expect(component.serviceContextP1()).toBeNull();
-    expect(component.serviceContextP2()).toBeNull();
+  it('should default serveAttempt to null', () => {
+    expect(component.serveAttempt()).toBeNull();
   });
 
-  // ── toggleStroke ─────────────────────────────────────────────────────────────
+  // ── setStroke ────────────────────────────────────────────────────────────────
 
-  it('should set strokeType when toggled on', () => {
-    component.toggleStroke(1, 'FOREHAND');
+  it('should set strokeType for the given panel', () => {
+    component.setStroke(1, 'FOREHAND');
     expect(component.strokeTypeP1()).toBe('FOREHAND');
   });
 
-  it('should clear strokeType when toggled off (same value)', () => {
-    component.toggleStroke(1, 'BACKHAND');
-    component.toggleStroke(1, 'BACKHAND');
+  it('should clear strokeType when the panel emits null', () => {
+    component.setStroke(1, 'BACKHAND');
+    component.setStroke(1, null);
     expect(component.strokeTypeP1()).toBeNull();
   });
 
-  it('should toggle strokeType independently for each panel', () => {
-    component.toggleStroke(1, 'FOREHAND');
-    component.toggleStroke(2, 'BACKHAND');
+  it('should hold strokeType independently for each panel', () => {
+    component.setStroke(1, 'FOREHAND');
+    component.setStroke(2, 'BACKHAND');
     expect(component.strokeTypeP1()).toBe('FOREHAND');
     expect(component.strokeTypeP2()).toBe('BACKHAND');
   });
 
   // ── toggleService ─────────────────────────────────────────────────────────────
 
-  it('should set serviceContext when toggled on', () => {
-    component.toggleService(1, 1);
-    expect(component.serviceContextP1()).toBe(1);
+  it('should set serveAttempt when toggled on', () => {
+    component.toggleService(1);
+    expect(component.serveAttempt()).toBe(1);
   });
 
-  it('should clear serviceContext when toggled off (same value)', () => {
-    component.toggleService(2, 2);
-    component.toggleService(2, 2);
-    expect(component.serviceContextP2()).toBeNull();
+  it('should clear serveAttempt when toggled off (same value)', () => {
+    component.toggleService(2);
+    component.toggleService(2);
+    expect(component.serveAttempt()).toBeNull();
   });
 
   // ── recordQuickPoint ──────────────────────────────────────────────────────────
@@ -130,20 +129,28 @@ describe('ScoreComponent — inline scoring', () => {
     expect(mockApi['recordPoint']).toHaveBeenCalledWith('match-1', { winner: 2 });
   });
 
-  it('should set serving player on recordQuickPoint when no server set (player 1)', () => {
+  it('pickServer(1) sets player 1 as server and patches the score', () => {
     component.matchData.set({ ...MOCK_MATCH, score: { ...MOCK_SCORE, servingPlayer: null } as any });
     mockApi['setServingPlayer1'].mockReturnValue(of({ ...MOCK_SCORE, servingPlayer: 1 }));
-    component.recordQuickPoint(1);
-    expect(mockApi['setServingPlayer1']).toHaveBeenCalled();
-    expect(mockApi['recordPoint']).not.toHaveBeenCalled();
+    component.pickServer(1);
+    expect(mockApi['setServingPlayer1']).toHaveBeenCalledWith('match-1');
+    expect(component.servingPlayer()).toBe(1);
   });
 
-  it('should set serving player 2 on recordQuickPoint when no server set', () => {
+  it('pickServer(2) sets player 2 as server', () => {
     component.matchData.set({ ...MOCK_MATCH, score: { ...MOCK_SCORE, servingPlayer: null } as any });
     mockApi['setServingPlayer2'].mockReturnValue(of({ ...MOCK_SCORE, servingPlayer: 2 }));
-    component.recordQuickPoint(2);
-    expect(mockApi['setServingPlayer2']).toHaveBeenCalled();
-    expect(mockApi['recordPoint']).not.toHaveBeenCalled();
+    component.pickServer(2);
+    expect(mockApi['setServingPlayer2']).toHaveBeenCalledWith('match-1');
+    expect(component.servingPlayer()).toBe(2);
+  });
+
+  it('recordQuickPoint without a server no longer sets the server implicitly', () => {
+    component.matchData.set({ ...MOCK_MATCH, score: { ...MOCK_SCORE, servingPlayer: null } as any });
+    mockApi['recordPoint'].mockReturnValue(of(MOCK_MATCH));
+    component.recordQuickPoint(1);
+    expect(mockApi['setServingPlayer1']).not.toHaveBeenCalled();
+    expect(mockApi['setServingPlayer2']).not.toHaveBeenCalled();
   });
 
   it('should not record point when match is completed (recordQuickPoint)', () => {
@@ -156,8 +163,8 @@ describe('ScoreComponent — inline scoring', () => {
 
   it('should call api.recordPoint with pointType and context for recordObservation', () => {
     mockApi['recordPoint'].mockReturnValue(of(MOCK_MATCH));
-    component.toggleStroke(1, 'BACKHAND');
-    component.toggleService(1, 1);
+    component.setStroke(1, 'BACKHAND');
+    component.toggleService(1);
     component.recordObservation(1, 'WINNER');
     expect(mockApi['recordPoint']).toHaveBeenCalledWith('match-1', {
       winner: 1,
@@ -184,11 +191,27 @@ describe('ScoreComponent — inline scoring', () => {
 
   it('should reset context signals after successful recordObservation', () => {
     mockApi['recordPoint'].mockReturnValue(of(MOCK_MATCH));
-    component.toggleStroke(1, 'FOREHAND');
-    component.toggleService(1, 2);
+    component.setStroke(1, 'FOREHAND');
+    component.toggleService(2);
     component.recordObservation(1, 'WINNER');
     expect(component.strokeTypeP1()).toBeNull();
-    expect(component.serviceContextP1()).toBeNull();
+    expect(component.serveAttempt()).toBeNull();
+  });
+
+  it('should reset the context of BOTH panels after a recorded point', () => {
+    mockApi['recordPoint'].mockReturnValue(of(MOCK_MATCH));
+    component.setStroke(1, 'FOREHAND');
+    component.toggleService(2);
+    component.recordObservation(2, 'UNFORCED_ERROR');   // Punkt vom anderen Panel
+    expect(component.strokeTypeP1()).toBeNull();
+    expect(component.serveAttempt()).toBeNull();
+  });
+
+  it('should send the serve attempt regardless of which panel records the point', () => {
+    mockApi['recordPoint'].mockReturnValue(of(MOCK_MATCH));
+    component.toggleService(2);
+    component.recordObservation(1, 'UNFORCED_ERROR');   // Returnierenden-Panel (Aufschläger ist 2)
+    expect(mockApi['recordPoint']).toHaveBeenCalledWith('match-1', expect.objectContaining({ serveAttempt: 2 }));
   });
 
   it('should reject ACE if the panel is not serving', () => {
@@ -209,10 +232,44 @@ describe('ScoreComponent — inline scoring', () => {
     expect(page).toBeTruthy();
   });
 
-  it('should render both player panels regardless of serving state', () => {
+  it('should render exactly one observation panel', () => {
     component.matchData.set({ ...MOCK_MATCH, score: { ...MOCK_SCORE, servingPlayer: 1 } as any });
     fixture.detectChanges();
-    const panels = fixture.debugElement.queryAll(By.css('[data-testid^="panel-"]'));
-    expect(panels).toHaveLength(2);
+    const panels = fixture.debugElement.queryAll(By.css('[data-testid="panel"]'));
+    expect(panels).toHaveLength(1);
+  });
+
+  // ── activePlayer folgt dem Aufschlag ─────────────────────────────────────────
+
+  it('should start on the serving player', () => {
+    expect(component.activePlayer()).toBe(2);   // MOCK_SCORE: servingPlayer 2
+  });
+
+  it('should follow the serve when it changes with a score response', () => {
+    // Arrange auf 2 (= der Ausgangswert aus MOCK_SCORE), Antwort nennt 1:
+    // der erwartete Wert unterscheidet sich vom arrangierten.
+    component.activePlayer.set(2);
+    component.matchData.set({ ...MOCK_MATCH, score: { ...MOCK_SCORE, servingPlayer: 1 } as any });
+    fixture.detectChanges();
+    expect(component.activePlayer()).toBe(1);
+  });
+
+  it('should return to the serving player after a recorded point', () => {
+    // frische Antwort (wie vom HTTP-Client), servingPlayer unverändert 2
+    mockApi['recordPoint'].mockReturnValue(of({ ...MOCK_MATCH, score: { ...MOCK_SCORE } as any }));
+    component.activePlayer.set(1);
+    component.recordObservation(1, 'UNFORCED_ERROR');
+    fixture.detectChanges();
+    expect(component.activePlayer()).toBe(2);
+  });
+
+  it('should expose the active player panel inputs', () => {
+    component.activePlayer.set(1);
+    component.setStroke(1, 'FOREHAND');
+    component.toggleService(2);
+    expect(component.activePlayerInfo().id).toBe('p1');
+    expect(component.activeOpponentName()).toBe(component.player2Name());
+    expect(component.activeStrokeType()).toBe('FOREHAND');
+    expect(component.activeServeAttempt()).toBe(2);
   });
 });

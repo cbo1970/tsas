@@ -76,3 +76,12 @@ a {
 .h2h-panel .mat-mdc-option.mdc-list-item--selected:not(.mat-mdc-option-multiple) {
   background: var(--brand-soft);
 }
+
+/* Dialoge am Handy: Vollbild (siehe responsiveDialogConfig). Der Inhalt scrollt, die Kopfzeile bleibt stehen. */
+.tsas-dialog-fullscreen .mat-mdc-dialog-surface {
+  border-radius: 0;
+}
+.tsas-dialog-fullscreen .mat-mdc-dialog-container .mat-mdc-dialog-content {
+  flex: 1 1 auto;
+  max-height: none;
+}

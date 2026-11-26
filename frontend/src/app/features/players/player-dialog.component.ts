@@ -7,6 +7,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { CreatePlayerRequest, Player } from '../../core/models/player.model';
+import { LayoutService } from '../../core/layout/layout.service';
+import { DialogHeaderComponent } from '../../core/layout/responsive-dialog';
 
 @Component({
   selector: 'app-player-dialog',
@@ -18,22 +20,28 @@ import { CreatePlayerRequest, Player } from '../../core/models/player.model';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatButtonModule
+    MatButtonModule,
+    DialogHeaderComponent
   ],
   templateUrl: './player-dialog.component.html',
   styles: [`
-    .dialog-form { display: flex; flex-direction: column; gap: 8px; min-width: 400px; padding-top: 8px; }
+    .dialog-form { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; }
     .full-width { width: 100%; }
   `]
 })
 export class PlayerDialogComponent {
+  protected readonly layout = inject(LayoutService);
   private readonly fb = inject(FormBuilder);
   private readonly dialogRef = inject(MatDialogRef<PlayerDialogComponent>);
-  readonly player: Player | null = inject(MAT_DIALOG_DATA, { optional: true });
+  private readonly data: Player | { prefill: { firstName: string; lastName: string } } | null =
+    inject(MAT_DIALOG_DATA, { optional: true });
+  /** Set when editing; `prefill` data means a new player with the name pre-filled. */
+  readonly player: Player | null = this.data && 'id' in this.data ? this.data : null;
+  private readonly prefill = this.data && 'prefill' in this.data ? this.data.prefill : null;
 
   form = this.fb.group({
-    firstName: [this.player?.firstName ?? '', Validators.required],
-    lastName:  [this.player?.lastName  ?? '', Validators.required],
+    firstName: [this.player?.firstName ?? this.prefill?.firstName ?? '', Validators.required],
+    lastName:  [this.player?.lastName  ?? this.prefill?.lastName ?? '', Validators.required],
     gender:    [this.player?.gender    ?? 'MALE', Validators.required],
     handedness:   [this.player?.handedness   ?? 'RIGHT', Validators.required],
     backhandType: [this.player?.backhandType ?? 'TWO_HANDED', Validators.required],

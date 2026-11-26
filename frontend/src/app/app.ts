@@ -1,5 +1,7 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, computed, inject, signal, OnInit } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { filter, map } from 'rxjs';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,6 +13,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AuthService } from './core/auth/auth.service';
 import { ApiService } from './core/services/api.service';
 import { LanguageService } from './core/i18n/language.service';
+import { LayoutService } from './core/layout/layout.service';
 
 @Component({
   selector: 'app-root',
@@ -22,7 +25,7 @@ import { LanguageService } from './core/i18n/language.service';
   ],
   templateUrl: './app.html',
   styles: [`
-    :host { display: flex; flex-direction: column; min-height: 100vh; }
+    :host { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
     .app-title { margin-left: 12px; font-size: 20px; font-weight: 800; color: var(--brand-strong); }
     .spacer { flex: 1; }
     mat-toolbar {
@@ -30,7 +33,7 @@ import { LanguageService } from './core/i18n/language.service';
       color: var(--text);
       border-bottom: 1px solid var(--border);
     }
-    main { flex: 1; background: var(--surface-bg); min-height: calc(100vh - 64px); }
+    main { flex: 1; background: var(--surface-bg); }
     .active-link { border-bottom: 2px solid var(--brand); border-radius: 0; }
     mat-toolbar mat-icon { font-size: 28px; }
     .user-name { font-size: 14px; margin-right: 4px; opacity: 0.9; }
@@ -43,6 +46,32 @@ import { LanguageService } from './core/i18n/language.service';
       font-weight: 600;
       letter-spacing: 0.5px;
     }
+    .bottom-nav {
+      order: 1;
+      position: sticky;
+      bottom: 0;
+      z-index: 1;
+      display: flex;
+      background: var(--surface-card);
+      border-top: 1px solid var(--border);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .bottom-nav .nav-item {
+      flex: 1;
+      min-width: 44px;
+      min-height: 56px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      border-radius: 0;
+      font-size: 12px;
+      line-height: 1.2;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .bottom-nav .nav-item.active-link { border-bottom: 0; color: var(--brand-strong); }
     .danger-item { color: var(--danger); }
     .danger-item mat-icon { color: var(--danger); }
     .flag { display: inline-block; margin-right: 6px; font-size: 18px; line-height: 1; }
@@ -54,6 +83,22 @@ export class App implements OnInit {
   private readonly api = inject(ApiService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly translate = inject(TranslateService);
+  private readonly router = inject(Router);
+  protected readonly isHandset = inject(LayoutService).isHandset;
+
+  private readonly currentUrl = toSignal(
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      map(e => e.urlAfterRedirects),
+    ),
+    { initialValue: this.router.url },
+  );
+
+  /** Auf dem Scoring-Screen (`/matches/:id/score`) gibt es keine App-Navigation. */
+  readonly showAppNav = computed(() => {
+    const path = this.currentUrl().split(/[?#]/)[0];
+    return !(path.startsWith('/matches/') && path.endsWith('/score'));
+  });
 
   protected userName = signal('');
   protected readonly languages: ReadonlyArray<{ code: 'de'|'en'|'it'|'fr', label: string, flag: string }> = [
