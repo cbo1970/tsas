@@ -1,4 +1,4 @@
-<div class="page-container">
+<div class="page-container" [class.handset]="isHandset()">
   <div class="page-header">
     <h1>{{ 'players.title' | translate }}</h1>
     <mat-form-field appearance="outline" class="search-field">
@@ -14,7 +14,7 @@
       <mat-icon>compare_arrows</mat-icon>
       {{ 'h2h.title' | translate }}
     </button>
-    <button mat-raised-button color="primary" (click)="openCreateDialog()">
+    <button mat-raised-button color="primary" data-testid="new-player-btn" (click)="openCreateDialog()">
       <mat-icon>add</mat-icon>
       {{ 'players.newPlayer' | translate }}
     </button>
@@ -36,6 +36,16 @@
 
   <mat-card>
     <mat-card-content>
+      @if (isHandset()) {
+        <app-player-card-list
+          [players]="filteredPlayers()"
+          (edit)="openEditDialog($event)"
+          (history)="goToHistory($event)"
+          (compare)="comparePlayer($event)"
+          (remove)="deletePlayer($event)"
+          (deactivate)="deactivatePlayer($event)"
+          (openMatch)="goToMatch($event.activeMatchId!)" />
+      } @else {
       <table mat-table [dataSource]="filteredPlayers()" matSort (matSortChange)="onSort($event)" class="full-width">
         <ng-container matColumnDef="firstName">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'players.form.firstName' | translate }}</th>
@@ -97,6 +107,7 @@
             [class.inactive-row]="row.active === false"
             (click)="openEditDialog(row)"></tr>
       </table>
+      }
 
       @if (filteredPlayers().length === 0) {
         <div class="empty-state">

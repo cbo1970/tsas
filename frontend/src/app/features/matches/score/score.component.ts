@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -6,14 +6,26 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 
-import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../../core/services/api.service';
 import { Player } from '../../../core/models/player.model';
 import { MatchWithScore, MatchScore } from '../../../core/models/match.model';
+import { LayoutService } from '../../../core/layout/layout.service';
+import { responsiveDialogConfig } from '../../../core/layout/responsive-dialog';
 import { ScoreEditDialogComponent } from './score-edit-dialog.component';
 import { EndMatchDialogComponent, EndMatchDialogResult } from './end-match-dialog.component';
 import { PointType, StrokeType, RecordPointRequest } from '../../../core/models/point.model';
 import { PlayerNotesComponent } from '../notes/player-notes.component';
+import { ServePickerComponent } from './serve-picker.component';
+import { ObservationPanelComponent } from './observation-panel.component';
+
+const OBSERVATION_LABELS: Record<PointType, string> = {
+  ACE: 'Ass',
+  WINNER: 'Winner',
+  DOUBLE_FAULT: 'Doppelfehler',
+  FORCED_ERROR: 'Forced Error',
+  UNFORCED_ERROR: 'Unforced Error',
+  NET: 'Netz',
+};
 
 @Component({
   selector: 'app-score',
@@ -25,195 +37,202 @@ import { PlayerNotesComponent } from '../notes/player-notes.component';
     MatDialogModule,
     MatSnackBarModule,
     PlayerNotesComponent,
-    TranslatePipe,
+    ServePickerComponent,
+    ObservationPanelComponent,
   ],
   templateUrl: './score.component.html',
   styles: [`
-    :host { display: block; height: 100dvh; }
+    /* Die Seite fuellt mindestens den Viewport, darf aber hoeher werden.
+       Kein Ausweg per Media Query mehr: deren max-height misst die
+       CSS-Viewporthoehe, waehrend das Layout in dvh bemisst — am Handy
+       trennt beide die Browserleiste (375x667 rendert ~553dvh), und jede
+       Schwelle traf darum die falschen Geraete. Stattdessen scrollt
+       grundsaetzlich die Erfassungsflaeche (overflow:auto, s.u.) und,
+       falls Kopfzeile/Umschalter/Leiste die Seite sprengen, das Dokument.
+       Nichts wird mehr unerreichbar abgeschnitten. */
+    :host { display: block; min-height: 100dvh; }
 
     .scoring-page {
       display: flex;
       flex-direction: column;
-      height: 100dvh;
+      min-height: 100dvh;
       background: var(--surface-bg);
       color: var(--text);
-      overflow: hidden;
+      overflow: visible;
     }
 
-    /* ── Score header ── */
+    /* ── Score header (verdichtet, <= 100px) ── */
     .score-header {
       background: var(--surface-card);
-      padding: 10px 16px;
+      padding: 4px 8px;
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
     }
-    .header-grid {
+    .header-row {
       display: grid;
-      grid-template-columns: 1fr auto 1fr;
+      grid-template-columns: 44px minmax(0, 1fr) auto minmax(0, 1fr) 44px 44px;
       align-items: center;
-      gap: 8px;
+      gap: 4px;
     }
-    .player-half-left  { text-align: center; }
-    .player-half-right { text-align: center; }
+    .hdr-icon { width: 44px; height: 44px; padding: 10px; }
+    .player-half {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 0;
+    }
     .player-name {
-      font-size: 14px;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 15px;
       font-weight: 700;
       color: var(--text-muted);
     }
     .player-name.serving { color: var(--brand-strong); }
-    .score-center { display: flex; align-items: center; gap: 8px; }
-    .sep { opacity: .3; }
-    .games-num {
-      font-size: 26px;
-      font-weight: 800;
-      line-height: 1;
+    .games {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-    .games-num.winning { color: var(--brand-strong); }
+    .games-label { font-size: 10px; color: var(--text); letter-spacing: .5px; }
+    .games-value {
+      display: flex;
+      gap: 4px;
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.2;
+      font-variant-numeric: tabular-nums;
+    }
+    .games-value .winning { color: var(--brand-strong); }
+    .sep { opacity: .3; }
     .pts-btn {
       background: none;
       border: none;
       color: var(--text);
-      font-size: 34px;
+      font-size: 30px;
       font-weight: 900;
       line-height: 1;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
       cursor: pointer;
       border-radius: 6px;
-      padding: 2px 10px;
+      min-width: 44px;
+      min-height: 44px;
+      padding: 0 6px;
       transition: background .15s;
     }
     .pts-btn:hover { background: var(--surface-muted); }
     .pts-btn.p1 { color: var(--brand-strong); }
-    .pts-label {
-      font-size: 10px;
-      color: var(--text);
-      letter-spacing: .5px;
-      text-align: center;
-    }
     .set-history {
       text-align: center;
-      margin-top: 4px;
       font-size: 10px;
+      line-height: 14px;
       color: var(--text);
       letter-spacing: .5px;
     }
-    .header-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 4px;
-      margin-top: 6px;
-    }
 
-    /* ── Observation panels ── */
+    /* ── Erfassungsfläche: genau ein Panel ──
+       flex:1 fuellt die min-height-Box, damit Umschalter und untere Leiste
+       im Hochformat unten kleben. overflow:auto statt hidden: passt das
+       Panel nicht, ist es scrollbar statt unerreichbar. */
     .panels-area {
       flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      align-content: start;
-      gap: 12px;
-      padding: 12px;
-      overflow-y: auto;
-    }
-    .obs-panel {
-      background: var(--surface-card);
-      border: 1px solid var(--text);
-      border-radius: 10px;
-      padding: 10px;
+      min-height: 0;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-    }
-    .obs-panel.serving {
-      background: var(--brand-soft);
-      border-color: var(--brand-border);
+      padding: 8px;
+      overflow: auto;
     }
 
-    /* Coach-Notizen: volle Breite direkt unter den beiden Panels */
-    .coach-notes {
-      grid-column: 1 / -1;
-      background: var(--border);
-      border: 1px solid var(--text);
-      border-radius: 10px;
-      padding: 8px 12px;
+    /* ── Spielerumschalter (zwei Flächen à 56px, in Daumenreichweite) ── */
+    .player-switch {
+      flex-shrink: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 0 8px 8px;
     }
-    .coach-notes summary {
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: .04em;
-      color: var(--text-muted);
-      padding: 4px 0;
-    }
-    .panel-title {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .5px;
-      text-align: center;
-      color: var(--text-muted);
-    }
-    .obs-panel.serving .panel-title { color: var(--brand-strong); }
-    .serve-badge { font-size: 9px; opacity: .6; font-weight: 400; }
-
-    .section-label {
-      font-size: 9px;
-      color: var(--text);
-      font-weight: 700;
-      letter-spacing: .5px;
-      margin-top: 4px;
-    }
-    .section-label.green { color: var(--success); opacity: .8; }
-    .section-label.red   { color: var(--danger); opacity: .8; }
-
-    /* Context toggle buttons */
-    .ctx-row { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-    .ctx-btn {
-      background: var(--border);
+    .switch-btn {
+      min-height: 56px;
       border: 1px solid var(--border);
-      border-radius: 5px;
-      padding: 6px 4px;
-      text-align: center;
-      font-size: 12px;
+      border-radius: 10px;
+      background: var(--surface-card);
       color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.2;
+      padding: 8px 6px;
       cursor: pointer;
+      white-space: normal;
+      overflow-wrap: anywhere;
       transition: background .15s;
     }
-    .ctx-btn.active {
+    .switch-btn.active {
       background: var(--brand-soft);
       border-color: var(--brand);
       color: var(--brand-strong);
-      font-weight: 600;
     }
 
-    /* Observation buttons */
-    .obs-row-2 { display: grid; grid-template-columns: 1fr 1fr;     gap: 4px; }
-    .obs-row-1 { display: grid; grid-template-columns: 1fr;         gap: 4px; }
-    .obs-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
-
-    .obs-btn {
-      border: none;
-      border-radius: 5px;
-      padding: 7px 4px;
-      text-align: center;
-      font-size: 12px;
+    /* ── Untere Leiste ── */
+    .bottom-bar {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 0 8px 8px;
+    }
+    .last-observation {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .notes-btn {
+      position: relative;
+      margin-left: auto;
+      flex-shrink: 0;
+      min-height: 40px;
+      min-width: 44px;
+      padding: 0 16px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface-card);
+      color: var(--text);
+      font-size: 14px;
       font-weight: 700;
       cursor: pointer;
-      transition: opacity .15s;
     }
-    .obs-btn:hover  { opacity: .85; }
-    .obs-btn:active { opacity: .7; }
-    .obs-btn.err-sm { font-size: 11px; padding: 6px 2px; }
+    .notes-dot {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--brand);
+    }
 
-    .win-btn {
-      background: var(--success);
-      border: none;
-      color: #fff;
+    /* ── Notizen-Vollbild ── */
+    /* flex statt height:100% — die Seite ist auto-hoch, eine Prozentangabe
+       loeste sich dort zu auto auf und die Notizen schrumpften auf ihren
+       Inhalt, mit leerem Hintergrund darunter. */
+    .notes-view { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+    .notes-head {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 8px;
+      background: var(--surface-card);
+      border-bottom: 1px solid var(--border);
     }
-    .err-btn {
-      background: var(--danger);
-      border: none;
-      color: #fff;
-    }
-    /* Gelbes Icon-Glyph auf den roten Buttons (auf Rot deutlich sichtbar) */
-    .ico-y { color: #FACC15; font-weight: 900; }
+    .notes-title { font-size: 16px; font-weight: 700; }
+    .notes-body { flex: 1; min-height: 0; overflow-y: auto; padding: 12px; }
 
     /* ── Winner overlay ── */
     .winner-overlay {
@@ -236,6 +255,8 @@ import { PlayerNotesComponent } from '../notes/player-notes.component';
       box-shadow: var(--shadow-pop);
     }
     .winner-text { font-size: 22px; font-weight: bold; margin-bottom: 8px; color: var(--brand-strong); }
+    .winner-actions { display: flex; flex-direction: column; gap: 8px; }
+    .winner-actions button { min-height: 44px; }
     .final-score { font-size: 15px; color: var(--text-muted); margin-bottom: 16px; }
 
     .loading { text-align: center; padding: 48px; color: var(--text-subtle); }
@@ -246,6 +267,7 @@ export class ScoreComponent implements OnInit {
   private readonly route    = inject(ActivatedRoute);
   private readonly router   = inject(Router);
   private readonly dialog   = inject(MatDialog);
+  private readonly layout   = inject(LayoutService);
   private readonly snackBar = inject(MatSnackBar);
 
   matchData  = signal<MatchWithScore | null>(null);
@@ -253,10 +275,29 @@ export class ScoreComponent implements OnInit {
   player2    = signal<Player | null>(null);
   setHistory = signal<Array<{p1: number; p2: number}>>([]);
 
-  serviceContextP1 = signal<1 | 2 | null>(null);
-  serviceContextP2 = signal<1 | 2 | null>(null);
+  /** Aufschlagversuch des laufenden Punkts, unabhängig vom aktiven Panel. */
+  serveAttempt     = signal<1 | 2 | null>(null);
   strokeTypeP1     = signal<StrokeType | null>(null);
   strokeTypeP2     = signal<StrokeType | null>(null);
+
+  /** Notizen-Vollbild innerhalb der Scoring-Route. */
+  showNotes = signal(false);
+  hasNotes  = signal(false);
+  /**
+   * Zuletzt erfolgreich erfasster Punkt (Anzeige in der unteren Leiste).
+   * 'QUICK' = Schnellpunkt ohne Beobachtung — die Leiste darf dann nicht
+   * weiter die Beobachtung des vorherigen Punktes behaupten.
+   */
+  lastObservation = signal<PointType | 'QUICK' | null>(null);
+
+  lastObservationText = computed(() => {
+    const o = this.lastObservation();
+    if (!o) return 'Noch nichts erfasst';
+    return o === 'QUICK' ? 'Zuletzt: Punkt ohne Zuordnung' : `Zuletzt: ${OBSERVATION_LABELS[o]}`;
+  });
+
+  /** Spieler, dessen Panel gerade sichtbar ist. */
+  activePlayer = signal<1 | 2>(1);
 
   player1Name = computed(() => {
     const p = this.player1();
@@ -270,6 +311,11 @@ export class ScoreComponent implements OnInit {
 
   servingPlayer = computed(() => this.matchData()?.score?.servingPlayer ?? null);
 
+  needsServer = computed(() => {
+    const m = this.matchData();
+    return !!m && m.status !== 'COMPLETED' && this.servingPlayer() === null;
+  });
+
   setHistoryText = computed(() => {
     const history = this.setHistory();
     const m = this.matchData();
@@ -280,7 +326,28 @@ export class ScoreComponent implements OnInit {
     return past ? `${past} · ${current}` : current;
   });
 
+  activePlayerInfo = computed(() => this.activePlayer() === 1
+    ? { id: this.matchData()?.player1Id ?? '', name: this.player1Name() }
+    : { id: this.matchData()?.player2Id ?? '', name: this.player2Name() });
+
+  activeOpponentName = computed(() => this.activePlayer() === 1 ? this.player2Name() : this.player1Name());
+
+  activeServeAttempt = computed(() => this.serveAttempt());
+
+  activeStrokeType = computed(() => this.activePlayer() === 1 ? this.strokeTypeP1() : this.strokeTypeP2());
+
   private matchId = '';
+
+  constructor() {
+    // Das Panel folgt dem Aufschlag: jede Score-Antwort (Punkt, Aufschlagwahl,
+    // manuelle Korrektur) setzt den aktiven Spieler auf den dann gültigen
+    // Aufschläger zurück. Bewusst auf matchData() statt auf servingPlayer(),
+    // damit auch eine Antwort mit unverändertem Aufschläger zurückschaltet.
+    effect(() => {
+      const serving = this.matchData()?.score?.servingPlayer ?? null;
+      if (serving === 1 || serving === 2) this.activePlayer.set(serving);
+    });
+  }
 
   ngOnInit() {
     this.matchId = this.route.snapshot.paramMap.get('id') ?? '';
@@ -292,9 +359,22 @@ export class ScoreComponent implements OnInit {
       next: (match) => {
         this.matchData.set(match);
         this.loadPlayers(match.player1Id, match.player2Id);
+        this.loadNotesIndicator();
       },
       error: () => this.snackBar.open('Match nicht gefunden', 'OK', { duration: 3000 })
     });
+  }
+
+  private loadNotesIndicator() {
+    this.api.getPlayerNotes(this.matchId).subscribe({
+      next: (notes) => this.hasNotes.set(notes.some(n => n.note.trim().length > 0)),
+      error: () => this.hasNotes.set(false),
+    });
+  }
+
+  closeNotes() {
+    this.showNotes.set(false);
+    this.loadNotesIndicator();
   }
 
   loadPlayers(p1Id: string, p2Id: string) {
@@ -305,9 +385,14 @@ export class ScoreComponent implements OnInit {
   recordQuickPoint(winner: 1 | 2): void {
     const m = this.matchData();
     if (!m || m.status === 'COMPLETED') return;
-    if (this.servingPlayer() === null) { this.setServe(winner === 1); return; }
     this.api.recordPoint(this.matchId, { winner }).subscribe({
-      next: (updated) => this.handlePointResponse(updated),
+      next: (updated) => {
+        this.handlePointResponse(updated);
+        // Auch der Schnellpunkt ist ein erfasster Punkt: Aufschlagversuch und
+        // Schlagart gehoeren zu ihm und duerfen nicht am naechsten mitreisen.
+        this.lastObservation.set('QUICK');
+        this.resetPointContext();
+      },
       error: () => this.snackBar.open('Fehler beim Speichern', 'OK', { duration: 3000 })
     });
   }
@@ -315,8 +400,6 @@ export class ScoreComponent implements OnInit {
   recordObservation(panel: 1 | 2, pointType: PointType): void {
     const m = this.matchData();
     if (!m || m.status === 'COMPLETED') return;
-    if (this.servingPlayer() === null) { this.setServe(panel === 1); return; }
-
     if (pointType === 'ACE' && this.servingPlayer() !== panel) {
       this.snackBar.open('Ass nur für den Aufschläger', 'OK', { duration: 3000 });
       return;
@@ -327,7 +410,7 @@ export class ScoreComponent implements OnInit {
     }
 
     const winner: 1 | 2 = (pointType === 'ACE' || pointType === 'WINNER') ? panel : (panel === 1 ? 2 : 1);
-    const serveAttempt = panel === 1 ? this.serviceContextP1() : this.serviceContextP2();
+    const serveAttempt = this.serveAttempt();
     const strokeType   = panel === 1 ? this.strokeTypeP1()     : this.strokeTypeP2();
 
     const request: RecordPointRequest = { winner, pointType, serveAttempt, strokeType };
@@ -335,36 +418,35 @@ export class ScoreComponent implements OnInit {
     this.api.recordPoint(this.matchId, request).subscribe({
       next: (updated) => {
         this.handlePointResponse(updated);
-        this.resetContextForPanel(panel);
+        this.lastObservation.set(pointType);
+        this.resetPointContext();
       },
       error: () => this.snackBar.open('Fehler beim Speichern', 'OK', { duration: 3000 })
     });
   }
 
-  toggleService(panel: 1 | 2, attempt: 1 | 2): void {
+  toggleService(attempt: 1 | 2): void {
+    this.serveAttempt.update(v => v === attempt ? null : attempt);
+  }
+
+  setStroke(panel: 1 | 2, type: StrokeType | null): void {
     if (panel === 1) {
-      this.serviceContextP1.update(v => v === attempt ? null : attempt);
+      this.strokeTypeP1.set(type);
     } else {
-      this.serviceContextP2.update(v => v === attempt ? null : attempt);
+      this.strokeTypeP2.set(type);
     }
   }
 
-  toggleStroke(panel: 1 | 2, type: StrokeType): void {
-    if (panel === 1) {
-      this.strokeTypeP1.update(v => v === type ? null : type);
-    } else {
-      this.strokeTypeP2.update(v => v === type ? null : type);
-    }
-  }
-
-  private resetContextForPanel(panel: 1 | 2): void {
-    if (panel === 1) {
-      this.serviceContextP1.set(null);
-      this.strokeTypeP1.set(null);
-    } else {
-      this.serviceContextP2.set(null);
-      this.strokeTypeP2.set(null);
-    }
+  /**
+   * Der Kontext gehört zum erfassten Punkt, nicht zum Panel: nach einem Punkt
+   * wird er auf beiden Panels geräumt. Sonst bliebe eine Auswahl auf dem
+   * Aufschläger-Panel stehen, wenn der Punkt vom Returnierenden-Panel erfasst
+   * wurde, und reiste stumm mit dem nächsten Punkt mit.
+   */
+  private resetPointContext(): void {
+    this.serveAttempt.set(null);
+    this.strokeTypeP1.set(null);
+    this.strokeTypeP2.set(null);
   }
 
   private handlePointResponse(updated: MatchWithScore): void {
@@ -400,8 +482,8 @@ export class ScoreComponent implements OnInit {
     );
   }
 
-  private setServe(forPlayer1: boolean) {
-    const obs = forPlayer1
+  pickServer(player: 1 | 2): void {
+    const obs = player === 1
       ? this.api.setServingPlayer1(this.matchId)
       : this.api.setServingPlayer2(this.matchId);
     obs.subscribe({
@@ -428,7 +510,7 @@ export class ScoreComponent implements OnInit {
   openEditDialog() {
     const m = this.matchData();
     if (!m) return;
-    const ref = this.dialog.open(ScoreEditDialogComponent, { width: '500px', data: { score: m.score } });
+    const ref = this.dialog.open(ScoreEditDialogComponent, { ...responsiveDialogConfig(this.layout.isHandset()), data: { score: m.score } });
     ref.afterClosed().subscribe((result) => {
       if (!result) return;
       this.api.setScore(this.matchId, result).subscribe({
@@ -444,7 +526,7 @@ export class ScoreComponent implements OnInit {
 
   endMatch() {
     const ref = this.dialog.open(EndMatchDialogComponent, {
-      width: '360px',
+      ...responsiveDialogConfig(this.layout.isHandset()),
       data: { player1Name: this.player1Name(), player2Name: this.player2Name() }
     });
     ref.afterClosed().subscribe((result: EndMatchDialogResult | undefined) => {

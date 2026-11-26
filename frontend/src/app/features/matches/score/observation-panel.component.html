@@ -1,0 +1,76 @@
+<section class="panel" [class.serving]="isServing()" data-testid="panel">
+
+  <div class="panel-head">
+    <span class="panel-player">{{ player().name }}</span>
+    <span class="panel-role">{{ isServing() ? 'Aufschlag' : 'Return' }}</span>
+  </div>
+
+  @if (isServing()) {
+    <div class="ctx-block">
+      <div class="section-label">SERVICE (Kontext)</div>
+      <div class="ctx-row">
+        <button type="button" class="ctx-btn"
+                data-testid="serve-attempt-1"
+                [class.active]="serveAttempt() === 1"
+                [attr.aria-pressed]="serveAttempt() === 1"
+                (click)="serveAttemptChange.emit(1)">1. Service</button>
+        <button type="button" class="ctx-btn"
+                data-testid="serve-attempt-2"
+                [class.active]="serveAttempt() === 2"
+                [attr.aria-pressed]="serveAttempt() === 2"
+                (click)="serveAttemptChange.emit(2)">2. Service</button>
+      </div>
+    </div>
+  }
+
+  <div class="obs-block">
+    <div class="section-label green">→ PUNKT FÜR {{ player().name }}</div>
+    <div class="obs-row" [class.cols-2]="isServing()">
+      @if (isServing()) {
+        <button type="button" class="obs-btn win-btn"
+                data-testid="obs-ACE"
+                (click)="observation.emit('ACE')">🎯 Ass</button>
+      }
+      <button type="button" class="obs-btn win-btn"
+              data-testid="obs-WINNER"
+              (click)="observation.emit('WINNER')">🏆 Winner</button>
+    </div>
+
+    <div class="section-label red">→ PUNKT FÜR {{ opponentName() }}</div>
+    @if (isServing()) {
+      <div class="obs-row">
+        <button type="button" class="obs-btn err-btn"
+                data-testid="obs-DOUBLE_FAULT"
+                (click)="observation.emit('DOUBLE_FAULT')"><span class="ico-y">✕</span> Doppelfehler</button>
+      </div>
+    }
+    <div class="obs-row cols-3">
+      <button type="button" class="obs-btn err-btn"
+              data-testid="obs-FORCED_ERROR"
+              (click)="observation.emit('FORCED_ERROR')">💨 Forced</button>
+      <button type="button" class="obs-btn err-btn"
+              data-testid="obs-UNFORCED_ERROR"
+              (click)="observation.emit('UNFORCED_ERROR')">😓 Unforced</button>
+      <button type="button" class="obs-btn err-btn"
+              data-testid="obs-NET"
+              (click)="observation.emit('NET')">🎾 Netz</button>
+    </div>
+  </div>
+
+  <div class="ctx-block">
+    <div class="section-label">SCHLAGART (Kontext)</div>
+    <div class="ctx-row">
+      <button type="button" class="ctx-btn"
+              data-testid="stroke-FOREHAND"
+              [class.active]="strokeType() === 'FOREHAND'"
+              [attr.aria-pressed]="strokeType() === 'FOREHAND'"
+              (click)="toggleStroke('FOREHAND')">Vorhand</button>
+      <button type="button" class="ctx-btn"
+              data-testid="stroke-BACKHAND"
+              [class.active]="strokeType() === 'BACKHAND'"
+              [attr.aria-pressed]="strokeType() === 'BACKHAND'"
+              (click)="toggleStroke('BACKHAND')">Rückhand</button>
+    </div>
+  </div>
+
+</section>

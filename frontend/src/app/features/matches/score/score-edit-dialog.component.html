@@ -1,4 +1,8 @@
-<h2 mat-dialog-title>Score korrigieren</h2>
+@if (layout.isHandset()) {
+  <app-dialog-header title="Score korrigieren" (cancelled)="cancel()" (saved)="save()" />
+} @else {
+  <h2 mat-dialog-title>Score korrigieren</h2>
+}
 <mat-dialog-content>
   <form [formGroup]="form" class="edit-form">
     <div class="row-pair">
@@ -63,7 +67,9 @@
     </mat-form-field>
   </form>
 </mat-dialog-content>
-<mat-dialog-actions align="end">
-  <button mat-button (click)="cancel()">Abbrechen</button>
-  <button mat-raised-button color="primary" (click)="save()">Speichern</button>
-</mat-dialog-actions>
+@if (!layout.isHandset()) {
+  <mat-dialog-actions align="end">
+    <button mat-button data-testid="dialog-cancel" (click)="cancel()">Abbrechen</button>
+    <button mat-raised-button color="primary" data-testid="dialog-save" (click)="save()">Speichern</button>
+  </mat-dialog-actions>
+}

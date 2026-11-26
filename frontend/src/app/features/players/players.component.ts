@@ -18,6 +18,9 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { Player, CreatePlayerRequest } from '../../core/models/player.model';
+import { LayoutService } from '../../core/layout/layout.service';
+import { responsiveDialogConfig } from '../../core/layout/responsive-dialog';
+import { PlayerCardListComponent } from './player-card-list.component';
 import { PlayerDialogComponent } from './player-dialog.component';
 
 export type Scope = 'mine' | 'all';
@@ -39,7 +42,8 @@ export type Scope = 'mine' | 'all';
     MatInputModule,
     MatTooltipModule,
     MatButtonToggleModule,
-    TranslatePipe
+    TranslatePipe,
+    PlayerCardListComponent
   ],
   templateUrl: './players.component.html',
   styles: [`
@@ -48,6 +52,12 @@ export type Scope = 'mine' | 'all';
     .page-header h1 { margin: 0; font-size: 28px; font-weight: 700; color: var(--text); }
     .search-field { flex: 1; min-width: 150px; margin-bottom: -1.25em; }
     .page-header button { flex-shrink: 0; }
+    .handset.page-container { padding: 16px; }
+    .handset .page-header { flex-direction: column; align-items: stretch; gap: 12px; margin-bottom: 16px; }
+    .handset .search-field { flex: none; min-width: 0; margin-bottom: 0; }
+    .handset .page-header button { min-height: 48px; }
+    .handset mat-card-content { padding: 0; }
+    .handset .admin-scope { flex-wrap: wrap; }
     .full-width { width: 100%; }
     .empty-state { text-align: center; padding: 48px; color: var(--text-muted); }
     table { border-radius: 8px; overflow: hidden; border: 1px solid var(--text); }
@@ -79,9 +89,11 @@ export type Scope = 'mine' | 'all';
 export class PlayersComponent implements OnInit {
   private readonly api = inject(ApiService);
   private readonly dialog = inject(MatDialog);
+  private readonly layout = inject(LayoutService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly router = inject(Router);
   protected readonly authService = inject(AuthService);
+  protected readonly isHandset = this.layout.isHandset;
 
   players = signal<Player[]>([]);
   searchTerm = signal('');
@@ -147,7 +159,7 @@ export class PlayersComponent implements OnInit {
   }
 
   openCreateDialog() {
-    const ref = this.dialog.open(PlayerDialogComponent, { width: '500px' });
+    const ref = this.dialog.open(PlayerDialogComponent, responsiveDialogConfig(this.layout.isHandset()));
     ref.afterClosed().subscribe((result: CreatePlayerRequest | undefined) => {
       if (result) {
         this.api.createPlayer(result).subscribe({
@@ -162,7 +174,7 @@ export class PlayersComponent implements OnInit {
   }
 
   openEditDialog(player: Player) {
-    const ref = this.dialog.open(PlayerDialogComponent, { width: '500px', data: player });
+    const ref = this.dialog.open(PlayerDialogComponent, { ...responsiveDialogConfig(this.layout.isHandset()), data: player });
     ref.afterClosed().subscribe((result: CreatePlayerRequest | undefined) => {
       if (result) {
         this.api.updatePlayer(player.id, result).subscribe({

@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { signal, computed } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { App } from './app';
 import { AuthService } from './core/auth/auth.service';
 import { provideHttpClient } from '@angular/common/http';
@@ -22,7 +22,7 @@ describe('App', () => {
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [
-        provideRouter([]),
+        provideRouter([{ path: '**', children: [] }]),
         provideHttpClient(),
         ...testTranslateProviders,
         { provide: AuthService, useValue: mockAuthService },
@@ -42,5 +42,16 @@ describe('App', () => {
     // Ohne Loader liefert ngx-translate den Key zurück — wir prüfen nur, dass das Element
     // gerendert wird und der Title-Slot über `translate`-Pipe an `app.title` bindet.
     expect(compiled.querySelector('.app-title')?.textContent?.trim()).toBe('app.title');
+  });
+
+  it('showAppNav is false only on /matches/:id/score', async () => {
+    const fixture = TestBed.createComponent(App);
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/matches/m1/score');
+    expect(fixture.componentInstance.showAppNav()).toBe(false);
+    await router.navigateByUrl('/matches/m1');
+    expect(fixture.componentInstance.showAppNav()).toBe(true);
+    await router.navigateByUrl('/matches/new');
+    expect(fixture.componentInstance.showAppNav()).toBe(true);
   });
 });

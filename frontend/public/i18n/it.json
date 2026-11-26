@@ -3,7 +3,8 @@
     "title": "TSaS – Tennis Score & Statistic",
     "nav": {
       "players": "Giocatori",
-      "newMatch": "Nuovo match"
+      "newMatch": "Nuovo match",
+      "more": "Altro"
     },
     "menu": {
       "exportData": "Esporta i miei dati",
@@ -80,6 +81,9 @@
       "TWO_HANDED": "A due mani"
     },
     "actions": {
+      "menu": "Azioni",
+      "history": "Storico partite",
+      "openMatch": "Mostra partita in corso",
       "headToHead": "Head-to-head",
       "deactivate": "Disattiva",
       "deleteHard": "Elimina definitivamente"
@@ -103,6 +107,7 @@
     "matchTiebreak": "Match tiebreak nel set decisivo",
     "shortSet": "Set breve (primo a 4)",
     "start": "Inizia match",
+    "createPlayer": "Crea « {{name}} »",
     "errors": {
       "samePlayer": "I due giocatori devono essere diversi.",
       "missingPlayer": "Seleziona entrambi i giocatori."
